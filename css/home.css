@@ -7,8 +7,8 @@
 }
 
 body {
-  /* position: relative;
-  display: flex; */
+  position: relative;
+  display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -21,7 +21,7 @@ body::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.75); /* atur brightness di sini */
+  background: rgba(0,0,0,0.75); 
   z-index: -1;
 }
 
@@ -52,7 +52,7 @@ a {
     background: white;
     border-radius: 15px;
     border: 1px solid black;
-    box-shadow: 3px 5px 1px white;
+    box-shadow: 3px 5px 0 0 whitesmoke;
 }
 
 a:hover {

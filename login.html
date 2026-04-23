@@ -1,20 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Login</title>
-<link rel="stylesheet" href="css/login.css">
-<script src="Script.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/login.css">
+    <!-- Basic Icons -->
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <!-- Filled Icons -->
+    <!-- <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet"> -->
+    <!-- Brand Icons -->
+    <!-- <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet"> -->
+    <title>Login | Invenz</title>
 </head>
 <body>
+    
+    <!-- <a href="index.html"><i class="bx bx-caret-left-square" style="color:#000000;" /></a> -->
 
-<h2>Login</h2>
+    <div class="title">
+        <h1>INVENZ</h1>
+        <h3><i>Sistem Manajemen Inventori</i></h3>
+    </div>
 
-<input id="username" placeholder="Username"><br>
-<input id="password" type="password" placeholder="Password"><br>
-
-<button onclick="login()">Login</button><br>
-
-<a href="index.html">Kembali</a>
+    <div class="container">
+        <form action="">
+            <h1>LOGIN</h1>
+            <div class="login-box">
+                <input type="text" placeholder="Username" id="username" required>
+                <input type="password" placeholder="Password" id="password" required>
+                <input type="submit" id="submit">
+            </div>
+        </form>
+    </div>
 
 </body>
 </html>
