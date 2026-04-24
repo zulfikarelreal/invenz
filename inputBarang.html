@@ -3,17 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/inputBarang.css">
+    <link rel="stylesheet" href="css/inputBarang.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Input Barang | Invenz - Sistem Manajemen Inventori</title>
 </head>
 <body>
-    
+
     <div class="navbar">
         <i class="bxf bx-menu-closer"></i>
+        <div class="title">
+            <i class="bxf bx-package bx-tada"></i>
+            <h6>INPUT BARANG</h6>
+        </div>
+        <i class="bxf bx-user-circle"></i>
     </div>
 
+    <div class="nav-controll">
+        <p>* klik input barang</p>
+        <div class="inputbarang-btn" id="openModalBtn">Input Barang</div>
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice</th>
+                    <th>Tanggal Masuk</th>
+                    <th>Nama Supplier</th>
+                    <th>Total Barang</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="empty-row">
+                    <td colspan="6">Belum ada data — klik "Input Barang" untuk menambah</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>Input Barang</h3>
+            <div class="modal-form">
+                <input type="text" id="inputInvoice" placeholder="Invoice">
+                <input type="date" id="inputTanggal">
+                <input type="text" id="inputSupplier" placeholder="Nama Supplier">
+                <input type="number" id="inputTotal" placeholder="Total Barang" min="0">
+            </div>
+            <p class="error-msg" id="errorMsg"></p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="batalBtn">Batal</button>
+                <button class="btn-simpan" id="simpanBtn">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="inputBarang.js"></script>
 </body>
 </html>
