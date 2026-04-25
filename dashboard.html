@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap)" rel="stylesheet">
+  <link href="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css)" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+  <title>Dashboard | Invenz</title>
+</head>
+<body>
+
+  <div class="navbar">
+    <i class='bx bx-home'></i>
+    <div class="title">
+      <i class='bx bx-bar-chart'></i>
+      <h6>DASHBOARD</h6>
+    </div>
+    <i class='bx bx-user-circle'></i>
+  </div>
+
+  <div class="content">
+    <div class="cards">
+      <div class="card">
+        <h3>Total Barang Tersedia</h3>
+        <p id="totalBarang">0</p>
+      </div>
+      <div class="card">
+        <h3>Jumlah Jenis Barang</h3>
+        <p id="jenisBarang">0</p>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="pieChart"></canvas>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>
