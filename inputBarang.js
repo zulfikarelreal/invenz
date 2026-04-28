@@ -1,5 +1,6 @@
 // ===== GUARD: pastikan loggedUser tidak undefined =====
 // Ambil dari localStorage jika auth.js tidak mendefinisikannya sebagai variabel global
+
 const loggedUser =
   (typeof window.loggedUser !== "undefined" && window.loggedUser) ||
   localStorage.getItem("loggedUser") ||
