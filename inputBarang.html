@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/inputBarang.css">
+    <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
@@ -12,7 +13,7 @@
     <title>Input Barang | Invenz</title>
 </head>
 <body>
-    
+
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -82,10 +83,24 @@
         <div class="modal">
             <h3>Input Barang</h3>
             <div class="modal-form">
-                <input type="text" id="inputInvoice" placeholder="Invoice">
+                <input type="text" id="inputInvoice" placeholder="Invoice" autocomplete="off">
                 <input type="date" id="inputTanggal">
-                <input type="text" id="inputSupplier" placeholder="Nama Supplier">
-                <!-- <div class="total-display">Total Barang: <span id="totalBarang">0</span> item <span class="total-note">(otomatis)</span></div> -->
+
+                <!-- Custom Dropdown: Supplier -->
+                <div class="cd-wrapper" id="cdSupplier">
+                    <div class="cd-input-row">
+                        <input type="text" class="cd-input" placeholder="Nama Supplier" autocomplete="off" id="inputSupplier">
+                        <i class="bx bx-chevron-down cd-arrow"></i>
+                    </div>
+                    <div class="cd-dropdown">
+                        <div class="cd-search-box">
+                            <i class="bx bx-search"></i>
+                            <input type="text" class="cd-search" placeholder="Cari supplier...">
+                        </div>
+                        <ul class="cd-list"></ul>
+                        <div class="cd-empty">Belum ada data. Ketik manual lalu simpan.</div>
+                    </div>
+                </div>
             </div>
             <p class="error-msg" id="errorMsg"></p>
             <div class="modal-actions">
@@ -108,8 +123,8 @@
         </div>
     </div>
 
-    <!-- auth.js harus load duluan, inputBarang.js belakangan -->
     <script src="auth.js"></script>
+    <script src="customDropdown.js"></script>
     <script src="inputBarang.js"></script>
 </body>
 </html>

@@ -1,0 +1,190 @@
+/* ============================================================
+   CUSTOM DROPDOWN — customDropdown.css
+   Taruh di: css/customDropdown.css
+   Import di setiap halaman yang pakai custom dropdown.
+   ============================================================ */
+
+/* ===== WRAPPER ===== */
+.cd-wrapper {
+    position: relative;
+    width: 100%;
+    font-family: "Poppins", sans-serif;
+}
+
+/* ===== INPUT ROW (text input + arrow icon) ===== */
+.cd-input-row {
+    display: flex;
+    align-items: center;
+    background-color: rgb(229, 229, 229);
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s, background-color 0.15s;
+    cursor: pointer;
+}
+
+.cd-wrapper.open .cd-input-row {
+    border-color: rgb(16, 44, 168);
+    background-color: rgb(210, 220, 240);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.cd-input {
+    flex: 1;
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    color: #111;
+    outline: none;
+    cursor: text;
+    min-width: 0;
+}
+
+.cd-input::placeholder {
+    color: #999;
+}
+
+.cd-arrow {
+    font-size: 18px !important;
+    color: #666;
+    padding: 0 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.cd-wrapper.open .cd-arrow {
+    transform: rotate(180deg);
+    color: rgb(16, 44, 168);
+}
+
+/* ===== DROPDOWN PANEL ===== */
+.cd-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid rgb(16, 44, 168);
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 3px 5px 0 0 #111;
+    z-index: 300;
+    max-height: 220px;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cd-wrapper.open .cd-dropdown {
+    display: flex;
+}
+
+/* ===== SEARCH BOX INSIDE DROPDOWN ===== */
+.cd-search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f5f7ff;
+    flex-shrink: 0;
+}
+
+.cd-search-box i {
+    font-size: 14px !important;
+    color: #888;
+    cursor: default;
+}
+
+.cd-search {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-family: "Poppins", sans-serif;
+    color: #333;
+    outline: none;
+}
+
+.cd-search::placeholder {
+    color: #bbb;
+}
+
+/* ===== LIST ===== */
+.cd-list {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding: 4px 0;
+    margin: 0;
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #bbb #f0f0f0;
+}
+
+.cd-list::-webkit-scrollbar {
+    width: 5px;
+}
+.cd-list::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+.cd-list::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 10px;
+}
+
+/* ===== LIST ITEM ===== */
+.cd-list li {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #222;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 3px solid transparent;
+    transition: background 0.1s, border-left-color 0.1s;
+}
+
+.cd-list li:hover {
+    background: #e8f0ff;
+    border-left-color: rgb(16, 44, 168);
+    color: rgb(16, 44, 168);
+}
+
+.cd-list li.selected {
+    background: #dce8ff;
+    border-left-color: rgb(16, 44, 168);
+    color: rgb(16, 44, 168);
+    font-weight: 600;
+}
+
+.cd-list li i {
+    font-size: 14px !important;
+    opacity: 0.6;
+}
+
+/* ===== EMPTY STATE ===== */
+.cd-empty {
+    display: none;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+    text-align: center;
+}
+
+/* ===== NO RESULT (filter kosong) ===== */
+.cd-no-result {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #bbb;
+    font-style: italic;
+    text-align: center;
+}
