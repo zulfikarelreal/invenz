@@ -13,15 +13,23 @@ const simpanBtn = document.getElementById("simpanBtn");
 const confirmYes = document.getElementById("confirmYes");
 const confirmNo = document.getElementById("confirmNo");
 const errorMsg = document.getElementById("errorMsg");
-
-const inputNama = document.getElementById("inputNama");
-const inputKategori = document.getElementById("inputKategori");
-const inputMerk = document.getElementById("inputMerk");
 const inputStok = document.getElementById("inputStok");
-const inputLokasi = document.getElementById("inputLokasi");
 
 let rowCount = 0;
 let rowToDelete = null;
+
+// ===== INIT CUSTOM DROPDOWNS =====
+// CustomDropdown + autoAddToLinkedData tersedia dari js/customDropdown.js
+const ddNama = new CustomDropdown("cdNama", "barang", { icon: "bx-package" });
+const ddKategori = new CustomDropdown("cdKategori", "kategori", {
+  icon: "bx-category",
+});
+const ddMerk = new CustomDropdown("cdMerk", "merk", {
+  icon: "bx-purchase-tag",
+});
+const ddLokasi = new CustomDropdown("cdLokasi", "lokasi", {
+  icon: "bx-map-pin",
+});
 
 // ===== INIT =====
 function init() {
@@ -31,7 +39,6 @@ function init() {
   }
 
   navInvoiceId.textContent = invoiceId;
-
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
   const data = invoices[invoiceId];
 
@@ -43,52 +50,59 @@ function init() {
       data.items.forEach((item) => tambahBaris(item, false));
     }
   } else {
-    invoiceInfo.innerHTML = `<div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${invoiceId}</span></div>`;
+    invoiceInfo.innerHTML = `
+      <div class="info-item">
+        <span class="info-label">Invoice</span>
+        <span class="info-value">${invoiceId}</span>
+      </div>`;
   }
 }
 
 function renderInfo(data) {
   invoiceInfo.innerHTML = `
-        <div class="info-item">
-            <span class="info-label">Invoice</span>
-            <span class="info-value">${data.invoice}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Tanggal Masuk</span>
-            <span class="info-value">${data.tanggal}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Nama Supplier</span>
-            <span class="info-value">${data.supplier}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Total Barang</span>
-            <span class="info-value" id="infoTotal">${data.total}</span>
-        </div>
-    `;
+    <div class="info-item">
+      <span class="info-label">Invoice</span>
+      <span class="info-value">${data.invoice}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Tanggal Masuk</span>
+      <span class="info-value">${data.tanggal}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Nama Supplier</span>
+      <span class="info-value">${data.supplier}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Total Stok</span>
+      <span class="info-value" id="infoTotal">${data.total}</span>
+    </div>
+  `;
 }
 
-// ===== HITUNG & SIMPAN TOTAL =====
+// ===== UPDATE TOTAL =====
 function updateTotal() {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
   if (!invoices[invoiceId]) return;
-
   const total = invoices[invoiceId].items.reduce(
     (sum, item) => sum + (parseInt(item.stok) || 0),
     0,
   );
   invoices[invoiceId].total = total;
   localStorage.setItem("invoices", JSON.stringify(invoices));
-
-  // Update tampilan di info card
   const infoTotal = document.getElementById("infoTotal");
   if (infoTotal) infoTotal.textContent = total;
 }
 
 // ===== MODAL =====
-openTambahBtn.addEventListener("click", () =>
-  modalOverlay.classList.add("active"),
-);
+openTambahBtn.addEventListener("click", () => {
+  // Refresh semua dropdown dari linkedData terbaru
+  ddNama.refresh();
+  ddKategori.refresh();
+  ddMerk.refresh();
+  ddLokasi.refresh();
+  modalOverlay.classList.add("active");
+});
+
 batalBtn.addEventListener("click", tutupModal);
 modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) tutupModal();
@@ -101,65 +115,67 @@ function tutupModal() {
 }
 
 function clearForm() {
-  inputNama.value = "";
-  inputKategori.value = "";
-  inputMerk.value = "";
+  ddNama.clear();
+  ddKategori.clear();
+  ddMerk.clear();
+  ddLokasi.clear();
   inputStok.value = "";
-  inputLokasi.value = "";
   errorMsg.textContent = "";
 }
 
 function simpanItem() {
-  const nama = inputNama.value.trim();
-  const kategori = inputKategori.value.trim();
-  const merk = inputMerk.value.trim();
+  const nama = ddNama.getValue();
+  const kategori = ddKategori.getValue();
+  const merk = ddMerk.getValue();
   const stok = inputStok.value.trim();
-  const lokasi = inputLokasi.value.trim();
+  const lokasi = ddLokasi.getValue();
 
   if (!nama || !kategori || !merk || !stok || !lokasi) {
     errorMsg.textContent = "Semua field harus diisi!";
     return;
   }
 
+  // Auto-add ke linkedData untuk nilai manual yang belum ada
+  autoAddToLinkedData("barang", nama);
+  autoAddToLinkedData("kategori", kategori);
+  autoAddToLinkedData("merk", merk);
+  autoAddToLinkedData("lokasi", lokasi);
+
   const item = { nama, kategori, merk, stok, lokasi };
 
-  // Simpan item ke localStorage
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  if (!invoices[invoiceId])
+  if (!invoices[invoiceId]) {
     invoices[invoiceId] = { invoice: invoiceId, items: [] };
+  }
   invoices[invoiceId].items.push(item);
   localStorage.setItem("invoices", JSON.stringify(invoices));
 
-  // Update total otomatis
   updateTotal();
-
   tambahBaris(item, true);
   tutupModal();
 }
 
+// ===== TAMBAH BARIS =====
 function tambahBaris(item, removeEmpty = true) {
   if (removeEmpty) {
     const emptyRow = itemTableBody.querySelector(".empty-row");
     if (emptyRow) emptyRow.remove();
   }
-
   rowCount++;
   const tr = document.createElement("tr");
   tr.innerHTML = `
-        <td>${rowCount}</td>
-        <td>${item.nama}</td>
-        <td>${item.kategori}</td>
-        <td>${item.merk}</td>
-        <td>${item.stok}</td>
-        <td>${item.lokasi}</td>
-        <td><button class="btn-hapus"><i class="bx bx-trash"></i> Hapus</button></td>
-    `;
-
+    <td>${rowCount}</td>
+    <td>${item.nama}</td>
+    <td>${item.kategori}</td>
+    <td>${item.merk}</td>
+    <td>${item.stok}</td>
+    <td>${item.lokasi}</td>
+    <td><button class="btn-hapus"><i class="bx bx-trash"></i> Hapus</button></td>
+  `;
   tr.querySelector(".btn-hapus").addEventListener("click", () => {
     rowToDelete = tr;
     confirmOverlay.classList.add("active");
   });
-
   itemTableBody.appendChild(tr);
 }
 
@@ -171,15 +187,11 @@ confirmYes.addEventListener("click", () => {
     );
     const rowIndex = rows.indexOf(rowToDelete);
     rowToDelete.remove();
-
-    // Hapus dari localStorage
     const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-    if (invoices[invoiceId] && invoices[invoiceId].items) {
+    if (invoices[invoiceId]?.items) {
       invoices[invoiceId].items.splice(rowIndex, 1);
       localStorage.setItem("invoices", JSON.stringify(invoices));
     }
-
-    // Update total otomatis setelah hapus
     updateTotal();
     updateNomor();
     rowToDelete = null;
@@ -199,6 +211,7 @@ confirmOverlay.addEventListener("click", (e) => {
   }
 });
 
+// ===== UPDATE NOMOR =====
 function updateNomor() {
   const rows = itemTableBody.querySelectorAll("tr:not(.empty-row)");
   if (rows.length === 0) {
@@ -216,7 +229,7 @@ function updateNomor() {
   }
 }
 
-// ===== TOMBOL BACK =====
+// ===== BACK =====
 backBtn.addEventListener("click", () => {
   window.location.href = "inputBarang.html";
 });
