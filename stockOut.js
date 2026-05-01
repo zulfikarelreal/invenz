@@ -12,23 +12,23 @@ if (!localStorage.getItem("isLoggedIn")) {
 let rowCount = 0;
 let rowToDelete = null;
 
-const modalOverlay   = document.getElementById("modalOverlay");
+const modalOverlay = document.getElementById("modalOverlay");
 const confirmOverlay = document.getElementById("confirmOverlay");
-const tableBody      = document.getElementById("tableBody");
-const errorMsg       = document.getElementById("errorMsg");
-const openModalBtn   = document.getElementById("openModalBtn");
-const batalBtn       = document.getElementById("batalBtn");
-const simpanBtn      = document.getElementById("simpanBtn");
-const confirmYes     = document.getElementById("confirmYes");
-const confirmNo      = document.getElementById("confirmNo");
-
-const inputInvoice   = document.getElementById("inputInvoice");
-const inputTanggal   = document.getElementById("inputTanggal");
-const inputPenerima  = document.getElementById("inputPenerima");
+const tableBody = document.getElementById("tableBody");
+const errorMsg = document.getElementById("errorMsg");
+const openModalBtn = document.getElementById("openModalBtn");
+const batalBtn = document.getElementById("batalBtn");
+const simpanBtn = document.getElementById("simpanBtn");
+const confirmYes = document.getElementById("confirmYes");
+const confirmNo = document.getElementById("confirmNo");
+const inputInvoice = document.getElementById("inputInvoice");
+const inputTanggal = document.getElementById("inputTanggal");
 
 // ===== USER INFO =====
 document.getElementById("sidebarUsername").textContent = loggedUser;
-document.getElementById("sidebarAvatar").textContent = loggedUser.charAt(0).toUpperCase();
+document.getElementById("sidebarAvatar").textContent = loggedUser
+  .charAt(0)
+  .toUpperCase();
 
 // ===== SIDEBAR =====
 const sidebar = document.getElementById("sidebar");
@@ -51,24 +51,16 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "login.html";
 });
 
-// ===== ISI DATALIST PENERIMA dari linkedData =====
-function loadPenerimaList() {
-  const penerima = JSON.parse(localStorage.getItem("penerima") || "[]");
-  const datalist = document.getElementById("penerimaList");
-  datalist.innerHTML = "";
-  penerima.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p.nama;
-    datalist.appendChild(opt);
-  });
-}
+// ===== CUSTOM DROPDOWN PENERIMA =====
+// customDropdown.js sudah di-load sebelum script ini
+const ddPenerima = new CustomDropdown("cdPenerima", "penerima", {
+  icon: "bx-user",
+});
 
-// ===== MODAL INPUT STOCK OUT =====
+// ===== MODAL =====
 openModalBtn.addEventListener("click", () => {
-  loadPenerimaList();
-  // Set default tanggal hari ini
-  const today = new Date().toISOString().split("T")[0];
-  inputTanggal.value = today;
+  ddPenerima.refresh(); // reload data terbaru dari linkedData
+  inputTanggal.value = new Date().toISOString().split("T")[0];
   modalOverlay.classList.add("active");
 });
 
@@ -76,29 +68,22 @@ batalBtn.addEventListener("click", tutupModal);
 modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) tutupModal();
 });
-
 simpanBtn.addEventListener("click", simpanData);
 
-// ===== MODAL KONFIRMASI HAPUS =====
+// ===== KONFIRMASI HAPUS =====
 confirmYes.addEventListener("click", () => {
   if (rowToDelete) {
     const invoiceId = rowToDelete.dataset.invoiceId;
-
-    // Kembalikan stok ke globalStok sebelum hapus
     restoreStok(invoiceId);
-
     rowToDelete.remove();
     updateNomor();
-
     const stockOuts = JSON.parse(localStorage.getItem("stockOuts") || "{}");
     delete stockOuts[invoiceId];
     localStorage.setItem("stockOuts", JSON.stringify(stockOuts));
-
     rowToDelete = null;
   }
   confirmOverlay.classList.remove("active");
 });
-
 confirmNo.addEventListener("click", () => {
   rowToDelete = null;
   confirmOverlay.classList.remove("active");
@@ -110,33 +95,31 @@ confirmOverlay.addEventListener("click", (e) => {
   }
 });
 
-// ===== RESTORE STOK SAAT INVOICE KELUAR DIHAPUS =====
+// ===== RESTORE STOK =====
 function restoreStok(invoiceId) {
   const stockOuts = JSON.parse(localStorage.getItem("stockOuts") || "{}");
   const invoiceData = stockOuts[invoiceId];
   if (!invoiceData || !invoiceData.items) return;
 
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-
-  invoiceData.items.forEach(outItem => {
-    // Cari item di invoice asal dan kembalikan stoknya
+  invoiceData.items.forEach((outItem) => {
     if (invoices[outItem.invoiceAsal]) {
-      const inv = invoices[outItem.invoiceAsal];
-      const found = inv.items.find(i => i.nama === outItem.nama && i.kategori === outItem.kategori);
+      const found = invoices[outItem.invoiceAsal].items.find(
+        (i) => i.nama === outItem.nama && i.kategori === outItem.kategori,
+      );
       if (found) {
         found.stok = parseInt(found.stok) + parseInt(outItem.jumlahKeluar);
       }
     }
   });
-
   localStorage.setItem("invoices", JSON.stringify(invoices));
 }
 
-// ===== SIMPAN INVOICE KELUAR BARU =====
+// ===== SIMPAN =====
 function simpanData() {
-  const invoice  = inputInvoice.value.trim();
-  const tanggal  = inputTanggal.value;
-  const penerima = inputPenerima.value.trim();
+  const invoice = inputInvoice.value.trim();
+  const tanggal = inputTanggal.value;
+  const penerima = ddPenerima.getValue(); // ambil dari custom dropdown
 
   if (!invoice || !tanggal || !penerima) {
     errorMsg.textContent = "Semua field harus diisi!";
@@ -149,11 +132,11 @@ function simpanData() {
     return;
   }
 
+  // ✅ Auto-tambah penerima ke linkedData jika input manual
+  autoAddToLinkedData("penerima", penerima);
+
   stockOuts[invoice] = { invoice, tanggal, penerima, total: 0, items: [] };
   localStorage.setItem("stockOuts", JSON.stringify(stockOuts));
-
-  // Auto-tambah penerima ke linkedData jika belum ada
-  autoTambahPenerima(penerima);
 
   const emptyRow = tableBody.querySelector(".empty-row");
   if (emptyRow) emptyRow.remove();
@@ -163,16 +146,7 @@ function simpanData() {
   tutupModal();
 }
 
-function autoTambahPenerima(namaPenerima) {
-  const penerima = JSON.parse(localStorage.getItem("penerima") || "[]");
-  const sudahAda = penerima.some(p => p.nama.toLowerCase() === namaPenerima.toLowerCase());
-  if (!sudahAda) {
-    penerima.push({ nama: namaPenerima, keterangan: "Ditambahkan otomatis dari Stock Out" });
-    localStorage.setItem("penerima", JSON.stringify(penerima));
-  }
-}
-
-// ===== BUAT BARIS TABEL =====
+// ===== BUAT BARIS =====
 function buatBaris(data) {
   const tr = document.createElement("tr");
   tr.dataset.invoiceId = data.invoice;
@@ -184,26 +158,27 @@ function buatBaris(data) {
     <td class="col-total">${data.total}</td>
     <td><button class="btn-hapus"><i class="bx bx-trash"></i> Hapus</button></td>
   `;
-
   tr.querySelector(".btn-hapus").addEventListener("click", () => {
     rowToDelete = tr;
     confirmOverlay.classList.add("active");
   });
-
   tableBody.appendChild(tr);
 }
 
-// ===== UPDATE NOMOR URUT =====
+// ===== UPDATE NOMOR =====
 function updateNomor() {
   const rows = tableBody.querySelectorAll("tr:not(.empty-row)");
   if (rows.length === 0) {
     const emptyTr = document.createElement("tr");
     emptyTr.className = "empty-row";
-    emptyTr.innerHTML = '<td colspan="6">Belum ada data — klik "Stock Out" untuk membuat invoice keluar</td>';
+    emptyTr.innerHTML =
+      '<td colspan="6">Belum ada data — klik "Stock Out" untuk membuat invoice keluar</td>';
     tableBody.appendChild(emptyTr);
     rowCount = 0;
   } else {
-    rows.forEach((r, i) => { r.cells[0].textContent = i + 1; });
+    rows.forEach((r, i) => {
+      r.cells[0].textContent = i + 1;
+    });
     rowCount = rows.length;
   }
 }
@@ -213,31 +188,28 @@ function tutupModal() {
   modalOverlay.classList.remove("active");
   inputInvoice.value = "";
   inputTanggal.value = "";
-  inputPenerima.value = "";
+  ddPenerima.clear();
   errorMsg.textContent = "";
 }
 
-// ===== INIT: render dari localStorage =====
+// ===== INIT =====
 function init() {
   const stockOuts = JSON.parse(localStorage.getItem("stockOuts") || "{}");
   const list = Object.values(stockOuts);
   if (list.length === 0) return;
-
   const emptyRow = tableBody.querySelector(".empty-row");
   if (emptyRow) emptyRow.remove();
-
-  list.forEach(data => {
+  list.forEach((data) => {
     rowCount++;
     buatBaris(data);
   });
 }
 
-// ===== SYNC total saat kembali ke halaman ini =====
+// ===== SYNC TOTAL =====
 window.addEventListener("focus", syncTotals);
 function syncTotals() {
   const stockOuts = JSON.parse(localStorage.getItem("stockOuts") || "{}");
-  const rows = tableBody.querySelectorAll("tr:not(.empty-row)");
-  rows.forEach(tr => {
+  tableBody.querySelectorAll("tr:not(.empty-row)").forEach((tr) => {
     const id = tr.dataset.invoiceId;
     if (stockOuts[id]) {
       tr.querySelector(".col-total").textContent = stockOuts[id].total;

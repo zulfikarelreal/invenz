@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/invoiceKeluar.css">
+    <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -11,10 +12,7 @@
 </head>
 <body>
 
-    <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>INVENZ</span>
@@ -41,9 +39,9 @@
         </div>
     </div>
 
-    <!-- Navbar -->
+    <!-- Navbar sama seperti invoice masuk -->
     <div class="navbar">
-        <i class="bx bx-menu hamburger" id="hamburger"></i>
+        <i class="bxf bx-chevron-left-circle" id="backBtn" title="Kembali"></i>
         <div class="title">
             <i class="bxf bx-truck"></i>
             <h6 id="navTitle">INVOICE KELUAR</h6>
@@ -51,22 +49,16 @@
         <i class="bxf bx-user-circle"></i>
     </div>
 
-    <!-- Invoice Info Bar -->
-    <div class="invoice-info-bar">
-        <a href="stockOut.html" class="back-btn">
-            <i class="bx bx-arrow-back"></i> Kembali
-        </a>
-        <div class="info-chips">
-            <span class="chip chip-invoice" id="chipInvoice">—</span>
-            <span class="chip chip-tanggal" id="chipTanggal">—</span>
-            <span class="chip chip-penerima" id="chipPenerima">—</span>
-        </div>
-        <button class="btn-add-item" id="btnAddItem">
-            <i class="bx bx-plus"></i> Stock Out Barang
-        </button>
+    <!-- Info bar sama seperti invoice masuk -->
+    <div class="invoice-info" id="invoiceInfo">
+        <!-- Diisi JS -->
     </div>
 
-    <!-- Table -->
+    <div class="nav-controll">
+        <p>* klik stock out barang untuk mengeluarkan barang dari stok</p>
+        <button class="tambah-btn" id="btnAddItem">+ Stock Out Barang</button>
+    </div>
+
     <div class="container">
         <table>
             <thead>
@@ -90,36 +82,30 @@
         </table>
     </div>
 
-    <!-- Summary Footer -->
     <div class="summary-bar" id="summaryBar">
         <span>Total barang keluar: <strong id="summaryTotal">0</strong> item</span>
     </div>
 
-    <!-- ===== MODAL PILIH BARANG ===== -->
+    <!-- Modal Pilih Barang -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal modal-wide">
             <div class="modal-header">
                 <h3><i class="bx bx-search"></i> Pilih Barang dari Stok</h3>
-                <input type="text" id="searchBarang" class="search-input" placeholder="🔍 Cari nama barang, kategori, merk...">
+                <input type="text" id="searchBarang" class="search-input"
+                       placeholder="🔍 Cari nama barang, kategori, merk...">
             </div>
-
-            <div class="stok-list" id="stokList">
-                <!-- Daftar barang dari global stok -->
-            </div>
-
+            <div class="stok-list" id="stokList"></div>
             <div class="modal-actions">
                 <button class="btn-batal" id="batalBtn">Tutup</button>
             </div>
         </div>
     </div>
 
-    <!-- ===== MODAL JUMLAH KELUAR ===== -->
+    <!-- Modal Jumlah Keluar -->
     <div class="modal-overlay" id="jumlahOverlay">
         <div class="modal modal-jumlah">
             <h3><i class="bx bx-export"></i> Jumlah Keluar</h3>
-            <div class="barang-preview" id="barangPreview">
-                <!-- Info barang yang dipilih -->
-            </div>
+            <div class="barang-preview" id="barangPreview"></div>
             <div class="modal-form">
                 <label>Jumlah yang dikeluarkan:</label>
                 <div class="qty-control">
@@ -139,7 +125,7 @@
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Hapus item -->
+    <!-- Modal Konfirmasi Kembalikan -->
     <div class="modal-overlay" id="confirmOverlay">
         <div class="modal modal-confirm">
             <div class="confirm-icon">↩️</div>
@@ -153,7 +139,7 @@
     </div>
 
     <script src="auth.js"></script>
+    <script src="customDropdown.js"></script>
     <script src="invoiceKeluar.js"></script>
-    
 </body>
 </html>

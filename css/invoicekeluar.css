@@ -46,6 +46,75 @@ i { font-size: 30px; cursor: pointer; }
     font-weight: 700;
 }
 
+/* ===== INFO INVOICE (sama seperti invoice masuk) ===== */
+.invoice-info {
+    margin-top: 60px;
+    width: 90%;
+    background: white;
+    border: 1px solid black;
+    border-radius: 10px;
+    box-shadow: 3px 5px 0 0 black;
+    padding: 14px 20px;
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    align-self: center;
+}
+
+.invoice-info .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.invoice-info .info-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.invoice-info .info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+}
+
+/* ===== NAV CONTROL ===== */
+.nav-controll {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    margin-top: 12px;
+    padding: 5px 0;
+    align-self: center;
+}
+
+.nav-controll > p {
+    font-style: italic;
+    font-size: 13px;
+    color: #555;
+}
+
+.tambah-btn {
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: rgb(212, 214, 230);
+    border: 1px solid black;
+    border-radius: 5px;
+    box-shadow: 3px 5px 0 0 black;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    font-family: "Poppins", sans-serif;
+}
+
+.tambah-btn:hover {
+    transform: scale(0.90);
+}
+
 /* ===== SIDEBAR OVERLAY ===== */
 .sidebar-overlay {
     display: none;

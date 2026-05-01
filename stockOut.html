@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/stockOut.css">
+    <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
@@ -12,10 +13,7 @@
 </head>
 <body>
 
-    <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>INVENZ</span>
@@ -42,7 +40,6 @@
         </div>
     </div>
 
-    <!-- Navbar -->
     <div class="navbar">
         <i class="bx bx-menu hamburger" id="hamburger"></i>
         <div class="title">
@@ -52,7 +49,6 @@
         <i class="bxf bx-user-circle"></i>
     </div>
 
-    <!-- Nav Control -->
     <div class="nav-controll">
         <p>* klik invoice untuk melihat & mengelola barang keluar</p>
         <div class="stockout-btn" id="openModalBtn">
@@ -60,7 +56,6 @@
         </div>
     </div>
 
-    <!-- Table -->
     <div class="container">
         <table>
             <thead>
@@ -84,12 +79,28 @@
     <!-- Modal Buat Invoice Keluar -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <h3><i class="bx bx-truck"></i> Buat Invoice Keluar</h3>
+            <h3>Stock Out Barang</h3>
             <div class="modal-form">
-                <input type="text" id="inputInvoice" placeholder="No. Invoice Keluar (contoh: INV-OUT-001)">
+                <input type="text" id="inputInvoice" placeholder="No. Invoice Keluar (contoh: INV-OUT-001)" autocomplete="off">
                 <input type="date" id="inputTanggal">
-                <input type="text" id="inputPenerima" placeholder="Nama Penerima" list="penerimaList">
-                <datalist id="penerimaList"></datalist>
+
+                <!-- Penerima: custom dropdown dari linkedData.penerima -->
+                <div class="cd-wrapper" id="cdPenerima">
+                    <div class="cd-input-row">
+                        <input class="cd-input" id="inputPenerima" type="text"
+                               placeholder="Nama Penerima / Tujuan" autocomplete="off">
+                        <i class="bx bx-chevron-down cd-arrow"></i>
+                    </div>
+                    <div class="cd-dropdown">
+                        <div class="cd-search-box">
+                            <i class="bx bx-search"></i>
+                            <input class="cd-search" type="text" placeholder="Cari penerima...">
+                        </div>
+                        <ul class="cd-list"></ul>
+                        <div class="cd-empty">Belum ada data penerima di Linked Data</div>
+                    </div>
+                </div>
+
             </div>
             <p class="error-msg" id="errorMsg"></p>
             <div class="modal-actions">
@@ -113,6 +124,7 @@
     </div>
 
     <script src="auth.js"></script>
+    <script src="customDropdown.js"></script>
     <script src="stockOut.js"></script>
 </body>
 </html>
