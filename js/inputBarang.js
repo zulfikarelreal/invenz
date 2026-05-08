@@ -1,4 +1,4 @@
-// ===== GUARD =====
+// ===== AUTH =====
 const loggedUser =
   (typeof window.loggedUser !== "undefined" && window.loggedUser) ||
   localStorage.getItem("loggedUser") ||
@@ -7,40 +7,6 @@ const loggedUser =
 if (!localStorage.getItem("isLoggedIn")) {
   window.location.href = "login.html";
 }
-
-// ===== VARIABEL =====
-let rowCount = 0;
-let rowToDelete = null;
-
-const modalOverlay = document.getElementById("modalOverlay");
-const confirmOverlay = document.getElementById("confirmOverlay");
-const tableBody = document.getElementById("tableBody");
-const errorMsg = document.getElementById("errorMsg");
-const openModalBtn = document.getElementById("openModalBtn");
-const batalBtn = document.getElementById("batalBtn");
-const simpanBtn = document.getElementById("simpanBtn");
-const confirmYes = document.getElementById("confirmYes");
-const confirmNo = document.getElementById("confirmNo");
-const inputInvoice = document.getElementById("inputInvoice");
-const inputTanggal = document.getElementById("inputTanggal");
-const scanInvoiceBtn = document.getElementById("scanInvoiceBtn");
-const inputRange = document.getElementById("inputRange");
-const cdRangeWrapper = document.getElementById("cdRange");
-const cdRangeList = cdRangeWrapper?.querySelector(".cd-list");
-const cdRangeSearch = cdRangeWrapper?.querySelector(".cd-search");
-
-const RANGE_OPTIONS = [
-  "All time",
-  "Hari ini",
-  "7 hari terakhir",
-  "Bulan ini",
-  "30 hari terakhir",
-  "Bulan kemarin",
-  "3 bulan terakhir",
-  "6 bulan terakhir",
-  "YTD",
-  "12 bulan / 1 tahun terakhir",
-];
 
 // ===== USER INFO =====
 document.getElementById("sidebarUsername").textContent = loggedUser;
@@ -69,275 +35,330 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "login.html";
 });
 
+// ===== STATE =====
+let allInvoices = {}; // cache semua invoices
+let rowToDelete = null;
+let cameraStream = null;
+let currentTab = "manual";
+
+// ===== ELEMEN =====
+const modalOverlay = document.getElementById("modalOverlay");
+const confirmOverlay = document.getElementById("confirmOverlay");
+const tableBody = document.getElementById("tableBody");
+const errorMsg = document.getElementById("errorMsg");
+const filterWaktu = document.getElementById("filterWaktu");
+
 // ===== CUSTOM DROPDOWN =====
 const ddSupplier = new CustomDropdown("cdSupplier", "supplier", {
   icon: "bx-store",
 });
+const ddSupplierScan = new CustomDropdown("cdSupplierScan", "supplier", {
+  icon: "bx-store",
+});
 
-// ===== HELPER: parse tanggal yyyy-mm-dd =====
-function parseTanggal(str) {
-  if (!str) return null;
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
+// ===== FORMAT RUPIAH =====
+function formatRp(num) {
+  if (!num || num === 0) return "Rp 0";
+  return "Rp " + parseInt(num).toLocaleString("id-ID");
 }
 
-// ===== HELPER: hitung jenis, stok, total harga =====
-function hitungStatInvoice(invoiceData) {
-  const items = invoiceData.items || [];
-  const namaSet = new Set();
-  let totalStok = 0;
-  let totalHarga = 0;
-
-  items.forEach((item) => {
-    if (item.nama) namaSet.add(item.nama.toLowerCase().trim());
-    const stok = parseInt(item.stok) || 0;
-    totalStok += stok;
-
-    // Harga per unit disimpan sebagai item.harga (sesuai revisi fitur)
-    const harga = parseInt(item.harga) || 0;
-    totalHarga += harga * stok;
-  });
-
-  return { jenis: namaSet.size, stok: totalStok, totalHarga };
-}
-
-function formatRupiah(n) {
+// ===== LINKED DATA HELPERS (sudah ada di customDropdown.js tapi kita reuse) =====
+function getLinkedData() {
   try {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(n);
+    const raw = localStorage.getItem("linkedData");
+    const d = raw ? JSON.parse(raw) : {};
+    return {
+      supplier: d.supplier || [],
+      barang: d.barang || [],
+      kategori: d.kategori || [],
+      merk: d.merk || [],
+      lokasi: d.lokasi || [],
+      penerima: d.penerima || [],
+    };
   } catch {
-    return `Rp ${n.toLocaleString("id-ID")}`;
+    return {
+      supplier: [],
+      barang: [],
+      kategori: [],
+      merk: [],
+      lokasi: [],
+      penerima: [],
+    };
   }
 }
 
-// ===== MODAL =====
-openModalBtn.addEventListener("click", () => {
+// ===== DATE FILTER LOGIC =====
+function getDateRange(filter) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (filter) {
+    case "today":
+      return { from: today, to: new Date() };
+    case "7d":
+      return { from: new Date(today - 6 * 864e5), to: new Date() };
+    case "thismonth":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth(), 1),
+        to: new Date(),
+      };
+    case "30d":
+      return { from: new Date(today - 29 * 864e5), to: new Date() };
+    case "lastmonth": {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { from: start, to: end };
+    }
+    case "3m":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()),
+        to: new Date(),
+      };
+    case "6m":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()),
+        to: new Date(),
+      };
+    case "ytd":
+      return { from: new Date(now.getFullYear(), 0, 1), to: new Date() };
+    case "1y":
+      return {
+        from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()),
+        to: new Date(),
+      };
+    default: // all
+      return null;
+  }
+}
+
+function isInRange(tanggalStr, range) {
+  if (!range) return true;
+  const d = new Date(tanggalStr);
+  return d >= range.from && d <= range.to;
+}
+
+// ===== HITUNG TOTAL HARGA INVOICE =====
+// Harga diambil dari item.harga * item.stok pada invoice.items
+function hitungTotalHarga(invoiceId) {
+  const inv = allInvoices[invoiceId];
+  if (!inv || !inv.items) return 0;
+  return inv.items.reduce((sum, item) => {
+    const harga = parseFloat(item.harga) || 0;
+    const stok = parseInt(item.stok) || 0;
+    return sum + harga * stok;
+  }, 0);
+}
+
+// ===== RENDER TABLE =====
+function renderTable() {
+  const filter = filterWaktu.value;
+  const range = getDateRange(filter);
+  const list = Object.values(allInvoices);
+  const filtered = list.filter((inv) => isInRange(inv.tanggal, range));
+
+  // Summary
+  const totalTransaksi = filtered.length;
+  const totalBarang = filtered.reduce(
+    (s, inv) => s + (parseInt(inv.total) || 0),
+    0,
+  );
+  const totalHarga = filtered.reduce(
+    (s, inv) => s + hitungTotalHarga(inv.invoice),
+    0,
+  );
+
+  document.getElementById("sumTransaksi").textContent = totalTransaksi;
+  document.getElementById("sumBarang").textContent = totalBarang;
+  document.getElementById("sumHarga").textContent = formatRp(totalHarga);
+
+  // Table
+  tableBody.innerHTML = "";
+  if (filtered.length === 0) {
+    tableBody.innerHTML = `<tr class="empty-row"><td colspan="7">Tidak ada data untuk periode ini</td></tr>`;
+    return;
+  }
+
+  filtered.forEach((data, idx) => {
+    const tr = document.createElement("tr");
+    tr.dataset.invoiceId = data.invoice;
+    const totalH = hitungTotalHarga(data.invoice);
+    tr.innerHTML = `
+      <td>${idx + 1}</td>
+      <td><a class="invoice-link" href="invoice.html?id=${encodeURIComponent(data.invoice)}">${data.invoice}</a></td>
+      <td>${data.tanggal}</td>
+      <td>${data.supplier}</td>
+      <td class="col-total">${data.total || 0}</td>
+      <td class="col-harga">${formatRp(totalH)}</td>
+      <td><button class="btn-hapus"><i class="bx bx-trash"></i> Hapus</button></td>
+    `;
+    tr.querySelector(".btn-hapus").addEventListener("click", () => {
+      rowToDelete = tr;
+      confirmOverlay.classList.add("active");
+    });
+    tableBody.appendChild(tr);
+  });
+}
+
+// ===== FILTER CHANGE =====
+filterWaktu.addEventListener("change", renderTable);
+
+// ===== BUKA MODAL =====
+document.getElementById("openModalBtn").addEventListener("click", () => {
   ddSupplier.refresh();
+  ddSupplierScan.refresh();
+  document.getElementById("inputTanggal").value = new Date()
+    .toISOString()
+    .split("T")[0];
+  document.getElementById("inputTanggalScan").value = new Date()
+    .toISOString()
+    .split("T")[0];
+  errorMsg.textContent = "";
   modalOverlay.classList.add("active");
+  switchTab("manual");
 });
 
-// ===== SCAN INVOICE (barcode) =====
-// Popup pilihan kamera vs galeri (tanpa prompt berulang)
-const scanModeOverlay = document.createElement("div");
-scanModeOverlay.className = "modal-overlay";
-scanModeOverlay.style.zIndex = "500";
-scanModeOverlay.innerHTML = `
-  <div class="modal" style="width:360px;">
-    <h3>Pilih Scan</h3>
-    <div class="modal-actions">
-      <button type="button" class="btn-simpan" id="scanModeCamera">📷 Kamera</button>
-      <button type="button" class="btn-batal" id="scanModeGaleri">🖼️ Galeri</button>
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn-batal" id="scanModeCancel" style="flex:1;">Batal</button>
-    </div>
-  </div>
-`;
-document.body.appendChild(scanModeOverlay);
-
-function openScanMode() {
-  scanModeOverlay.classList.add("active");
-}
-function closeScanMode() {
-  scanModeOverlay.classList.remove("active");
-}
-
-scanModeOverlay.addEventListener("click", (e) => {
-  if (e.target === scanModeOverlay) closeScanMode();
-});
-
-scanModeOverlay
-  .querySelector("#scanModeCancel")
-  .addEventListener("click", closeScanMode);
-
-// Mode kamera: buka kamera HP/Laptop, jepret frame, deteksi barcode, isi otomatis invoice.
-scanModeOverlay
-  .querySelector("#scanModeCamera")
-  .addEventListener("click", () => {
-    closeScanMode();
-    startCameraScan();
-  });
-
-// ===== CAMERA SCAN UI =====
-let cameraStream = null;
-let cameraScanOverlay = null;
-let videoEl = null;
-let canvasEl = null;
-let scanBusy = false;
-
-function createCameraScanOverlay() {
-  if (cameraScanOverlay) return cameraScanOverlay;
-
-  cameraScanOverlay = document.createElement("div");
-  cameraScanOverlay.className = "modal-overlay";
-  cameraScanOverlay.style.zIndex = "600";
-  cameraScanOverlay.innerHTML = `
-    <div class="modal" style="width:420px;">
-      <h3 style="display:flex; gap:8px; align-items:center; justify-content:center;">
-        <i class="bx bx-qr"></i>
-        Scan Barcode Invoice
-      </h3>
-
-      <div style="position:relative; width:100%; border:1.5px solid #111; border-radius:10px; overflow:hidden; background:#000;">
-        <video id="cameraVideo" autoplay playsinline style="width:100%; display:block; transform: scaleX(-1);"></video>
-        <canvas id="cameraCanvas" style="display:none;"></canvas>
-        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">
-          <div style="width:70%; height:40%; border:3px dashed rgba(255,255,255,0.7); border-radius:12px;"></div>
-        </div>
-      </div>
-
-      <div class="modal-actions" style="margin-top:10px;">
-        <button type="button" class="btn-batal" id="cameraStopBtn">Stop</button>
-        <button type="button" class="btn-simpan" id="cameraSnapBtn">
-          <i class="bx bx-camera"></i> Ambil & Scan
-        </button>
-      </div>
-
-      <p class="error-msg" id="cameraError" style="min-height:18px;"></p>
-
-      <p style="font-size:11px; color:#888; text-align:center; margin-top:-4px;">
-        Arahkan kamera ke barcode. Tekan “Ambil & Scan”.
-      </p>
-    </div>
-  `;
-
-  document.body.appendChild(cameraScanOverlay);
-
-  videoEl = cameraScanOverlay.querySelector("#cameraVideo");
-  canvasEl = cameraScanOverlay.querySelector("#cameraCanvas");
-
-  cameraScanOverlay
-    .querySelector("#cameraStopBtn")
-    .addEventListener("click", stopCameraScan);
-
-  cameraScanOverlay
-    .querySelector("#cameraSnapBtn")
-    .addEventListener("click", () => {
-      if (scanBusy) return;
-      scanBusy = true;
-      const errEl = cameraScanOverlay.querySelector("#cameraError");
-      if (errEl) errEl.textContent = "";
-
-      scanFromFrame()
-        .then((val) => {
-          if (val) {
-            inputInvoice.value = String(val).trim();
-            inputInvoice.dispatchEvent(new Event("change", { bubbles: true }));
-            stopCameraScan();
-          } else {
-            if (errEl)
-              errEl.textContent =
-                "Barcode tidak terbaca. Coba lagi atau dekatkan ke barcode.";
-          }
-        })
-        .finally(() => {
-          scanBusy = false;
-        });
-    });
-
-  return cameraScanOverlay;
-}
-
-async function startCameraScan() {
-  createCameraScanOverlay();
-  cameraScanOverlay.classList.add("active");
-
-  const errEl = cameraScanOverlay.querySelector("#cameraError");
-  if (errEl) errEl.textContent = "";
-
-  try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      if (errEl) errEl.textContent = "Browser tidak mendukung akses kamera.";
-      return;
-    }
-
-    stopCameraScan();
-
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-      audio: false,
-    });
-
-    videoEl.srcObject = cameraStream;
-    await videoEl.play().catch(() => {});
-  } catch (e) {
-    if (errEl)
-      errEl.textContent =
-        "Gagal membuka kamera. Izinkan akses kamera lalu coba lagi.";
-    stopCameraScan();
-  }
-}
-
-function stopCameraScan() {
-  try {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((t) => t.stop());
-    }
-  } catch {}
-  cameraStream = null;
-
-  if (cameraScanOverlay) {
-    cameraScanOverlay.classList.remove("active");
-  }
-}
-
-async function scanFromFrame() {
-  if (!videoEl || !canvasEl) return null;
-  if (videoEl.readyState < 2) return null;
-
-  const w = videoEl.videoWidth;
-  const h = videoEl.videoHeight;
-  if (!w || !h) return null;
-
-  canvasEl.width = w;
-  canvasEl.height = h;
-
-  const ctx = canvasEl.getContext("2d");
-  ctx.drawImage(videoEl, 0, 0, w, h);
-
-  if (typeof window.detectBarcodeFromImageLike !== "function") return null;
-  return window.detectBarcodeFromImageLike(canvasEl);
-}
-
-// Mode galeri: dimatikan untuk fokus ke kamera
-scanModeOverlay
-  .querySelector("#scanModeGaleri")
-  .addEventListener("click", () => {
-    closeScanMode();
-    window.alert("Mode galeri dimatikan. Gunakan kamera.");
-  });
-
-scanInvoiceBtn?.addEventListener("click", () => {
-  openScanMode();
-});
-
-batalBtn.addEventListener("click", tutupModal);
+document.getElementById("modalCloseX").addEventListener("click", tutupModal);
+document.getElementById("batalBtn").addEventListener("click", tutupModal);
 modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) tutupModal();
 });
-simpanBtn.addEventListener("click", simpanData);
 
-// ===== KONFIRMASI HAPUS =====
-confirmYes.addEventListener("click", () => {
+// ===== TAB SWITCH =====
+window.switchTab = function (tab) {
+  currentTab = tab;
+  document
+    .getElementById("panelManual")
+    .classList.toggle("hidden", tab !== "manual");
+  document
+    .getElementById("panelScan")
+    .classList.toggle("hidden", tab !== "scan");
+  document
+    .getElementById("tabManual")
+    .classList.toggle("active", tab === "manual");
+  document.getElementById("tabScan").classList.toggle("active", tab === "scan");
+
+  if (tab !== "scan" && cameraStream) {
+    cameraStream.getTracks().forEach((t) => t.stop());
+    cameraStream = null;
+    document.getElementById("cameraStream").srcObject = null;
+    document.getElementById("scanPlaceholder").style.display = "flex";
+  }
+};
+
+// ===== KAMERA =====
+document.getElementById("btnOpenCam").addEventListener("click", async () => {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+    });
+    const video = document.getElementById("cameraStream");
+    video.srcObject = cameraStream;
+    document.getElementById("scanPlaceholder").style.display = "none";
+
+    // Simulasi scan (di production gunakan library QuaggaJS atau ZXing)
+    setTimeout(() => simulateScan(), 3000);
+  } catch (err) {
+    alert("Tidak bisa mengakses kamera: " + err.message);
+  }
+});
+
+// Pilih dari galeri
+document
+  .getElementById("galleryInput")
+  .addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      // Di sini normalnya kita decode barcode dari gambar
+      // Simulasi: ambil nama file sebagai "barcode" untuk demo
+      const fakeScan = Date.now().toString().slice(-6);
+      showScanResult(fakeScan);
+    };
+    reader.readAsDataURL(file);
+  });
+
+function simulateScan() {
+  // Simulasi hasil scan barcode — di production gunakan ZXing/Quagga
+  const fakeScan = "INV-" + Date.now().toString().slice(-6);
+  showScanResult(fakeScan);
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((t) => t.stop());
+    cameraStream = null;
+  }
+}
+
+function showScanResult(value) {
+  document.getElementById("scanResultVal").textContent = value;
+  document.getElementById("scanResult").style.display = "flex";
+  document.getElementById("cameraStream").srcObject = null;
+  document.getElementById("scanPlaceholder").style.display = "flex";
+}
+
+document.getElementById("btnUseScan").addEventListener("click", () => {
+  const val = document.getElementById("scanResultVal").textContent;
+  document.getElementById("inputInvoiceScan").value = val;
+  document.getElementById("scanResult").style.display = "none";
+});
+
+// ===== SIMPAN =====
+document.getElementById("simpanBtn").addEventListener("click", simpanData);
+
+function simpanData() {
+  let invoice, tanggal, supplier;
+
+  if (currentTab === "manual") {
+    invoice = document.getElementById("inputInvoice").value.trim();
+    tanggal = document.getElementById("inputTanggal").value;
+    supplier = ddSupplier.getValue();
+  } else {
+    invoice = document.getElementById("inputInvoiceScan").value.trim();
+    tanggal = document.getElementById("inputTanggalScan").value;
+    supplier = ddSupplierScan.getValue();
+  }
+
+  if (!invoice || !tanggal || !supplier) {
+    errorMsg.textContent = "Semua field harus diisi!";
+    return;
+  }
+
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
+  if (invoices[invoice]) {
+    errorMsg.textContent = "Invoice sudah ada!";
+    return;
+  }
+
+  // Auto-add supplier ke linkedData
+  autoAddToLinkedData("supplier", supplier);
+
+  invoices[invoice] = {
+    invoice,
+    tanggal,
+    supplier,
+    total: 0,
+    totalHarga: 0,
+    items: [],
+  };
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+
+  allInvoices = invoices;
+  tutupModal();
+  renderTable();
+}
+
+// ===== HAPUS =====
+document.getElementById("confirmYes").addEventListener("click", () => {
   if (rowToDelete) {
-    const invoiceId = rowToDelete.dataset.invoiceId;
-    rowToDelete.remove();
-    updateNomor();
-    const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-    delete invoices[invoiceId];
-    localStorage.setItem("invoices", JSON.stringify(invoices));
+    const id = rowToDelete.dataset.invoiceId;
+    delete allInvoices[id];
+    localStorage.setItem("invoices", JSON.stringify(allInvoices));
     rowToDelete = null;
+    renderTable();
   }
   confirmOverlay.classList.remove("active");
 });
-confirmNo.addEventListener("click", () => {
+document.getElementById("confirmNo").addEventListener("click", () => {
   rowToDelete = null;
   confirmOverlay.classList.remove("active");
 });
@@ -351,288 +372,28 @@ confirmOverlay.addEventListener("click", (e) => {
 // ===== TUTUP MODAL =====
 function tutupModal() {
   modalOverlay.classList.remove("active");
-  clearForm();
-}
-function clearForm() {
-  inputInvoice.value = "";
-  inputTanggal.value = "";
-  ddSupplier.clear();
   errorMsg.textContent = "";
-}
-
-// ===== SIMPAN =====
-function simpanData() {
-  const invoice = inputInvoice.value.trim();
-  const tanggal = inputTanggal.value;
-  const supplier = ddSupplier.getValue();
-
-  if (!invoice || !tanggal || !supplier) {
-    errorMsg.textContent = "Semua field harus diisi!";
-    return;
+  document.getElementById("inputInvoice").value = "";
+  document.getElementById("inputTanggal").value = "";
+  document.getElementById("inputInvoiceScan").value = "";
+  document.getElementById("inputTanggalScan").value = "";
+  ddSupplier.clear();
+  ddSupplierScan.clear();
+  document.getElementById("scanResult").style.display = "none";
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((t) => t.stop());
+    cameraStream = null;
   }
-
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  if (invoices[invoice]) {
-    errorMsg.textContent = "Invoice sudah ada!";
-    return;
-  }
-
-  autoAddToLinkedData("supplier", supplier);
-
-  const newData = { invoice, tanggal, supplier, total: 0, items: [] };
-  invoices[invoice] = newData;
-  localStorage.setItem("invoices", JSON.stringify(invoices));
-
-  const emptyRow = tableBody.querySelector(".empty-row");
-  if (emptyRow) emptyRow.remove();
-
-  rowCount++;
-  buatBaris(newData);
-  tutupModal();
+  document.getElementById("scanPlaceholder").style.display = "flex";
 }
 
-// ===== BUAT BARIS =====
-// Kolom: # | Invoice | Tanggal | Supplier | Jenis Barang | Total Stok Masuk | Actions
-function buatBaris(data) {
-  const stat = hitungStatInvoice(data);
-  const tr = document.createElement("tr");
-  tr.dataset.invoiceId = data.invoice;
-  tr.innerHTML = `
-    <td>${rowCount}</td>
-    <td><a class="invoice-link" href="invoice.html?id=${encodeURIComponent(data.invoice)}">${data.invoice}</a></td>
-    <td>${data.tanggal}</td>
-    <td>${data.supplier}</td>
-    <td class="col-jenis">${stat.jenis}</td>
-    <td class="col-stok">${stat.stok}</td>
-    <td class="col-harga">${formatRupiah(stat.totalHarga || 0)}</td>
-    <td><button class="btn-hapus"><i class="bx bx-trash"></i> Hapus</button></td>
-
-  `;
-  tr.querySelector(".btn-hapus").addEventListener("click", () => {
-    rowToDelete = tr;
-    confirmOverlay.classList.add("active");
-  });
-  tableBody.appendChild(tr);
-}
-
-// ===== UPDATE NOMOR =====
-function updateNomor() {
-  const rows = tableBody.querySelectorAll("tr:not(.empty-row)");
-  if (rows.length === 0) {
-    const emptyTr = document.createElement("tr");
-    emptyTr.className = "empty-row";
-    emptyTr.innerHTML =
-      '<td colspan="8">Belum ada data — klik "Input Barang" untuk menambah</td>';
-    tableBody.appendChild(emptyTr);
-    rowCount = 0;
-  } else {
-    rows.forEach((r, i) => {
-      r.cells[0].textContent = i + 1;
-    });
-    rowCount = rows.length;
-  }
-}
-
-// ===== SYNC: refresh kolom jenis & stok saat tab aktif lagi =====
-// (misal user baru balik dari halaman invoice setelah tambah barang)
-window.addEventListener("focus", () => {
-  syncStats();
-  syncWithFilter();
-});
-
-// ===== FILTER RENTANG WAKTU =====
-function getRangeForOption(opt) {
-  const now = new Date();
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-
-  const startOfDay = (d) => {
-    const x = new Date(d);
-    x.setHours(0, 0, 0, 0);
-    return x;
-  };
-
-  const startOfMonth = (d) => {
-    const x = new Date(d);
-    x.setDate(1);
-    x.setHours(0, 0, 0, 0);
-    return x;
-  };
-
-  const addDays = (d, days) => {
-    const x = new Date(d);
-    x.setDate(x.getDate() + days);
-    return x;
-  };
-
-  const subMonths = (d, months) => {
-    const x = new Date(d);
-    x.setMonth(x.getMonth() - months);
-    return x;
-  };
-
-  switch (opt) {
-    case "Hari ini":
-      return { start: startOfDay(now), end };
-    case "7 hari terakhir":
-      return { start: startOfDay(addDays(now, -6)), end };
-    case "30 hari terakhir":
-      return { start: startOfDay(addDays(now, -29)), end };
-    case "Bulan ini":
-      return { start: startOfMonth(now), end };
-    case "Bulan kemarin": {
-      const y = subMonths(now, 1);
-      return {
-        start: startOfMonth(y),
-        end: new Date(startOfMonth(now).getTime() - 1),
-      };
-    }
-    case "3 bulan terakhir":
-      return { start: startOfMonth(subMonths(now, 2)), end };
-    case "6 bulan terakhir":
-      return { start: startOfMonth(subMonths(now, 5)), end };
-    case "YTD": {
-      const start = new Date(now.getFullYear(), 0, 1);
-      start.setHours(0, 0, 0, 0);
-      return { start, end };
-    }
-    case "12 bulan / 1 tahun terakhir":
-      return { start: startOfDay(addDays(now, -364)), end };
-    case "All time":
-      return { start: new Date(0), end: end }; // end sudah dideklarasi di atas
-    default:
-      return { start: null, end: null };
-  }
-}
-
-function filterInvoicesByRange(option) {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const list = Object.values(invoices);
-
-  if (!option) return list;
-
-  const { start, end } = getRangeForOption(option);
-  if (!start || !end) return list;
-
-  return list.filter((inv) => {
-    const d = parseTanggal(inv.tanggal);
-    if (!d) return false;
-    return d >= start && d <= end;
-  });
-}
-
-function renderTable(list) {
-  // reset
-  tableBody.querySelectorAll("tr:not(.empty-row)").forEach((tr) => tr.remove());
-  const emptyRow = tableBody.querySelector(".empty-row");
-  if (emptyRow) emptyRow.remove();
-
-  rowCount = 0;
-
-  if (!list || list.length === 0) {
-    const emptyTr = document.createElement("tr");
-    emptyTr.className = "empty-row";
-    emptyTr.innerHTML =
-      '<td colspan="8">Tidak ada data pada rentang waktu ini</td>';
-    tableBody.appendChild(emptyTr);
-    return;
-  }
-
-  list.forEach((data) => {
-    rowCount++;
-    buatBaris(data);
-    // buatBaris sudah isi total harga
-  });
-}
-
-function initRangeDropdown() {
-  if (!cdRangeList) return;
-
-  // isi opsi static (tanpa linkedData)
-  cdRangeWrapper.classList.add("open");
-  cdRangeList.innerHTML = "";
-  cdRangeWrapper.classList.remove("open");
-
-  cdRangeList.innerHTML = "";
-
-  const renderOptions = (opts) => {
-    cdRangeList.innerHTML = "";
-    opts.forEach((opt) => {
-      const li = document.createElement("li");
-      li.textContent = opt;
-      li.addEventListener("click", () => {
-        inputRange.value = opt;
-        cdRangeWrapper.classList.remove("open");
-        applyFilter();
-      });
-      cdRangeList.appendChild(li);
-    });
-  };
-
-  renderOptions(RANGE_OPTIONS);
-
-  // simple manual open/close seperti customDropdown: kita pakai klik wrapper/input-row
-  const openClose = () => {
-    cdRangeWrapper.classList.toggle("open");
-  };
-  cdRangeWrapper
-    .querySelector(".cd-input-row")
-    .addEventListener("click", openClose);
-
-  document.addEventListener("click", (e) => {
-    if (!cdRangeWrapper.contains(e.target))
-      cdRangeWrapper.classList.remove("open");
-  });
-
-  cdRangeSearch?.addEventListener("input", () => {
-    const q = (cdRangeSearch.value || "").trim().toLowerCase();
-    const filtered = RANGE_OPTIONS.filter((x) => x.toLowerCase().includes(q));
-    renderOptions(filtered);
-  });
-}
-
-function applyFilter() {
-  const opt = inputRange.value.trim();
-  const list = filterInvoicesByRange(opt);
-  renderTable(list);
-}
-
-initRangeDropdown();
-// default: All time
-inputRange.value = inputRange.value || "All time";
-applyFilter();
-
-function syncStats() {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  tableBody.querySelectorAll("tr:not(.empty-row)").forEach((tr) => {
-    const id = tr.dataset.invoiceId;
-    if (!invoices[id]) return;
-    const stat = hitungStatInvoice(invoices[id]);
-    tr.querySelector(".col-jenis").textContent = stat.jenis;
-    tr.querySelector(".col-stok").textContent = stat.stok;
-    const hargaEl = tr.querySelector(".col-harga");
-    if (hargaEl) hargaEl.textContent = formatRupiah(stat.totalHarga || 0);
-  });
-}
-
-// Kalau ada filter aktif, re-render supaya baris yang tampil sesuai rentang waktu.
-function syncWithFilter() {
-  const opt = inputRange?.value?.trim?.() || "";
-  const list = filterInvoicesByRange(opt);
-  renderTable(list);
+// ===== SYNC TOTAL (dari invoice.js saat kembali) =====
+window.addEventListener("focus", syncTotals);
+function syncTotals() {
+  allInvoices = JSON.parse(localStorage.getItem("invoices") || "{}");
+  renderTable();
 }
 
 // ===== INIT =====
-function init() {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const list = Object.values(invoices);
-  if (list.length === 0) return;
-  const emptyRow = tableBody.querySelector(".empty-row");
-  if (emptyRow) emptyRow.remove();
-  list.forEach((data) => {
-    rowCount++;
-    buatBaris(data);
-  });
-}
-
-init();
+allInvoices = JSON.parse(localStorage.getItem("invoices") || "{}");
+renderTable();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,6 @@
         <i class="bxf bx-user-circle"></i>
     </div>
 
-    <!-- Info box diisi JS — sekarang 5 item: Invoice, Tanggal, Supplier, Jenis Barang, Total Stok Masuk -->
     <div class="invoice-info" id="invoiceInfo"></div>
 
     <div class="nav-controll">
@@ -37,18 +36,25 @@
                     <th>Nama Barang</th>
                     <th>Kategori</th>
                     <th>Merk</th>
-                    <th>Stok Masuk</th>
-                    <th>Stok Saat Ini</th>
+                    <th>Stok</th>
+                    <th>Harga Satuan</th>
+                    <th>Subtotal</th>
                     <th>Lokasi Inventori</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="itemTableBody">
                 <tr class="empty-row">
-                    <td colspan="8">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>
+                    <td colspan="9">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Total Harga Footer -->
+    <div class="total-harga-bar">
+        <span>Total Nilai Invoice:</span>
+        <strong id="totalHargaDisplay">Rp 0</strong>
     </div>
 
     <!-- Modal Tambah Barang -->
@@ -56,19 +62,15 @@
         <div class="modal">
             <h3>Tambah Barang</h3>
             <div class="modal-form">
-
                 <div class="cd-wrapper" id="cdNama">
                     <div class="cd-input-row">
                         <input type="text" class="cd-input" placeholder="Nama Barang" autocomplete="off" id="inputNama">
                         <i class="bx bx-chevron-down cd-arrow"></i>
                     </div>
                     <div class="cd-dropdown">
-                        <div class="cd-search-box">
-                            <i class="bx bx-search"></i>
-                            <input type="text" class="cd-search" placeholder="Cari nama barang...">
-                        </div>
+                        <div class="cd-search-box"><i class="bx bx-search"></i><input type="text" class="cd-search" placeholder="Cari nama barang..."></div>
                         <ul class="cd-list"></ul>
-                        <div class="cd-empty">Belum ada data. Ketik manual lalu simpan.</div>
+                        <div class="cd-empty">Belum ada data.</div>
                     </div>
                 </div>
 
@@ -78,12 +80,9 @@
                         <i class="bx bx-chevron-down cd-arrow"></i>
                     </div>
                     <div class="cd-dropdown">
-                        <div class="cd-search-box">
-                            <i class="bx bx-search"></i>
-                            <input type="text" class="cd-search" placeholder="Cari kategori...">
-                        </div>
+                        <div class="cd-search-box"><i class="bx bx-search"></i><input type="text" class="cd-search" placeholder="Cari kategori..."></div>
                         <ul class="cd-list"></ul>
-                        <div class="cd-empty">Belum ada data. Ketik manual lalu simpan.</div>
+                        <div class="cd-empty">Belum ada data.</div>
                     </div>
                 </div>
 
@@ -93,18 +92,16 @@
                         <i class="bx bx-chevron-down cd-arrow"></i>
                     </div>
                     <div class="cd-dropdown">
-                        <div class="cd-search-box">
-                            <i class="bx bx-search"></i>
-                            <input type="text" class="cd-search" placeholder="Cari merk...">
-                        </div>
+                        <div class="cd-search-box"><i class="bx bx-search"></i><input type="text" class="cd-search" placeholder="Cari merk..."></div>
                         <ul class="cd-list"></ul>
-                        <div class="cd-empty">Belum ada data. Ketik manual lalu simpan.</div>
+                        <div class="cd-empty">Belum ada data.</div>
                     </div>
                 </div>
 
-                <input type="number" id="inputStok" placeholder="Stok" min="0">
-                <input type="number" id="inputHarga" placeholder="Harga per unit" min="0" step="1">
-
+                <div class="input-row-2">
+                    <input type="number" id="inputStok"  placeholder="Stok"         min="0">
+                    <input type="number" id="inputHarga" placeholder="Harga Satuan"  min="0">
+                </div>
 
                 <div class="cd-wrapper" id="cdLokasi">
                     <div class="cd-input-row">
@@ -112,15 +109,16 @@
                         <i class="bx bx-chevron-down cd-arrow"></i>
                     </div>
                     <div class="cd-dropdown">
-                        <div class="cd-search-box">
-                            <i class="bx bx-search"></i>
-                            <input type="text" class="cd-search" placeholder="Cari lokasi...">
-                        </div>
+                        <div class="cd-search-box"><i class="bx bx-search"></i><input type="text" class="cd-search" placeholder="Cari lokasi..."></div>
                         <ul class="cd-list"></ul>
-                        <div class="cd-empty">Belum ada data. Ketik manual lalu simpan.</div>
+                        <div class="cd-empty">Belum ada data.</div>
                     </div>
                 </div>
 
+                <!-- Preview subtotal -->
+                <div class="subtotal-preview" id="subtotalPreview">
+                    Subtotal: <strong id="subtotalVal">Rp 0</strong>
+                </div>
             </div>
             <p class="error-msg" id="errorMsg"></p>
             <div class="modal-actions">

@@ -1,6 +1,5 @@
 const params = new URLSearchParams(window.location.search);
 const invoiceId = params.get("id");
-
 const backBtn = document.getElementById("backBtn");
 const navInvoiceId = document.getElementById("navInvoiceId");
 const invoiceInfo = document.getElementById("invoiceInfo");
@@ -15,11 +14,13 @@ const confirmNo = document.getElementById("confirmNo");
 const errorMsg = document.getElementById("errorMsg");
 const inputStok = document.getElementById("inputStok");
 const inputHarga = document.getElementById("inputHarga");
+const subtotalVal = document.getElementById("subtotalVal");
+const totalHargaDisplay = document.getElementById("totalHargaDisplay");
 
 let rowCount = 0;
 let rowToDelete = null;
 
-// ===== CUSTOM DROPDOWNS =====
+// ===== DROPDOWNS =====
 const ddNama = new CustomDropdown("cdNama", "barang", { icon: "bx-package" });
 const ddKategori = new CustomDropdown("cdKategori", "kategori", {
   icon: "bx-category",
@@ -31,82 +32,20 @@ const ddLokasi = new CustomDropdown("cdLokasi", "lokasi", {
   icon: "bx-map-pin",
 });
 
-// ===== HELPER: stok saat ini =====
-// Stok awal (di invoice) dikurangi semua pengeluaran di stockOuts yang cocok
-function hitungStokSaatIni(nama, kategori) {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const stockOuts = JSON.parse(localStorage.getItem("stockOuts") || "{}");
-
-  const inv = invoices[invoiceId];
-  const itemData = inv?.items?.find(
-    (i) => i.nama === nama && i.kategori === kategori,
-  );
-  const stokAwal = parseInt(itemData?.stok) || 0;
-
-  let totalKeluar = 0;
-  Object.values(stockOuts).forEach((so) => {
-    (so.items || []).forEach((outItem) => {
-      if (
-        outItem.invoiceAsal === invoiceId &&
-        outItem.nama === nama &&
-        outItem.kategori === kategori
-      ) {
-        totalKeluar += parseInt(outItem.jumlahKeluar) || 0;
-      }
-    });
-  });
-
-  return Math.max(0, stokAwal - totalKeluar);
+// ===== FORMAT RP =====
+function formatRp(num) {
+  if (!num || num === 0) return "Rp 0";
+  return "Rp " + parseInt(num).toLocaleString("id-ID");
 }
 
-// ===== HELPER: hitung jenis & total stok masuk invoice ini =====
-function hitungStatInvoice() {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const items = invoices[invoiceId]?.items || [];
-  const namaSet = new Set();
-  let totalStok = 0;
-  items.forEach((item) => {
-    if (item.nama) namaSet.add(item.nama.toLowerCase().trim());
-    totalStok += parseInt(item.stok) || 0;
-  });
-  return { jenis: namaSet.size, stok: totalStok };
+// ===== PREVIEW SUBTOTAL =====
+function updateSubtotalPreview() {
+  const stok = parseInt(inputStok.value) || 0;
+  const harga = parseFloat(inputHarga.value) || 0;
+  subtotalVal.textContent = formatRp(stok * harga);
 }
-
-// ===== RENDER INFO BOX (5 item) =====
-function renderInfo(data) {
-  const stat = hitungStatInvoice();
-  invoiceInfo.innerHTML = `
-    <div class="info-item">
-      <span class="info-label">Invoice</span>
-      <span class="info-value">${data.invoice}</span>
-    </div>
-    <div class="info-item">
-      <span class="info-label">Tanggal Masuk</span>
-      <span class="info-value">${data.tanggal}</span>
-    </div>
-    <div class="info-item">
-      <span class="info-label">Nama Supplier</span>
-      <span class="info-value">${data.supplier}</span>
-    </div>
-    <div class="info-item">
-      <span class="info-label">Jenis Barang</span>
-      <span class="info-value" id="infoJenis">${stat.jenis}</span>
-    </div>
-    <div class="info-item">
-      <span class="info-label">Total Stok Masuk</span>
-      <span class="info-value" id="infoTotal">${stat.stok}</span>
-    </div>
-  `;
-}
-
-// ===== UPDATE INFO BOX (angka jenis & stok saja) =====
-function updateInfoStats() {
-  const stat = hitungStatInvoice();
-  const jenisEl = document.getElementById("infoJenis");
-  const totalEl = document.getElementById("infoTotal");
-  if (jenisEl) jenisEl.textContent = stat.jenis;
-  if (totalEl) totalEl.textContent = stat.stok;
-}
+inputStok.addEventListener("input", updateSubtotalPreview);
+inputHarga.addEventListener("input", updateSubtotalPreview);
 
 // ===== INIT =====
 function init() {
@@ -114,11 +53,9 @@ function init() {
     invoiceInfo.innerHTML = '<p style="color:red">Invoice tidak ditemukan.</p>';
     return;
   }
-
   navInvoiceId.textContent = invoiceId;
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
   const data = invoices[invoiceId];
-
   if (data) {
     renderInfo(data);
     if (data.items && data.items.length > 0) {
@@ -127,25 +64,54 @@ function init() {
       data.items.forEach((item) => tambahBaris(item, false));
     }
   } else {
-    invoiceInfo.innerHTML = `
-      <div class="info-item">
-        <span class="info-label">Invoice</span>
-        <span class="info-value">${invoiceId}</span>
-      </div>`;
+    invoiceInfo.innerHTML = `<div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${invoiceId}</span></div>`;
   }
+  updateTotalHargaDisplay();
 }
 
-// ===== UPDATE TOTAL localStorage =====
+function renderInfo(data) {
+  invoiceInfo.innerHTML = `
+    <div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${data.invoice}</span></div>
+    <div class="info-item"><span class="info-label">Tanggal Masuk</span><span class="info-value">${data.tanggal}</span></div>
+    <div class="info-item"><span class="info-label">Nama Supplier</span><span class="info-value">${data.supplier}</span></div>
+    <div class="info-item"><span class="info-label">Total Stok</span><span class="info-value" id="infoTotal">${data.total}</span></div>
+    <div class="info-item"><span class="info-label">Total Harga</span><span class="info-value" id="infoHarga" style="color:#1a6b2a">${formatRp(data.totalHarga || 0)}</span></div>
+  `;
+}
+
+// ===== UPDATE TOTAL STOK & HARGA =====
 function updateTotal() {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
   if (!invoices[invoiceId]) return;
-  // total: total stok masuk (dipakai fitur sebelumnya)
   const total = invoices[invoiceId].items.reduce(
-    (sum, item) => sum + (parseInt(item.stok) || 0),
+    (s, i) => s + (parseInt(i.stok) || 0),
+    0,
+  );
+  const totalH = invoices[invoiceId].items.reduce(
+    (s, i) => s + (parseFloat(i.harga) || 0) * (parseInt(i.stok) || 0),
     0,
   );
   invoices[invoiceId].total = total;
+  invoices[invoiceId].totalHarga = totalH;
   localStorage.setItem("invoices", JSON.stringify(invoices));
+  const infoTotal = document.getElementById("infoTotal");
+  const infoHarga = document.getElementById("infoHarga");
+  if (infoTotal) infoTotal.textContent = total;
+  if (infoHarga) infoHarga.textContent = formatRp(totalH);
+  updateTotalHargaDisplay();
+}
+
+function updateTotalHargaDisplay() {
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
+  const data = invoices[invoiceId];
+  if (!data) return;
+  const totalH = data.items
+    ? data.items.reduce(
+        (s, i) => s + (parseFloat(i.harga) || 0) * (parseInt(i.stok) || 0),
+        0,
+      )
+    : 0;
+  totalHargaDisplay.textContent = formatRp(totalH);
 }
 
 // ===== MODAL =====
@@ -154,6 +120,7 @@ openTambahBtn.addEventListener("click", () => {
   ddKategori.refresh();
   ddMerk.refresh();
   ddLokasi.refresh();
+  subtotalVal.textContent = "Rp 0";
   modalOverlay.classList.add("active");
 });
 batalBtn.addEventListener("click", tutupModal);
@@ -166,6 +133,7 @@ function tutupModal() {
   modalOverlay.classList.remove("active");
   clearForm();
 }
+
 function clearForm() {
   ddNama.clear();
   ddKategori.clear();
@@ -173,11 +141,10 @@ function clearForm() {
   ddLokasi.clear();
   inputStok.value = "";
   inputHarga.value = "";
-
+  subtotalVal.textContent = "Rp 0";
   errorMsg.textContent = "";
 }
 
-// ===== SIMPAN ITEM =====
 function simpanItem() {
   const nama = ddNama.getValue();
   const kategori = ddKategori.getValue();
@@ -186,8 +153,8 @@ function simpanItem() {
   const harga = inputHarga.value.trim();
   const lokasi = ddLokasi.getValue();
 
-  if (!nama || !kategori || !merk || !stok || !harga || !lokasi) {
-    errorMsg.textContent = "Semua field harus diisi!";
+  if (!nama || !kategori || !merk || !stok || !lokasi) {
+    errorMsg.textContent = "Semua field harus diisi! (Harga boleh 0)";
     return;
   }
 
@@ -196,43 +163,36 @@ function simpanItem() {
   autoAddToLinkedData("merk", merk);
   autoAddToLinkedData("lokasi", lokasi);
 
-  const item = { nama, kategori, merk, stok, harga, lokasi };
+  const item = { nama, kategori, merk, stok, harga: harga || "0", lokasi };
 
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  if (!invoices[invoiceId]) {
+  if (!invoices[invoiceId])
     invoices[invoiceId] = { invoice: invoiceId, items: [] };
-  }
   invoices[invoiceId].items.push(item);
   localStorage.setItem("invoices", JSON.stringify(invoices));
 
   updateTotal();
   tambahBaris(item, true);
-  updateInfoStats();
   tutupModal();
 }
 
 // ===== TAMBAH BARIS =====
-// Kolom: # | Nama | Kategori | Merk | Stok Masuk | Stok Saat Ini | Lokasi | Actions
 function tambahBaris(item, removeEmpty = true) {
   if (removeEmpty) {
     const emptyRow = itemTableBody.querySelector(".empty-row");
     if (emptyRow) emptyRow.remove();
   }
   rowCount++;
-
-  const stokMasuk = parseInt(item.stok) || 0;
-  const stokSaatIni = hitungStokSaatIni(item.nama, item.kategori);
-
+  const subtotal = (parseFloat(item.harga) || 0) * (parseInt(item.stok) || 0);
   const tr = document.createElement("tr");
-  tr.dataset.nama = item.nama;
-  tr.dataset.kategori = item.kategori;
   tr.innerHTML = `
     <td>${rowCount}</td>
     <td>${item.nama}</td>
     <td>${item.kategori}</td>
     <td>${item.merk}</td>
-    <td>${stokMasuk}</td>
-    <td class="col-stok-saat-ini">${renderStokBadge(stokSaatIni)}</td>
+    <td>${item.stok}</td>
+    <td>${formatRp(item.harga || 0)}</td>
+    <td style="font-weight:700;color:#1a6b2a">${formatRp(subtotal)}</td>
     <td>${item.lokasi}</td>
     <td><button class="btn-hapus"><i class="bx bx-trash"></i> Hapus</button></td>
   `;
@@ -243,14 +203,7 @@ function tambahBaris(item, removeEmpty = true) {
   itemTableBody.appendChild(tr);
 }
 
-// ===== RENDER BADGE STOK SAAT INI =====
-function renderStokBadge(stok) {
-  if (stok === 0) return `<span class="stok-badge stok-habis">${stok}</span>`;
-  if (stok <= 5) return `<span class="stok-badge stok-menipis">${stok}</span>`;
-  return `<span class="stok-badge stok-aman">${stok}</span>`;
-}
-
-// ===== KONFIRMASI HAPUS =====
+// ===== HAPUS =====
 confirmYes.addEventListener("click", () => {
   if (rowToDelete) {
     const rows = Array.from(
@@ -265,12 +218,10 @@ confirmYes.addEventListener("click", () => {
     }
     updateTotal();
     updateNomor();
-    updateInfoStats();
     rowToDelete = null;
   }
   confirmOverlay.classList.remove("active");
 });
-
 confirmNo.addEventListener("click", () => {
   rowToDelete = null;
   confirmOverlay.classList.remove("active");
@@ -282,14 +233,13 @@ confirmOverlay.addEventListener("click", (e) => {
   }
 });
 
-// ===== UPDATE NOMOR =====
 function updateNomor() {
   const rows = itemTableBody.querySelectorAll("tr:not(.empty-row)");
   if (rows.length === 0) {
     const emptyTr = document.createElement("tr");
     emptyTr.className = "empty-row";
     emptyTr.innerHTML =
-      '<td colspan="8">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>';
+      '<td colspan="9">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>';
     itemTableBody.appendChild(emptyTr);
     rowCount = 0;
   } else {
@@ -300,22 +250,6 @@ function updateNomor() {
   }
 }
 
-// ===== REFRESH STOK SAAT INI saat tab aktif lagi =====
-window.addEventListener("focus", refreshStokSaatIni);
-
-function refreshStokSaatIni() {
-  itemTableBody.querySelectorAll("tr:not(.empty-row)").forEach((tr) => {
-    const nama = tr.dataset.nama;
-    const kategori = tr.dataset.kategori;
-    if (!nama || !kategori) return;
-    const stokSaatIni = hitungStokSaatIni(nama, kategori);
-    const cell = tr.querySelector(".col-stok-saat-ini");
-    if (cell) cell.innerHTML = renderStokBadge(stokSaatIni);
-  });
-  updateInfoStats();
-}
-
-// ===== BACK =====
 backBtn.addEventListener("click", () => {
   window.location.href = "inputBarang.html";
 });

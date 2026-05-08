@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,15 +7,12 @@
     <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/animations.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Input Barang | Invenz</title>
 </head>
 <body>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>INVENZ</span>
@@ -51,23 +48,44 @@
         <i class="bxf bx-user-circle"></i>
     </div>
 
+    <!-- Nav Control -->
     <div class="nav-controll">
-        <p>* klik invoice untuk menambah barang</p>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <div class="cd-wrapper" id="cdRange">
-                <div class="cd-input-row">
-                    <input type="text" class="cd-input" placeholder="Rentang waktu" autocomplete="off" id="inputRange">
-                    <i class="bx bx-chevron-down cd-arrow"></i>
-                </div>
-                <div class="cd-dropdown">
-                    <div class="cd-search-box">
-                        <i class="bx bx-search"></i>
-                        <input type="text" class="cd-search" placeholder="Cari...">
-                    </div>
-                    <ul class="cd-list"></ul>
-                </div>
-            </div>
-            <div class="inputbarang-btn" id="openModalBtn">Input Barang</div>
+        <div class="filter-wrap">
+            <i class="bx bx-filter-alt filter-icon"></i>
+            <select id="filterWaktu" class="filter-select">
+                <option value="all">All Time</option>
+                <option value="today">Hari Ini</option>
+                <option value="7d">7 Hari Terakhir</option>
+                <option value="thismonth">Bulan Ini</option>
+                <option value="30d">30 Hari Terakhir</option>
+                <option value="lastmonth">Bulan Kemarin</option>
+                <option value="3m">3 Bulan Terakhir</option>
+                <option value="6m">6 Bulan Terakhir</option>
+                <option value="ytd">YTD (Tahun Ini)</option>
+                <option value="1y">12 Bulan Terakhir</option>
+            </select>
+        </div>
+        <p class="hint-text">* klik invoice untuk menambah barang</p>
+        <button class="inputbarang-btn" id="openModalBtn">
+            <i class="bx bx-plus"></i> Input Barang
+        </button>
+    </div>
+
+    <!-- Summary Bar -->
+    <div class="summary-strip" id="summaryStrip">
+        <div class="summary-item">
+            <span class="summary-label">Total Transaksi</span>
+            <span class="summary-val" id="sumTransaksi">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Total Barang Masuk</span>
+            <span class="summary-val" id="sumBarang">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Total Nilai</span>
+            <span class="summary-val" id="sumHarga">Rp 0</span>
         </div>
     </div>
 
@@ -78,10 +96,9 @@
                     <th>#</th>
                     <th>Invoice</th>
                     <th>Tanggal Masuk</th>
-                    <th>Nama Supplier</th>
-                    <th>Jenis Barang</th>
-                    <th>Total Stok Masuk</th>
-                    <th>Total Harga Transaksi</th>
+                    <th>Supplier</th>
+                    <th>Total Barang</th>
+                    <th>Total Harga</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -93,37 +110,118 @@
         </table>
     </div>
 
-<!-- Modal Input Barang -->
+    <!-- ===== MODAL INPUT BARANG ===== -->
     <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <h3>Input Barang</h3>
-            <div class="modal-form">
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="text" id="inputInvoice" placeholder="Invoice" autocomplete="off" style="flex:1;">
-                    <button type="button" class="btn-scan" id="scanInvoiceBtn" title="Scan barcode invoice">
-                        <i class="bx bx-scan"></i>
-                    </button>
-                </div>
-                <input type="date" id="inputTanggal">
-                <div class="cd-wrapper" id="cdSupplier">
-                    <div class="cd-input-row">
-                        <input type="text" class="cd-input" placeholder="Nama Supplier" autocomplete="off" id="inputSupplier">
-                        <i class="bx bx-chevron-down cd-arrow"></i>
+        <div class="modal modal-input">
+            <div class="modal-top-bar">
+                <h3><i class="bx bx-package"></i> Input Barang Masuk</h3>
+                <button class="modal-close-x" id="modalCloseX"><i class="bx bx-x"></i></button>
+            </div>
+
+            <!-- Scan / Manual toggle -->
+            <div class="scan-toggle">
+                <button class="scan-tab active" id="tabManual" onclick="switchTab('manual')">
+                    <i class="bx bx-edit"></i> Manual
+                </button>
+                <button class="scan-tab" id="tabScan" onclick="switchTab('scan')">
+                    <i class="bx bx-barcode-reader"></i> Scan Barcode
+                </button>
+            </div>
+
+            <!-- Manual input section -->
+            <div class="tab-panel" id="panelManual">
+                <div class="modal-form">
+                    <div class="form-row">
+                        <label>No. Invoice <span class="req">*</span></label>
+                        <input type="text" id="inputInvoice" placeholder="Contoh: INV-2024-001" autocomplete="off">
                     </div>
-                    <div class="cd-dropdown">
-                        <div class="cd-search-box">
-                            <i class="bx bx-search"></i>
-                            <input type="text" class="cd-search" placeholder="Cari supplier...">
+                    <div class="form-row">
+                        <label>Tanggal Masuk <span class="req">*</span></label>
+                        <input type="date" id="inputTanggal">
+                    </div>
+                    <div class="form-row">
+                        <label>Supplier <span class="req">*</span></label>
+                        <!-- Custom dropdown supplier -->
+                        <div class="cd-wrapper" id="cdSupplier">
+                            <div class="cd-input-row">
+                                <input class="cd-input" id="inputSupplier" type="text"
+                                       placeholder="Pilih atau ketik supplier" autocomplete="off">
+                                <i class="bx bx-chevron-down cd-arrow"></i>
+                            </div>
+                            <div class="cd-dropdown">
+                                <div class="cd-search-box">
+                                    <i class="bx bx-search"></i>
+                                    <input class="cd-search" type="text" placeholder="Cari supplier...">
+                                </div>
+                                <ul class="cd-list"></ul>
+                                <div class="cd-empty">Belum ada data supplier</div>
+                            </div>
                         </div>
-                        <ul class="cd-list"></ul>
-                        <div class="cd-empty">Belum ada data. Ketik manual lalu simpan.</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Scan section -->
+            <div class="tab-panel hidden" id="panelScan">
+                <div class="scan-area">
+                    <div class="scan-box" id="scanBox">
+                        <video id="cameraStream" autoplay playsinline></video>
+                        <div class="scan-frame">
+                            <div class="scan-line"></div>
+                        </div>
+                        <div class="scan-placeholder" id="scanPlaceholder">
+                            <i class="bx bx-barcode-reader"></i>
+                            <p>Kamera belum aktif</p>
+                        </div>
+                    </div>
+                    <div class="scan-actions">
+                        <button class="btn-cam" id="btnOpenCam">
+                            <i class="bx bx-camera"></i> Buka Kamera
+                        </button>
+                        <span class="scan-or">atau</span>
+                        <label class="btn-gallery" for="galleryInput">
+                            <i class="bx bx-image"></i> Pilih Gambar
+                        </label>
+                        <input type="file" id="galleryInput" accept="image/*" style="display:none">
+                    </div>
+                    <div class="scan-result" id="scanResult" style="display:none">
+                        <i class="bx bx-check-circle"></i>
+                        <div>
+                            <span class="scan-result-label">Hasil Scan:</span>
+                            <span class="scan-result-val" id="scanResultVal">—</span>
+                        </div>
+                        <button class="btn-use-scan" id="btnUseScan">Gunakan</button>
+                    </div>
+                    <!-- Manual input juga tersedia di tab scan -->
+                    <div class="scan-manual-fallback">
+                        <p class="scan-fallback-label">Atau input manual:</p>
+                        <input type="text" id="inputInvoiceScan" placeholder="No. Invoice" autocomplete="off">
+                        <input type="date" id="inputTanggalScan">
+                        <div class="cd-wrapper" id="cdSupplierScan">
+                            <div class="cd-input-row">
+                                <input class="cd-input" id="inputSupplierScan" type="text"
+                                       placeholder="Pilih atau ketik supplier" autocomplete="off">
+                                <i class="bx bx-chevron-down cd-arrow"></i>
+                            </div>
+                            <div class="cd-dropdown">
+                                <div class="cd-search-box">
+                                    <i class="bx bx-search"></i>
+                                    <input class="cd-search" type="text" placeholder="Cari supplier...">
+                                </div>
+                                <ul class="cd-list"></ul>
+                                <div class="cd-empty">Belum ada data supplier</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <p class="error-msg" id="errorMsg"></p>
             <div class="modal-actions">
                 <button class="btn-batal" id="batalBtn">Batal</button>
-                <button class="btn-simpan" id="simpanBtn">Simpan</button>
+                <button class="btn-simpan" id="simpanBtn">
+                    <i class="bx bx-save"></i> Simpan
+                </button>
             </div>
         </div>
     </div>
@@ -143,7 +241,6 @@
 
     <script src="js/auth.js"></script>
     <script src="js/customDropdown.js"></script>
-    <script src="js/scanBarcodeHelper.js"></script>
     <script src="js/inputBarang.js"></script>
 </body>
 </html>
