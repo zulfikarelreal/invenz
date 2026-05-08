@@ -120,29 +120,202 @@ openModalBtn.addEventListener("click", () => {
 });
 
 // ===== SCAN INVOICE (barcode) =====
-scanInvoiceBtn?.addEventListener("click", async () => {
-  // Fallback sederhana: Web API BarcodeDetector jika tersedia.
-  // Jika tidak tersedia, minta input manual (hasil scan diisi ke inputInvoice).
+// Popup pilihan kamera vs galeri (tanpa prompt berulang)
+const scanModeOverlay = document.createElement("div");
+scanModeOverlay.className = "modal-overlay";
+scanModeOverlay.style.zIndex = "500";
+scanModeOverlay.innerHTML = `
+  <div class="modal" style="width:360px;">
+    <h3>Pilih Scan</h3>
+    <div class="modal-actions">
+      <button type="button" class="btn-simpan" id="scanModeCamera">📷 Kamera</button>
+      <button type="button" class="btn-batal" id="scanModeGaleri">🖼️ Galeri</button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-batal" id="scanModeCancel" style="flex:1;">Batal</button>
+    </div>
+  </div>
+`;
+document.body.appendChild(scanModeOverlay);
+
+function openScanMode() {
+  scanModeOverlay.classList.add("active");
+}
+function closeScanMode() {
+  scanModeOverlay.classList.remove("active");
+}
+
+scanModeOverlay.addEventListener("click", (e) => {
+  if (e.target === scanModeOverlay) closeScanMode();
+});
+
+scanModeOverlay
+  .querySelector("#scanModeCancel")
+  .addEventListener("click", closeScanMode);
+
+// Mode kamera: buka kamera HP/Laptop, jepret frame, deteksi barcode, isi otomatis invoice.
+scanModeOverlay
+  .querySelector("#scanModeCamera")
+  .addEventListener("click", () => {
+    closeScanMode();
+    startCameraScan();
+  });
+
+// ===== CAMERA SCAN UI =====
+let cameraStream = null;
+let cameraScanOverlay = null;
+let videoEl = null;
+let canvasEl = null;
+let scanBusy = false;
+
+function createCameraScanOverlay() {
+  if (cameraScanOverlay) return cameraScanOverlay;
+
+  cameraScanOverlay = document.createElement("div");
+  cameraScanOverlay.className = "modal-overlay";
+  cameraScanOverlay.style.zIndex = "600";
+  cameraScanOverlay.innerHTML = `
+    <div class="modal" style="width:420px;">
+      <h3 style="display:flex; gap:8px; align-items:center; justify-content:center;">
+        <i class="bx bx-qr"></i>
+        Scan Barcode Invoice
+      </h3>
+
+      <div style="position:relative; width:100%; border:1.5px solid #111; border-radius:10px; overflow:hidden; background:#000;">
+        <video id="cameraVideo" autoplay playsinline style="width:100%; display:block; transform: scaleX(-1);"></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+          <div style="width:70%; height:40%; border:3px dashed rgba(255,255,255,0.7); border-radius:12px;"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:10px;">
+        <button type="button" class="btn-batal" id="cameraStopBtn">Stop</button>
+        <button type="button" class="btn-simpan" id="cameraSnapBtn">
+          <i class="bx bx-camera"></i> Ambil & Scan
+        </button>
+      </div>
+
+      <p class="error-msg" id="cameraError" style="min-height:18px;"></p>
+
+      <p style="font-size:11px; color:#888; text-align:center; margin-top:-4px;">
+        Arahkan kamera ke barcode. Tekan “Ambil & Scan”.
+      </p>
+    </div>
+  `;
+
+  document.body.appendChild(cameraScanOverlay);
+
+  videoEl = cameraScanOverlay.querySelector("#cameraVideo");
+  canvasEl = cameraScanOverlay.querySelector("#cameraCanvas");
+
+  cameraScanOverlay
+    .querySelector("#cameraStopBtn")
+    .addEventListener("click", stopCameraScan);
+
+  cameraScanOverlay
+    .querySelector("#cameraSnapBtn")
+    .addEventListener("click", () => {
+      if (scanBusy) return;
+      scanBusy = true;
+      const errEl = cameraScanOverlay.querySelector("#cameraError");
+      if (errEl) errEl.textContent = "";
+
+      scanFromFrame()
+        .then((val) => {
+          if (val) {
+            inputInvoice.value = String(val).trim();
+            inputInvoice.dispatchEvent(new Event("change", { bubbles: true }));
+            stopCameraScan();
+          } else {
+            if (errEl)
+              errEl.textContent =
+                "Barcode tidak terbaca. Coba lagi atau dekatkan ke barcode.";
+          }
+        })
+        .finally(() => {
+          scanBusy = false;
+        });
+    });
+
+  return cameraScanOverlay;
+}
+
+async function startCameraScan() {
+  createCameraScanOverlay();
+  cameraScanOverlay.classList.add("active");
+
+  const errEl = cameraScanOverlay.querySelector("#cameraError");
+  if (errEl) errEl.textContent = "";
+
   try {
-    const BarcodeDetectorCtor = window.BarcodeDetector;
-    if (!BarcodeDetectorCtor) {
-      const hasil = window.prompt(
-        "Masukkan hasil scan barcode invoice (fallback):",
-      );
-      if (hasil) inputInvoice.value = hasil.trim();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (errEl) errEl.textContent = "Browser tidak mendukung akses kamera.";
       return;
     }
 
-    // UI scan kamera sederhana tidak disediakan di desain saat ini.
-    // Untuk project browser-only ini: gunakan prompt sebagai placeholder.
-    const hasil = window.prompt(
-      "Scan barcode invoice (BarcodeDetector tidak disertakan UI kamera). Isi hasil di sini:",
-    );
-    if (hasil) inputInvoice.value = hasil.trim();
+    stopCameraScan();
+
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    });
+
+    videoEl.srcObject = cameraStream;
+    await videoEl.play().catch(() => {});
   } catch (e) {
-    const hasil = window.prompt("Masukkan hasil scan barcode invoice:");
-    if (hasil) inputInvoice.value = hasil.trim();
+    if (errEl)
+      errEl.textContent =
+        "Gagal membuka kamera. Izinkan akses kamera lalu coba lagi.";
+    stopCameraScan();
   }
+}
+
+function stopCameraScan() {
+  try {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop());
+    }
+  } catch {}
+  cameraStream = null;
+
+  if (cameraScanOverlay) {
+    cameraScanOverlay.classList.remove("active");
+  }
+}
+
+async function scanFromFrame() {
+  if (!videoEl || !canvasEl) return null;
+  if (videoEl.readyState < 2) return null;
+
+  const w = videoEl.videoWidth;
+  const h = videoEl.videoHeight;
+  if (!w || !h) return null;
+
+  canvasEl.width = w;
+  canvasEl.height = h;
+
+  const ctx = canvasEl.getContext("2d");
+  ctx.drawImage(videoEl, 0, 0, w, h);
+
+  if (typeof window.detectBarcodeFromImageLike !== "function") return null;
+  return window.detectBarcodeFromImageLike(canvasEl);
+}
+
+// Mode galeri: dimatikan untuk fokus ke kamera
+scanModeOverlay
+  .querySelector("#scanModeGaleri")
+  .addEventListener("click", () => {
+    closeScanMode();
+    window.alert("Mode galeri dimatikan. Gunakan kamera.");
+  });
+
+scanInvoiceBtn?.addEventListener("click", () => {
+  openScanMode();
 });
 
 batalBtn.addEventListener("click", tutupModal);
@@ -428,7 +601,6 @@ initRangeDropdown();
 // default: All time
 inputRange.value = inputRange.value || "All time";
 applyFilter();
-
 
 function syncStats() {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
