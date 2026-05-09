@@ -7,14 +7,13 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- JsBarcode untuk generate barcode SKU -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <title>Linked Data | Invenz</title>
 </head>
 <body>
-    
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>INVENZ</span>
@@ -41,7 +40,6 @@
         </div>
     </div>
 
-    <!-- Navbar -->
     <div class="navbar">
         <i class="bx bx-menu hamburger" id="hamburger"></i>
         <div class="nav-title">
@@ -51,186 +49,108 @@
         <i class="bxf bx-user-circle"></i>
     </div>
 
-    <!-- Main Content -->
     <div class="main">
-        
-        <!-- Tabs -->
+
         <div class="tabs">
-            <button class="tab-btn active" data-tab="kategori">
-                <i class="bx bx-categories"></i> Kategori
-            </button>
-            <button class="tab-btn" data-tab="merk">
-                <i class="bx bx-price-tag"></i> Merk
-            </button>
-            <button class="tab-btn" data-tab="supplier">
-                <i class="bx bx-store"></i> Supplier
-            </button>
-            <button class="tab-btn" data-tab="barang">
-                <i class="bx bx-package"></i> Barang
-            </button>
-            <button class="tab-btn" data-tab="lokasi">
-                <i class="bx bx-map"></i> Lokasi Inventori
-            </button>
-            <button class="tab-btn" data-tab="penerima">
-                <i class="bx bx-user"></i> Penerima/Tujuan
-            </button>
+            <button class="tab-btn active" data-tab="kategori"><i class="bx bx-categories"></i> Kategori</button>
+            <button class="tab-btn" data-tab="merk"><i class="bx bx-price-tag"></i> Merk</button>
+            <button class="tab-btn" data-tab="supplier"><i class="bx bx-store"></i> Supplier</button>
+            <button class="tab-btn" data-tab="barang"><i class="bx bx-package"></i> Barang</button>
+            <button class="tab-btn" data-tab="lokasi"><i class="bx bx-map"></i> Lokasi Inventori</button>
+            <button class="tab-btn" data-tab="penerima"><i class="bx bx-user"></i> Penerima/Tujuan</button>
         </div>
 
-        <!-- Tab Content Container -->
         <div class="tab-content-container">
-            
-            <!-- ===== KATEGORI ===== -->
+
+            <!-- KATEGORI -->
             <div class="tab-content active" data-content="kategori">
                 <div class="section-header">
                     <h3>Data Kategori</h3>
-                    <button class="btn-add" id="btnAddKategori">
-                        <i class="bx bx-plus"></i> Tambah Kategori
-                    </button>
+                    <button class="btn-add" id="btnAddKategori"><i class="bx bx-plus"></i> Tambah Kategori</button>
                 </div>
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Kategori</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableKategori">
-                            <tr class="empty-row"><td colspan="3">Belum ada data kategori</td></tr>
-                        </tbody>
-                    </table>
+                    <table><thead><tr><th>#</th><th>Nama Kategori</th><th>Actions</th></tr></thead>
+                    <tbody id="tableKategori"><tr class="empty-row"><td colspan="3">Belum ada data kategori</td></tr></tbody></table>
                 </div>
             </div>
 
-            <!-- ===== MERK ===== -->
+            <!-- MERK -->
             <div class="tab-content" data-content="merk">
                 <div class="section-header">
                     <h3>Data Merk</h3>
-                    <button class="btn-add" id="btnAddMerk">
-                        <i class="bx bx-plus"></i> Tambah Merk
-                    </button>
+                    <button class="btn-add" id="btnAddMerk"><i class="bx bx-plus"></i> Tambah Merk</button>
                 </div>
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Merk</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableMerk">
-                            <tr class="empty-row"><td colspan="3">Belum ada data merk</td></tr>
-                        </tbody>
-                    </table>
+                    <table><thead><tr><th>#</th><th>Nama Merk</th><th>Actions</th></tr></thead>
+                    <tbody id="tableMerk"><tr class="empty-row"><td colspan="3">Belum ada data merk</td></tr></tbody></table>
                 </div>
             </div>
 
-            <!-- ===== SUPPLIER ===== -->
+            <!-- SUPPLIER -->
             <div class="tab-content" data-content="supplier">
                 <div class="section-header">
                     <h3>Data Supplier</h3>
-                    <button class="btn-add" id="btnAddSupplier">
-                        <i class="bx bx-plus"></i> Tambah Supplier
-                    </button>
+                    <button class="btn-add" id="btnAddSupplier"><i class="bx bx-plus"></i> Tambah Supplier</button>
                 </div>
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Supplier</th>
-                                <th>Kontak</th>
-                                <th>Alamat</th>
-                                <th>Keterangan</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableSupplier">
-                            <tr class="empty-row"><td colspan="6">Belum ada data supplier</td></tr>
-                        </tbody>
-                    </table>
+                    <table><thead><tr><th>#</th><th>Nama Supplier</th><th>Kontak</th><th>Alamat</th><th>Keterangan</th><th>Actions</th></tr></thead>
+                    <tbody id="tableSupplier"><tr class="empty-row"><td colspan="6">Belum ada data supplier</td></tr></tbody></table>
                 </div>
             </div>
 
-            <!-- ===== BARANG ===== -->
+            <!-- ===== BARANG (REVISI) ===== -->
             <div class="tab-content" data-content="barang">
                 <div class="section-header">
                     <h3>Data Barang</h3>
-                    <button class="btn-add" id="btnAddBarang">
-                        <i class="bx bx-plus"></i> Tambah Barang
-                    </button>
+                    <button class="btn-add" id="btnAddBarang"><i class="bx bx-plus"></i> Tambah Barang</button>
                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>#</th>
+                                <th>Kode SKU</th>
                                 <th>Nama Barang</th>
+                                <th>Merk</th>
+                                <th>Kategori</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="tableBarang">
-                            <tr class="empty-row"><td colspan="3">Belum ada data barang</td></tr>
+                            <tr class="empty-row"><td colspan="6">Belum ada data barang</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- ===== LOKASI ===== -->
+            <!-- LOKASI -->
             <div class="tab-content" data-content="lokasi">
                 <div class="section-header">
                     <h3>Data Lokasi Inventori</h3>
-                    <button class="btn-add" id="btnAddLokasi">
-                        <i class="bx bx-plus"></i> Tambah Lokasi
-                    </button>
+                    <button class="btn-add" id="btnAddLokasi"><i class="bx bx-plus"></i> Tambah Lokasi</button>
                 </div>
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Lokasi Inventori</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableLokasi">
-                            <tr class="empty-row"><td colspan="3">Belum ada data lokasi</td></tr>
-                        </tbody>
-                    </table>
+                    <table><thead><tr><th>#</th><th>Nama Lokasi Inventori</th><th>Actions</th></tr></thead>
+                    <tbody id="tableLokasi"><tr class="empty-row"><td colspan="3">Belum ada data lokasi</td></tr></tbody></table>
                 </div>
             </div>
 
-            <!-- ===== PENERIMA ===== -->
+            <!-- PENERIMA -->
             <div class="tab-content" data-content="penerima">
                 <div class="section-header">
                     <h3>Data Penerima/Tujuan</h3>
-                    <button class="btn-add" id="btnAddPenerima">
-                        <i class="bx bx-plus"></i> Tambah Penerima
-                    </button>
+                    <button class="btn-add" id="btnAddPenerima"><i class="bx bx-plus"></i> Tambah Penerima</button>
                 </div>
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Penerima/Tujuan</th>
-                                <th>Keterangan</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablePenerima">
-                            <tr class="empty-row"><td colspan="4">Belum ada data penerima</td></tr>
-                        </tbody>
-                    </table>
+                    <table><thead><tr><th>#</th><th>Nama Penerima/Tujuan</th><th>Keterangan</th><th>Actions</th></tr></thead>
+                    <tbody id="tablePenerima"><tr class="empty-row"><td colspan="4">Belum ada data penerima</td></tr></tbody></table>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- Modal Universal -->
+    <!-- ===== MODAL UNIVERSAL (non-barang) ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <h3 id="modalTitle">Tambah Data</h3>
@@ -239,6 +159,114 @@
             <div class="modal-actions">
                 <button class="btn-batal" id="btnBatal">Batal</button>
                 <button class="btn-simpan" id="btnSimpan">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL BARANG (khusus, dengan SKU + scanner) ===== -->
+    <div class="modal-overlay" id="modalBarangOverlay">
+        <div class="modal modal-barang">
+            <div class="modal-top-bar">
+                <h3 id="modalBarangTitle"><i class="bx bx-package"></i> Tambah Barang</h3>
+                <button class="modal-close-x" id="btnCloseBarang"><i class="bx bx-x"></i></button>
+            </div>
+
+            <div class="modal-form">
+
+                <!-- SKU -->
+                <div class="form-row">
+                    <label>Kode SKU <span class="req">*</span></label>
+                    <div class="sku-row">
+                        <input type="text" id="fBarangSKU" placeholder="Ketik atau scan SKU" autocomplete="off">
+                        <button class="btn-scan-sku" id="btnScanBarangSKU" title="Scan Barcode SKU">
+                            <i class="bx bx-barcode-reader"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scanner panel -->
+                <div class="scanner-panel hidden" id="scannerBarangPanel">
+                    <div class="scan-box">
+                        <video id="cameraStreamBarang" autoplay playsinline></video>
+                        <div class="scan-frame"><div class="scan-line"></div></div>
+                        <div class="scan-placeholder" id="scanPlaceholderBarang">
+                            <i class="bx bx-barcode-reader"></i>
+                            <p>Kamera belum aktif</p>
+                        </div>
+                    </div>
+                    <div class="scan-actions">
+                        <button class="btn-cam" id="btnOpenCamBarang"><i class="bx bx-camera"></i> Kamera</button>
+                        <span class="scan-or">atau</span>
+                        <label class="btn-gallery" for="galleryBarang"><i class="bx bx-image"></i> Galeri</label>
+                        <input type="file" id="galleryBarang" accept="image/*" style="display:none">
+                        <button class="btn-close-scanner" id="btnCloseScannerBarang" title="Tutup"><i class="bx bx-x"></i></button>
+                    </div>
+                    <div class="scan-result hidden" id="scanResultBarang">
+                        <i class="bx bx-check-circle"></i>
+                        <div>
+                            <span class="scan-result-label">Hasil Scan:</span>
+                            <span class="scan-result-val" id="scanResultValBarang">—</span>
+                        </div>
+                        <button class="btn-use-scan" id="btnUseScanBarang">Gunakan</button>
+                    </div>
+                </div>
+
+                <!-- Nama Barang -->
+                <div class="form-row">
+                    <label>Nama Barang <span class="req">*</span></label>
+                    <input type="text" id="fBarangNama" placeholder="Contoh: RAM Kingston 16GB DDR4" autocomplete="off">
+                </div>
+
+                <!-- Merk & Kategori -->
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Merk <span class="req">*</span></label>
+                        <select id="fBarangMerk" class="form-select">
+                            <option value="">-- Pilih Merk --</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Kategori <span class="req">*</span></label>
+                        <select id="fBarangKategori" class="form-select">
+                            <option value="">-- Pilih Kategori --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Hint: merk/kategori belum ada -->
+                <p class="field-hint" id="hintMerkKategori" style="display:none">
+                    <i class="bx bx-info-circle"></i>
+                    Merk/Kategori belum ada? Tambahkan dulu di tab Merk/Kategori.
+                </p>
+
+            </div>
+
+            <p class="error-msg" id="errorMsgBarang"></p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="btnBatalBarang">Batal</button>
+                <button class="btn-simpan" id="btnSimpanBarang">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL BARCODE POPUP ===== -->
+    <div class="modal-overlay" id="barcodeOverlay">
+        <div class="modal modal-barcode">
+            <div class="modal-top-bar">
+                <h3><i class="bx bx-barcode"></i> Barcode SKU</h3>
+                <button class="modal-close-x" id="btnCloseBarcode"><i class="bx bx-x"></i></button>
+            </div>
+            <div class="barcode-info" id="barcodeInfo"></div>
+            <div class="barcode-canvas-wrap">
+                <svg id="barcodeCanvas"></svg>
+            </div>
+            <div class="barcode-actions">
+                <button class="btn-download-bc" id="btnDownloadBarcode">
+                    <i class="bx bx-download"></i> Download PNG
+                </button>
+                <button class="btn-print-bc" id="btnPrintBarcode">
+                    <i class="bx bx-printer"></i> Print
+                </button>
             </div>
         </div>
     </div>
@@ -255,6 +283,7 @@
             </div>
         </div>
     </div>
+
     <script src="js/auth.js"></script>
     <script src="js/linkedData.js"></script>
 </body>
