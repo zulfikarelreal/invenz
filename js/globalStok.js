@@ -69,8 +69,7 @@ function loadGlobalStok(){
     var nomor = 1;
 
     Object.values(invoices).forEach(function(inv){
-
-        // CEK ITEMS
+        
         if(!inv.items || inv.items.length === 0){
             return;
         }
@@ -112,6 +111,7 @@ function loadGlobalStok(){
     });
 
     // DATA KOSONG
+
     if(allRows.length === 0){
 
         tbody.innerHTML =
@@ -149,6 +149,8 @@ function renderRows(rows){
         if(r.expired !== '-'){
 
             var today = new Date();
+
+            today.setHours(0,0,0,0);
 
             var expDate = new Date(r.expired);
 
@@ -196,13 +198,11 @@ function renderRows(rows){
 
         '</td>' +
 
-        // SKU CLICKABLE
+        // SKU BUTTON
         '<td>' +
 
-        '<button class="sku-btn">' +
-
-        r.sku +
-
+        '<button class="sku-btn">' + 
+    r.sku +
         '</button>' +
 
         '</td>' +
@@ -254,21 +254,21 @@ function renderRows(rows){
 
         '</td>';
 
-        // ===== SKU BUTTON =====
+        // SKU BUTTON
 
         tr.querySelector('.sku-btn').onclick =
         function(){
 
-            showBarcode(r.nama, r.sku);
+            showBarcodePopup(r);
 
         };
 
-        // ===== BUTTON BARCODE =====
+        // BUTTON BARCODE
 
         tr.querySelector('.btn-barcode').onclick =
         function(){
 
-            showBarcode(r.nama, r.sku);
+            showBarcodePopup(r);
 
         };
 
@@ -287,6 +287,7 @@ document.getElementById('searchInput')
     var keyword = this.value.toLowerCase();
 
     // RESET
+
     if(keyword === ''){
 
         renderRows(allRows);
@@ -295,22 +296,41 @@ document.getElementById('searchInput')
     }
 
     // FILTER
+
     var filtered = allRows.filter(function(r){
 
         return (
 
             r.nama.toLowerCase().includes(keyword) ||
+
             r.kategori.toLowerCase().includes(keyword) ||
+
             r.merk.toLowerCase().includes(keyword) ||
+
             r.invoice.toLowerCase().includes(keyword) ||
+
             r.lokasi.toLowerCase().includes(keyword) ||
-            r.sku.toLowerCase().includes(keyword)
+
+            r.sku.toLowerCase().includes(keyword) ||
+
+            String(r.expired)
+            .toLowerCase()
+            .includes(keyword) ||
+
+            String(r.hpp)
+            .toLowerCase()
+            .includes(keyword) ||
+
+            String(r.jual)
+            .toLowerCase()
+            .includes(keyword)
 
         );
 
     });
 
     // HASIL KOSONG
+
     if(filtered.length === 0){
 
         document.getElementById('globalTableBody').innerHTML =
@@ -330,18 +350,27 @@ document.getElementById('searchInput')
 };
 
 
-// BARCODE
+// ===== BARCODE =====
 
 var barcodeOverlay =
 document.getElementById('barcodeOverlay');
 
-function showBarcode(nama, sku){
 
-    document.getElementById('bcNama').innerHTML = nama;
+// SHOW BARCODE POPUP
 
-    document.getElementById('bcSKU').innerHTML = sku;
+function showBarcodePopup(item){
 
-    JsBarcode('#barcodeCanvas', sku, {
+    // SET DATA
+
+    document.getElementById('bcNama').innerHTML =
+    item.nama;
+
+    document.getElementById('bcSKU').innerHTML =
+    item.sku;
+
+    // GENERATE BARCODE
+
+    JsBarcode('#barcodeCanvas', item.sku, {
 
         format : 'CODE128',
 
@@ -354,6 +383,8 @@ function showBarcode(nama, sku){
         displayValue : true
 
     });
+
+    // SHOW MODAL
 
     barcodeOverlay.classList.add('active');
 
@@ -370,6 +401,8 @@ function(){
 };
 
 
+// CLOSE IF CLICK OUTSIDE
+
 barcodeOverlay.onclick = function(e){
 
     if(e.target === barcodeOverlay){
@@ -381,7 +414,7 @@ barcodeOverlay.onclick = function(e){
 };
 
 
-// DOWNLOAD BARCODE
+// DOWNLOAD PNG
 
 document.getElementById('btnDownloadBarcode').onclick =
 function(){
@@ -389,7 +422,8 @@ function(){
     var svg =
     document.getElementById('barcodeCanvas');
 
-    var serializer = new XMLSerializer();
+    var serializer =
+    new XMLSerializer();
 
     var svgData =
     serializer.serializeToString(svg);
@@ -397,9 +431,11 @@ function(){
     var canvas =
     document.createElement('canvas');
 
-    var ctx = canvas.getContext('2d');
+    var ctx =
+    canvas.getContext('2d');
 
-    var img = new Image();
+    var img =
+    new Image();
 
     img.onload = function(){
 
@@ -418,7 +454,8 @@ function(){
 
         ctx.drawImage(img, 0, 0);
 
-        var a = document.createElement('a');
+        var a =
+        document.createElement('a');
 
         a.download = 'barcode.png';
 
@@ -442,10 +479,15 @@ document.getElementById('btnPrintBarcode').onclick =
 function(){
 
     var svg =
-    document.getElementById('barcodeCanvas').outerHTML;
+    document.getElementById('barcodeCanvas')
+    .outerHTML;
 
     var printWindow =
-    window.open('', '', 'width=600,height=400');
+    window.open(
+        '',
+        '',
+        'width=600,height=400'
+    );
 
     printWindow.document.write(
 
@@ -455,7 +497,12 @@ function(){
         '<title>Print Barcode</title>' +
         '</head>' +
 
-        '<body style="display:flex;justify-content:center;align-items:center;height:100vh;">' +
+        '<body style="' +
+        'display:flex;' +
+        'justify-content:center;' +
+        'align-items:center;' +
+        'height:100vh;' +
+        '">' +
 
         svg +
 
