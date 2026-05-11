@@ -7,6 +7,7 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <title>Global Stok | Invenz</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
 
@@ -122,17 +123,20 @@
                     <tr>
                         <th>#</th>
                         <th>Invoice</th>
-                        <th>Tanggal Masuk</th>
-                        <th>Kategori</th>
+                        <th>SKU</th>
                         <th>Nama Barang</th>
-                        <th>Stok</th>
                         <th>Merk</th>
+                        <th>Kategori</th>
+                        <th>Expired Date</th>
+                        <th>Qty/Stok</th>
+                        <th>Harga HPP</th>
+                        <th>Harga Jual</th>
                         <th>Lokasi Inventori</th>
                     </tr>
                 </thead>
                 <tbody id="globalTableBody">
                     <tr class="empty-row">
-                        <td colspan="8">Belum ada data — tambahkan barang melalui Input Barang</td>
+                        <td colspan="11">Belum ada data — tambahkan barang melalui Input Barang</td>
                     </tr>
                 </tbody>
             </table>
@@ -191,7 +195,7 @@
             });
 
             if (allRows.length === 0) {
-                tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Belum ada data — tambahkan barang melalui Input Barang</td></tr>';
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Belum ada data — tambahkan barang melalui Input Barang</td></tr>';
                 return;
             }
 
@@ -230,7 +234,7 @@
             );
             if (filtered.length === 0) {
                 document.getElementById('globalTableBody').innerHTML =
-                    '<tr class="empty-row"><td colspan="8">Tidak ada data yang cocok</td></tr>';
+                    '<tr class="empty-row"><td colspan="11">Tidak ada data yang cocok</td></tr>';
             } else {
                 renderRows(filtered);
             }
@@ -240,5 +244,6 @@
         // ========== END POINT 5 ==========
     </script>
     <script src="js/auth.js"></script>
+    <script src="js/globalStok.js"></script>
 </body>
 </html>
