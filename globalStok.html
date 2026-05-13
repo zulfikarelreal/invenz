@@ -1,128 +1,77 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- FONT -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- BOXICONS -->
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-
-    <!-- CSS -->
     <link rel="stylesheet" href="css/globalStok.css">
-
-    <!-- JS BARCODE -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-
     <title>Global Stok | Invenz</title>
 </head>
 <body>
 
-    <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-
         <div class="sidebar-header">
             <span>INVENZ</span>
             <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
         </div>
-
         <div class="sidebar-user">
             <div class="sidebar-avatar" id="sidebarAvatar">A</div>
-
             <div>
                 <div class="sidebar-username" id="sidebarUsername">Admin</div>
                 <div class="sidebar-role">Operator Inventori</div>
             </div>
         </div>
-
         <ul class="sidebar-menu">
-            <li>
-                <a href="dashboard.html">
-                    <i class="bx bx-home"></i>
-                    Dashboard
-                </a>
-            </li>
-
-            <li>
-                <a href="inputBarang.html">
-                    <i class="bx bx-package"></i>
-                    Input Barang
-                </a>
-            </li>
-
-            <li>
-                <a href="globalStok.html" class="active">
-                    <i class="bx bx-list-ul-square"></i>
-                    Global Stok
-                </a>
-            </li>
-
-            <li>
-                <a href="stockOut.html">
-                    <i class="bx bx-truck"></i>
-                    Stock Out
-                </a>
-            </li>
-
-            <li>
-                <a href="linkedData.html">
-                    <i class="bx bx-network-chart"></i>
-                    Linked Data
-                </a>
-            </li>
+            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+            <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
+            <li><a href="globalStok.html" class="active"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
         </ul>
-
         <div class="sidebar-footer">
             <button class="btn-logout" id="logoutBtn">
-                <i class="bx bx-log-out"></i>
-                Logout
+                <i class="bx bx-log-out"></i> Logout
             </button>
         </div>
-
     </div>
 
-    <!-- Navbar -->
     <div class="navbar">
-
         <i class="bx bx-menu hamburger" id="hamburger"></i>
-
         <div class="nav-title">
             <i class="bx bx-list-ul-square"></i>
             <span>GLOBAL STOK</span>
         </div>
-
         <i class="bxf bx-user-circle"></i>
-
     </div>
 
-    <!-- Main -->
     <div class="main">
 
         <div class="nav-controll">
-
-            <p>* semua data barang dari seluruh invoice</p>
-
-            <input 
-                type="text"
-                class="search-box"
-                id="searchInput"
-                placeholder="🔍 Cari barang..."
-            >
-
+            <div class="filter-wrap">
+                <i class="bx bx-filter-alt filter-icon"></i>
+                <select id="filterWaktu" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="thismonth">Bulan Ini</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="lastmonth">Bulan Kemarin</option>
+                    <option value="3m">3 Bulan Terakhir</option>
+                    <option value="6m">6 Bulan Terakhir</option>
+                    <option value="ytd">YTD (Tahun Ini)</option>
+                    <option value="1y">12 Bulan Terakhir</option>
+                </select>
+            </div>
+            <input type="text" class="search-box" id="searchInput" placeholder="🔍 Cari barang...">
         </div>
 
-        <!-- TABLE -->
         <div class="container">
-
             <table>
-
                 <thead>
                     <tr>
                         <th>#</th>
@@ -139,81 +88,42 @@
                         <th>Barcode</th>
                     </tr>
                 </thead>
-
                 <tbody id="globalTableBody">
-
                     <tr class="empty-row">
-                        <td colspan="12">
-                            Belum ada data — tambahkan barang melalui Input Barang
-                        </td>
+                        <td colspan="12">Belum ada data — tambahkan barang melalui Input Barang</td>
                     </tr>
-
                 </tbody>
-
             </table>
-
         </div>
 
     </div>
 
-    <!-- ===== MODAL BARCODE ===== -->
+    <!-- MODAL BARCODE -->
     <div class="modal-overlay" id="barcodeOverlay">
-
         <div class="modal modal-barcode">
-
             <div class="modal-top-bar">
-
-                <h3>
-                    <i class="bx bx-barcode"></i>
-                    Barcode SKU
-                </h3>
-
-                <button class="modal-close-x" id="btnCloseBarcode">
-                    <i class="bx bx-x"></i>
-                </button>
-
+                <h3><i class="bx bx-barcode"></i> Barcode SKU</h3>
+                <button class="modal-close-x" id="btnCloseBarcode"><i class="bx bx-x"></i></button>
             </div>
-
             <div class="barcode-info">
-
-                <p>
-                    <strong>Nama Barang:</strong>
-                    <span id="bcNama">-</span>
-                </p>
-
-                <p>
-                    <strong>SKU:</strong>
-                    <span id="bcSKU">-</span>
-                </p>
-
+                <p><strong>Nama Barang:</strong> <span id="bcNama">-</span></p>
+                <p><strong>SKU:</strong> <span id="bcSKU">-</span></p>
             </div>
-
             <div class="barcode-canvas-wrap">
                 <svg id="barcodeCanvas"></svg>
             </div>
-
             <div class="barcode-actions">
-
                 <button class="btn-download-bc" id="btnDownloadBarcode">
-                    <i class="bx bx-download"></i>
-                    Download PNG
+                    <i class="bx bx-download"></i> Download PNG
                 </button>
-
                 <button class="btn-print-bc" id="btnPrintBarcode">
-                    <i class="bx bx-printer"></i>
-                    Print
+                    <i class="bx bx-printer"></i> Print
                 </button>
-
             </div>
-
         </div>
-
     </div>
 
-    <!-- JS -->
     <script src="js/auth.js"></script>
     <script src="js/globalStok.js"></script>
-
 </body>
 </html>
-```

@@ -1,689 +1,266 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:"Poppins",sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
 }
 
-body{
-    background-color:aliceblue;
-    min-height:100vh;
-    overflow-x:hidden;
+body {
+    background-color: aliceblue;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* ===== SIDEBAR ===== */
-
-.sidebar-overlay{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.4);
-    z-index:150;
-}
-
-.sidebar-overlay.active{
-    display:block;
-}
-
-.sidebar{
-    position:fixed;
-    top:0;
-    left:-240px;
-    width:240px;
-    height:100vh;
-    background:#fff;
-    border-right:2px solid #111;
-    box-shadow:6px 0 0 0 #111;
-    z-index:200;
-    display:flex;
-    flex-direction:column;
-    transition:left .3s cubic-bezier(.4,0,.2,1);
-}
-
-.sidebar.open{
-    left:0;
-}
-
-.sidebar-header{
-    background:aqua;
-    padding:14px 18px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    border-bottom:2px solid #111;
-    height:45px;
-}
-
-.sidebar-header span{
-    font-weight:800;
-    font-size:18px;
-}
-
-.sidebar-close{
-    font-size:24px;
-    cursor:pointer;
-}
-
-.sidebar-user{
-    padding:18px;
-    border-bottom:1px solid #eee;
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.sidebar-avatar{
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    background:rgb(16,44,168);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;
-    font-weight:700;
-    border:2px solid #111;
-}
-
-.sidebar-username{
-    font-weight:600;
-    font-size:14px;
-}
-
-.sidebar-role{
-    font-size:11px;
-    color:#888;
-}
-
-.sidebar-menu{
-    flex:1;
-    padding:10px 0;
-    list-style:none;
-}
-
-.sidebar-menu li a{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:11px 18px;
-    font-size:14px;
-    font-weight:500;
-    color:#111;
-    text-decoration:none;
-    transition:.15s;
-    border-left:3px solid transparent;
-}
-
-.sidebar-menu li a:hover,
-.sidebar-menu li a.active{
-    background:#e8f0ff;
-    border-left-color:rgb(16,44,168);
-    color:rgb(16,44,168);
-}
-
-.sidebar-menu li a i{
-    font-size:20px;
-}
-
-.sidebar-footer{
-    padding:14px 18px;
-    border-top:1px solid #eee;
-}
-
-.btn-logout{
-    width:100%;
-    padding:9px;
-    background:#ff4d4d;
-    color:white;
-    border:1px solid #111;
-    border-radius:8px;
-    box-shadow:3px 3px 0 0 #111;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-}
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 150; }
+.sidebar-overlay.active { display: block; }
+.sidebar { position: fixed; top: 0; left: -240px; width: 240px; height: 100vh; background: #fff; border-right: 2px solid #111; box-shadow: 6px 0 0 0 #111; z-index: 200; display: flex; flex-direction: column; transition: left .3s cubic-bezier(.4,0,.2,1); }
+.sidebar.open { left: 0; }
+.sidebar-header { background: aqua; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #111; height: 45px; }
+.sidebar-header span { font-weight: 800; font-size: 18px; }
+.sidebar-close { font-size: 24px; cursor: pointer; }
+.sidebar-user { padding: 18px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+.sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgb(16,44,168); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; border: 2px solid #111; }
+.sidebar-username { font-weight: 600; font-size: 14px; }
+.sidebar-role { font-size: 11px; color: #888; }
+.sidebar-menu { flex: 1; padding: 10px 0; list-style: none; }
+.sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 11px 18px; font-size: 14px; font-weight: 500; color: #111; text-decoration: none; transition: .15s; border-left: 3px solid transparent; }
+.sidebar-menu li a:hover, .sidebar-menu li a.active { background: #e8f0ff; border-left-color: rgb(16,44,168); color: rgb(16,44,168); }
+.sidebar-menu li a i { font-size: 20px; }
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid #eee; }
+.btn-logout { width: 100%; padding: 9px; background: #ff4d4d; color: white; border: 1px solid #111; border-radius: 8px; box-shadow: 3px 3px 0 0 #111; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
 /* ===== NAVBAR ===== */
-
-.navbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:5px 15px;
-    width:100%;
-    height:45px;
-    background-color:aqua;
-    position:fixed;
-    top:0;
-    z-index:100;
-    border-bottom:2px solid #111;
-}
-
-.nav-title{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-weight:700;
-    font-size:18px;
-}
-
-.navbar i{
-    font-size:26px;
-    cursor:pointer;
-}
+.navbar { display: flex; justify-content: space-between; align-items: center; padding: 5px 15px; width: 100%; height: 45px; background-color: aqua; position: fixed; top: 0; z-index: 100; border-bottom: 2px solid #111; }
+.nav-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; }
+.navbar i { font-size: 26px; cursor: pointer; }
 
 /* ===== MAIN ===== */
+.main { margin-top: 45px; padding: 20px 24px 40px; }
 
-.main{
-    margin-top:45px;
-    padding:20px 24px 40px;
+/* ===== NAV CONTROL ===== */
+.nav-controll {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.nav-controll{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:14px;
+/* ===== FILTER ===== */
+.filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.nav-controll p{
-    font-style:italic;
-    font-size:13px;
-    color:#555;
+.filter-icon {
+    font-size: 20px;
+    color: rgb(16,44,168);
 }
 
-.search-box{
-    padding:6px 12px;
-    border-radius:8px;
-    border:1px solid #aaa;
-    font-size:13px;
-    outline:none;
-    width:220px;
+.filter-select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #aaa;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    outline: none;
+    cursor: pointer;
+    background: white;
 }
 
-.search-box:focus{
-    border-color:rgb(16,44,168);
-    background:#f0f4ff;
+.filter-select:focus {
+    border-color: rgb(16,44,168);
+    background: #f0f4ff;
+}
+
+/* ===== SEARCH ===== */
+.search-box {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #aaa;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    outline: none;
+    width: 220px;
+}
+
+.search-box:focus {
+    border-color: rgb(16,44,168);
+    background: #f0f4ff;
 }
 
 /* ===== TABLE ===== */
-
-.container{
-    width:100%;
-    overflow-x:auto;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    background:white;
-    border-radius:10px;
-    overflow:hidden;
-    border:1px solid black;
-    box-shadow:3px 5px 0 0 black;
-}
-
-thead{
-    background:aqua;
-}
-
-th{
-    padding:10px 14px;
-    text-align:center;
-    font-size:13px;
-    font-weight:600;
-    border-bottom:2px solid black;
-}
-
-td{
-    padding:9px 14px;
-    text-align:center;
-    font-size:13px;
-    border-bottom:.5px solid #ddd;
-}
-
-.empty-row td{
-    color:#888;
-    font-style:italic;
-    font-size:12px;
-}
-
-tbody tr:nth-child(even):not(.empty-row){
-    background:#f0f4ff;
-}
-
-tbody tr:not(.empty-row):hover{
-    background:#dce8ff;
-}
+.container { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; border: 1px solid black; box-shadow: 3px 5px 0 0 black; }
+thead { background: aqua; }
+th { padding: 10px 14px; text-align: center; font-size: 13px; font-weight: 600; border-bottom: 2px solid black; white-space: nowrap; }
+td { padding: 9px 14px; text-align: center; font-size: 13px; border-bottom: .5px solid #ddd; }
+.empty-row td { color: #888; font-style: italic; font-size: 12px; }
+tbody tr:nth-child(even):not(.empty-row) { background: #f0f4ff; }
+tbody tr:not(.empty-row):hover { background: #dce8ff; }
 
 /* ===== BADGE ===== */
-
-.badge{
-    display:inline-block;
-    padding:2px 8px;
-    border-radius:20px;
-    font-size:11px;
-    font-weight:600;
-    border:1px solid #111;
-}
-
-.badge-blue{
-    background:#dce8ff;
-    color:rgb(16,44,168);
-}
-
-/* ===== BUTTON BARCODE ===== */
-
-.btn-barcode{
-    width:34px;
-    height:34px;
-    border-radius:8px;
-    border:1px solid #111;
-    background:#dce8ff;
-    color:rgb(16,44,168);
-    cursor:pointer;
-    box-shadow:2px 2px 0 #111;
-}
-
-.btn-barcode i{
-    font-size:18px;
-}
-
-/* ===== MODAL ===== */
-
-.modal-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:500;
-    padding:20px;
-}
-
-.modal-overlay.active{
-    display:flex;
-}
-
-.modal{
-    background:white;
-    border:2px solid #111;
-    border-radius:18px;
-    box-shadow:6px 6px 0 #111;
-    width:100%;
-    max-width:460px;
-    overflow:hidden;
-}
-
-.modal-top-bar{
-    background:aqua;
-    border-bottom:2px solid #111;
-    padding:12px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.modal-top-bar h3{
-    font-size:16px;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.modal-close-x{
-    background:transparent;
-    border:none;
-    font-size:24px;
-    cursor:pointer;
-}
-
-.barcode-info{
-    padding:18px 20px 8px;
-    font-size:13px;
-}
-
-.barcode-info p{
-    margin-bottom:6px;
-}
-
-.barcode-canvas-wrap{
-    padding:10px 20px 20px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-#barcodeCanvas{
-    width:100%;
-    max-width:320px;
-    background:white;
-}
-
-.barcode-actions{
-    display:flex;
-    gap:10px;
-    padding:0 20px 20px;
-}
-
-.barcode-actions button{
-    flex:1;
-    padding:10px;
-    border-radius:10px;
-    border:1px solid #111;
-    cursor:pointer;
-    font-weight:600;
-    box-shadow:3px 3px 0 #111;
-}
-
-.btn-download-bc{
-    background:#dce8ff;
-    color:rgb(16,44,168);
-}
-
-.btn-print-bc{
-    background:#fff4cc;
-    color:#8a5b00;
-}
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid #111; }
+.badge-blue { background: #dce8ff; color: rgb(16,44,168); }
 
 /* ===== INVOICE LINK ===== */
-
-.invoice-link{
-    text-decoration:none;
-    font-weight:600;
-    color:rgb(16,44,168);
-}
-
-.invoice-link:hover{
-    text-decoration:underline;
-}
-
+.invoice-link { text-decoration: none; color: rgb(16,44,168); font-weight: 600; }
+.invoice-link:hover { text-decoration: underline; }
 
 /* ===== SKU BUTTON ===== */
-
-.sku-btn{
-    padding:6px 10px;
-    border:none;
-    border-radius:8px;
-    background:#e8f0ff;
-    color:rgb(16,44,168);
-    font-weight:600;
-    cursor:pointer;
-    border:1px solid #111;
-    box-shadow:2px 2px 0 #111;
-    transition:.15s;
+.sku-btn {
+    padding: 5px 10px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    background: #dce8ff;
+    color: rgb(16,44,168);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #111;
+    transition: .15s;
+    font-family: "Poppins", sans-serif;
 }
 
-.sku-btn:hover{
-    transform:translateY(2px);
-    box-shadow:1px 1px 0 #111;
+.sku-btn:hover {
+    transform: translateY(-2px);
+    background: #c9dcff;
 }
 
+/* ===== BARCODE BUTTON ===== */
+.btn-barcode {
+    padding: 5px 10px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    background: #e8f0ff;
+    color: rgb(16,44,168);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #111;
+    transition: .15s;
+    font-family: "Poppins", sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-barcode:hover {
+    transform: translateY(-2px);
+}
 
 /* ===== EXPIRED BADGE ===== */
-
-.expired-badge{
-    padding:4px 10px;
-    border-radius:20px;
-    font-size:11px;
-    font-weight:700;
-    border:1px solid #111;
+.expired-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #111;
+    min-width: 90px;
 }
 
+.expired-green { background: #d4ffdc; color: #137333; }
+.expired-yellow { background: #fff4cc; color: #8a5b00; }
+.expired-red { background: #ffd6d6; color: #b42318; }
 
-/* HIJAU */
-
-.expired-green{
-    background:#d4ffd4;
-    color:#008a00;
+/* ===== MODAL OVERLAY ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    padding: 20px;
 }
 
+.modal-overlay.active { display: flex; }
 
-/* KUNING */
-
-.expired-yellow{
-    background:#fff4cc;
-    color:#9a6b00;
+/* ===== MODAL BOX ===== */
+.modal {
+    width: 100%;
+    max-width: 500px;
+    background: white;
+    border-radius: 20px;
+    border: 2px solid #111;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 #111;
 }
 
-
-/* MERAH */
-
-.expired-red{
-    background:#ffd6d6;
-    color:#cc0000;
+/* ===== MODAL HEADER ===== */
+.modal-top-bar {
+    background: aqua;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #111;
 }
 
-/* =========================================
-   EXPIRED BADGE
-========================================= */
-
-.expired-badge{
-    display:inline-block;
-    padding:5px 10px;
-    border-radius:20px;
-    font-size:12px;
-    font-weight:600;
-    border:1px solid #111;
-    min-width:90px;
+.modal-top-bar h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
 }
 
-.expired-green{
-    background:#d4ffdc;
-    color:#137333;
+.modal-close-x {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #111;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.expired-yellow{
-    background:#fff4cc;
-    color:#8a5b00;
+/* ===== BARCODE INFO ===== */
+.barcode-info { padding: 18px 20px 10px; }
+.barcode-info p { margin-bottom: 8px; font-size: 14px; }
+
+/* ===== BARCODE SVG AREA ===== */
+.barcode-canvas-wrap {
+    padding: 10px 20px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.expired-red{
-    background:#ffd6d6;
-    color:#b42318;
+#barcodeCanvas { max-width: 100%; background: white; }
+
+/* ===== ACTION BUTTONS ===== */
+.barcode-actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 20px 20px;
 }
 
-
-/* =========================================
-   SKU BUTTON
-========================================= */
-
-.sku-btn{
-    padding:6px 10px;
-    border:none;
-    border-radius:8px;
-    background:#dce8ff;
-    color:#102ca8;
-    font-size:12px;
-    font-weight:600;
-    cursor:pointer;
-    transition:.2s;
-    border:1px solid #111;
-    box-shadow:2px 2px 0 #111;
+.barcode-actions button {
+    flex: 1;
+    padding: 11px;
+    border: 1px solid #111;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #111;
+    transition: .2s;
+    font-family: "Poppins", sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
-.sku-btn:hover{
-    transform:translateY(-2px);
-    background:#c9dcff;
-}
-
-
-/* =========================================
-   INVOICE LINK
-========================================= */
-
-.invoice-link{
-    text-decoration:none;
-    color:#102ca8;
-    font-weight:600;
-}
-
-.invoice-link:hover{
-    text-decoration:underline;
-}
-
-
-/* =========================================
-   BUTTON BARCODE
-========================================= */
-
-.btn-barcode{
-    padding:7px 12px;
-    border:none;
-    border-radius:8px;
-    background:#dce8ff;
-    color:#102ca8;
-    font-size:12px;
-    font-weight:600;
-    cursor:pointer;
-    border:1px solid #111;
-    box-shadow:2px 2px 0 #111;
-    transition:.2s;
-}
-
-.btn-barcode:hover{
-    transform:translateY(-2px);
-}
-
-
-/* =========================================
-   MODAL OVERLAY
-========================================= */
-
-.modal-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:999;
-    padding:20px;
-}
-
-.modal-overlay.active{
-    display:flex;
-}
-
-
-/* =========================================
-   MODAL BOX
-========================================= */
-
-.modal{
-    width:100%;
-    max-width:500px;
-    background:white;
-    border-radius:20px;
-    border:2px solid #111;
-    overflow:hidden;
-    box-shadow:6px 6px 0 #111;
-}
-
-
-/* =========================================
-   MODAL HEADER
-========================================= */
-
-.modal-top-bar{
-    background:aqua;
-    padding:14px 18px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border-bottom:2px solid #111;
-}
-
-.modal-top-bar h3{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:16px;
-    font-weight:700;
-}
-
-.modal-close-x{
-    width:34px;
-    height:34px;
-    border:none;
-    background:white;
-    border-radius:8px;
-    cursor:pointer;
-    border:1px solid #111;
-    font-size:18px;
-}
-
-
-/* =========================================
-   BARCODE INFO
-========================================= */
-
-.barcode-info{
-    padding:18px 20px 10px;
-}
-
-.barcode-info p{
-    margin-bottom:8px;
-    font-size:14px;
-}
-
-
-/* =========================================
-   BARCODE SVG AREA
-========================================= */
-
-.barcode-canvas-wrap{
-    padding:10px 20px 20px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-#barcodeCanvas{
-    max-width:100%;
-    background:white;
-}
-
-
-/* =========================================
-   ACTION BUTTONS
-========================================= */
-
-.barcode-actions{
-    display:flex;
-    gap:12px;
-    padding:0 20px 20px;
-}
-
-.barcode-actions button{
-    flex:1;
-    padding:11px;
-    border:none;
-    border-radius:10px;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    border:1px solid #111;
-    box-shadow:3px 3px 0 #111;
-    transition:.2s;
-}
-
-.barcode-actions button:hover{
-    transform:translateY(-2px);
-}
-
-.btn-download-bc{
-    background:#dce8ff;
-    color:#102ca8;
-}
-
-.btn-print-bc{
-    background:#fff4cc;
-    color:#8a5b00;
-}
+.barcode-actions button:hover { transform: translateY(-2px); }
+.btn-download-bc { background: #dce8ff; color: rgb(16,44,168); }
+.btn-print-bc { background: #fff4cc; color: #8a5b00; }

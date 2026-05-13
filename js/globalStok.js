@@ -1,530 +1,305 @@
 // AUTH CHECK
-
 if (!localStorage.getItem('isLoggedIn')) {
     window.location.href = 'login.html';
 }
 
 // USER INFO
-
 var loggedUser = localStorage.getItem('loggedUser') || 'Admin';
-
 document.getElementById('sidebarUsername').innerHTML = loggedUser;
-
-document.getElementById('sidebarAvatar').innerHTML =
-loggedUser.charAt(0).toUpperCase();
-
+document.getElementById('sidebarAvatar').innerHTML = loggedUser.charAt(0).toUpperCase();
 
 // SIDEBAR
-
 var sidebar = document.getElementById('sidebar');
 var overlay = document.getElementById('sidebarOverlay');
-
-document.getElementById('hamburger').onclick = function(){
-
+document.getElementById('hamburger').onclick = function () {
     sidebar.classList.add('open');
     overlay.classList.add('active');
-
 };
-
 document.getElementById('sidebarClose').onclick = closeSidebar;
-
 overlay.onclick = closeSidebar;
-
-function closeSidebar(){
-
+function closeSidebar() {
     sidebar.classList.remove('open');
     overlay.classList.remove('active');
-
 }
-
 
 // LOGOUT
-
-document.getElementById('logoutBtn').onclick = function(){
-
+document.getElementById('logoutBtn').onclick = function () {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('loggedUser');
-
     window.location.href = 'login.html';
-
 };
 
-
-// GLOBAL STOK
-
-var allRows = [];
-
-function loadGlobalStok(){
-
-    var invoices =
-    JSON.parse(localStorage.getItem('invoices') || '{}');
-
-    var tbody =
-    document.getElementById('globalTableBody');
-
-    tbody.innerHTML = '';
-
-    allRows = [];
-
-    var nomor = 1;
-
-    Object.values(invoices).forEach(function(inv){
-        
-        if(!inv.items || inv.items.length === 0){
-            return;
-        }
-
-        inv.items.forEach(function(item){
-
-            allRows.push({
-
-                nomor : nomor++,
-
-                // DATA INVOICE
-                invoice : inv.invoice || '-',
-
-                // DATA BARANG
-                sku : item.sku || '-',
-
-                nama : item.nama || '-',
-
-                merk : item.merk || '-',
-
-                kategori : item.kategori || '-',
-
-                expired : item.expired || '-',
-
-                stok : item.stok || 0,
-
-                // HARGA
-                hpp : item.hargaHPP || 0,
-
-                jual : item.hargaJual || 0,
-
-                // LOKASI
-                lokasi : item.lokasi || '-'
-
-            });
-
-        });
-
-    });
-
-    // DATA KOSONG
-
-    if(allRows.length === 0){
-
-        tbody.innerHTML =
-        '<tr class="empty-row">' +
-        '<td colspan="12">' +
-        'Belum ada data — tambahkan barang melalui Input Barang' +
-        '</td>' +
-        '</tr>';
-
-        return;
-
+// ===== DATE RANGE HELPER =====
+function getDateRange(filter) {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    switch (filter) {
+        case 'today':
+            return { from: today, to: new Date() };
+        case '7d':
+            return { from: new Date(today - 6 * 864e5), to: new Date() };
+        case 'thismonth':
+            return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: new Date() };
+        case '30d':
+            return { from: new Date(today - 29 * 864e5), to: new Date() };
+        case 'lastmonth':
+            return {
+                from: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+                to: new Date(now.getFullYear(), now.getMonth(), 0)
+            };
+        case '3m':
+            return { from: new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()), to: new Date() };
+        case '6m':
+            return { from: new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()), to: new Date() };
+        case 'ytd':
+            return { from: new Date(now.getFullYear(), 0, 1), to: new Date() };
+        case '1y':
+            return { from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), to: new Date() };
+        default:
+            return null; // all time
     }
-
-    renderRows(allRows);
-
 }
 
+function isInRange(tanggalStr, range) {
+    if (!range) return true;
+    var d = new Date(tanggalStr);
+    return d >= range.from && d <= range.to;
+}
 
-// RENDER TABLE
+// ===== STATE =====
+var allRows = [];
 
-function renderRows(rows){
+// ===== LOAD DATA =====
+function loadGlobalStok() {
+    var invoices = JSON.parse(localStorage.getItem('invoices') || '{}');
+    allRows = [];
+    var nomor = 1;
 
-    var tbody =
-    document.getElementById('globalTableBody');
+    Object.values(invoices).forEach(function (inv) {
+        if (!inv.items || inv.items.length === 0) return;
+        inv.items.forEach(function (item) {
+            allRows.push({
+                nomor: nomor++,
+                invoice: inv.invoice || '-',
+                tanggal: inv.tanggal || '',
+                sku: item.sku || '-',
+                nama: item.nama || '-',
+                merk: item.merk || '-',
+                kategori: item.kategori || '-',
+                expired: item.expired || '-',
+                stok: item.stok || 0,
+                hpp: item.hargaHPP || 0,
+                jual: item.hargaJual || 0,
+                lokasi: item.lokasi || '-'
+            });
+        });
+    });
 
+    applyFilterAndRender();
+}
+
+// ===== APPLY FILTER + SEARCH LALU RENDER =====
+function applyFilterAndRender() {
+    var filter = document.getElementById('filterWaktu').value;
+    var keyword = document.getElementById('searchInput').value.toLowerCase();
+    var range = getDateRange(filter);
+
+    // Filter tanggal invoice masuk
+    var filtered = allRows.filter(function (r) {
+        return isInRange(r.tanggal, range);
+    });
+
+    // Filter search
+    if (keyword) {
+        filtered = filtered.filter(function (r) {
+            return (
+                r.nama.toLowerCase().includes(keyword) ||
+                r.kategori.toLowerCase().includes(keyword) ||
+                r.merk.toLowerCase().includes(keyword) ||
+                r.invoice.toLowerCase().includes(keyword) ||
+                r.lokasi.toLowerCase().includes(keyword) ||
+                r.sku.toLowerCase().includes(keyword) ||
+                String(r.expired).toLowerCase().includes(keyword)
+            );
+        });
+    }
+
+    renderRows(filtered);
+}
+
+// ===== RENDER =====
+function renderRows(rows) {
+    var tbody = document.getElementById('globalTableBody');
     tbody.innerHTML = '';
 
-    rows.forEach(function(r){
+    if (rows.length === 0) {
+        tbody.innerHTML =
+            '<tr class="empty-row"><td colspan="12">Tidak ada data yang cocok</td></tr>';
+        return;
+    }
 
-        // ===== EXPIRED CHECK =====
+    // Renomor sesuai hasil filter
+    rows.forEach(function (r, idx) {
 
-        var expiredClass = 'expired-green';
+        // ===== EXPIRED STATUS =====
+        var expiredClass = '';
         var expiredText = r.expired;
 
-        if(r.expired !== '-'){
-
+        if (r.expired && r.expired !== '-') {
             var today = new Date();
-
-            today.setHours(0,0,0,0);
-
+            today.setHours(0, 0, 0, 0);
             var expDate = new Date(r.expired);
+            var diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
 
-            var diffTime =
-            expDate.getTime() - today.getTime();
-
-            var diffDays =
-            Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if(diffDays <= 0){
-
+            if (diffDays <= 0) {
                 expiredClass = 'expired-red';
-
-            }
-            else if(diffDays <= 30){
-
+            } else if (diffDays <= 30) {
                 expiredClass = 'expired-yellow';
-
-            }
-            else{
-
+            } else {
                 expiredClass = 'expired-green';
-
             }
-
         }
 
         var tr = document.createElement('tr');
 
         tr.innerHTML =
+            '<td>' + (idx + 1) + '</td>' +
 
-        // NOMOR
-        '<td>' + r.nomor + '</td>' +
+            // INVOICE — klik ke halaman invoice
+            '<td><a href="invoice.html?id=' + encodeURIComponent(r.invoice) +
+            '" class="invoice-link">' + r.invoice + '</a></td>' +
 
-        // INVOICE LINK
-        '<td>' +
+            // SKU — klik popup barcode
+            '<td><button class="sku-btn">' + r.sku + '</button></td>' +
 
-        '<a href="invoice.html?id=' +
-        r.invoice +
-        '" class="invoice-link">' +
+            '<td>' + r.nama + '</td>' +
+            '<td>' + r.merk + '</td>' +
+            '<td>' + r.kategori + '</td>' +
 
-        r.invoice +
+            // EXPIRED BADGE
+            '<td>' +
+            (expiredClass
+                ? '<span class="expired-badge ' + expiredClass + '">' + expiredText + '</span>'
+                : '<span style="color:#aaa">—</span>') +
+            '</td>' +
 
-        '</a>' +
+            '<td>' + r.stok + '</td>' +
 
-        '</td>' +
+            '<td>Rp ' + Number(r.hpp).toLocaleString('id-ID') + '</td>' +
+            '<td>Rp ' + Number(r.jual).toLocaleString('id-ID') + '</td>' +
+            '<td>' + r.lokasi + '</td>' +
 
-        // SKU BUTTON
-        '<td>' +
+            // TOMBOL BARCODE
+            '<td><button class="btn-barcode"><i class="bx bx-barcode"></i> Barcode</button></td>';
 
-        '<button class="sku-btn">' + 
-    r.sku +
-        '</button>' +
-
-        '</td>' +
-
-        // NAMA
-        '<td>' + r.nama + '</td>' +
-
-        // MERK
-        '<td>' + r.merk + '</td>' +
-
-        // KATEGORI
-        '<td>' + r.kategori + '</td>' +
-
-        // EXPIRED
-        '<td>' +
-
-        '<span class="expired-badge ' +
-        expiredClass +
-        '">' +
-
-        expiredText +
-
-        '</span>' +
-
-        '</td>' +
-
-        // STOK
-        '<td>' + r.stok + '</td>' +
-
-        // HPP
-        '<td>Rp ' +
-        Number(r.hpp).toLocaleString('id-ID') +
-        '</td>' +
-
-        // JUAL
-        '<td>Rp ' +
-        Number(r.jual).toLocaleString('id-ID') +
-        '</td>' +
-
-        // LOKASI
-        '<td>' + r.lokasi + '</td>' +
-
-        // BUTTON BARCODE
-        '<td>' +
-
-        '<button class="btn-barcode">' +
-        'Barcode' +
-        '</button>' +
-
-        '</td>';
-
-        // SKU BUTTON
-
-        tr.querySelector('.sku-btn').onclick =
-        function(){
-
+        // Event SKU button
+        tr.querySelector('.sku-btn').onclick = function () {
             showBarcodePopup(r);
-
         };
 
-        // BUTTON BARCODE
-
-        tr.querySelector('.btn-barcode').onclick =
-        function(){
-
+        // Event Barcode button
+        tr.querySelector('.btn-barcode').onclick = function () {
             showBarcodePopup(r);
-
         };
 
         tbody.appendChild(tr);
-
     });
-
 }
 
-
-// SEARCH
-
-document.getElementById('searchInput')
-.oninput = function(){
-
-    var keyword = this.value.toLowerCase();
-
-    // RESET
-
-    if(keyword === ''){
-
-        renderRows(allRows);
-        return;
-
-    }
-
-    // FILTER
-
-    var filtered = allRows.filter(function(r){
-
-        return (
-
-            r.nama.toLowerCase().includes(keyword) ||
-
-            r.kategori.toLowerCase().includes(keyword) ||
-
-            r.merk.toLowerCase().includes(keyword) ||
-
-            r.invoice.toLowerCase().includes(keyword) ||
-
-            r.lokasi.toLowerCase().includes(keyword) ||
-
-            r.sku.toLowerCase().includes(keyword) ||
-
-            String(r.expired)
-            .toLowerCase()
-            .includes(keyword) ||
-
-            String(r.hpp)
-            .toLowerCase()
-            .includes(keyword) ||
-
-            String(r.jual)
-            .toLowerCase()
-            .includes(keyword)
-
-        );
-
-    });
-
-    // HASIL KOSONG
-
-    if(filtered.length === 0){
-
-        document.getElementById('globalTableBody').innerHTML =
-
-        '<tr class="empty-row">' +
-        '<td colspan="12">' +
-        'Tidak ada data yang cocok' +
-        '</td>' +
-        '</tr>';
-
-    }else{
-
-        renderRows(filtered);
-
-    }
-
+// ===== FILTER & SEARCH EVENTS =====
+document.getElementById('filterWaktu').onchange = function () {
+    applyFilterAndRender();
 };
 
+document.getElementById('searchInput').oninput = function () {
+    applyFilterAndRender();
+};
 
-// ===== BARCODE =====
+// ===== BARCODE POPUP =====
+var barcodeOverlay = document.getElementById('barcodeOverlay');
+var currentBarcodeItem = null;
 
-var barcodeOverlay =
-document.getElementById('barcodeOverlay');
+function showBarcodePopup(item) {
+    currentBarcodeItem = item;
+    document.getElementById('bcNama').innerHTML = item.nama;
+    document.getElementById('bcSKU').innerHTML = item.sku;
 
-
-// SHOW BARCODE POPUP
-
-function showBarcodePopup(item){
-
-    // SET DATA
-
-    document.getElementById('bcNama').innerHTML =
-    item.nama;
-
-    document.getElementById('bcSKU').innerHTML =
-    item.sku;
-
-    // GENERATE BARCODE
-
-    JsBarcode('#barcodeCanvas', item.sku, {
-
-        format : 'CODE128',
-
-        lineColor : '#111',
-
-        width : 2,
-
-        height : 70,
-
-        displayValue : true
-
-    });
-
-    // SHOW MODAL
+    try {
+        JsBarcode('#barcodeCanvas', item.sku, {
+            format: 'CODE128',
+            lineColor: '#111',
+            width: 2,
+            height: 70,
+            displayValue: true,
+            fontSize: 14,
+            margin: 12,
+            background: '#ffffff'
+        });
+    } catch (e) {
+        document.getElementById('barcodeCanvas').innerHTML =
+            '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="red" font-size="12">SKU tidak valid untuk barcode</text>';
+    }
 
     barcodeOverlay.classList.add('active');
-
 }
 
-
-// CLOSE BARCODE
-
-document.getElementById('btnCloseBarcode').onclick =
-function(){
-
+document.getElementById('btnCloseBarcode').onclick = function () {
     barcodeOverlay.classList.remove('active');
-
+    currentBarcodeItem = null;
 };
 
-
-// CLOSE IF CLICK OUTSIDE
-
-barcodeOverlay.onclick = function(e){
-
-    if(e.target === barcodeOverlay){
-
+barcodeOverlay.onclick = function (e) {
+    if (e.target === barcodeOverlay) {
         barcodeOverlay.classList.remove('active');
-
+        currentBarcodeItem = null;
     }
-
 };
-
 
 // DOWNLOAD PNG
-
-document.getElementById('btnDownloadBarcode').onclick =
-function(){
-
-    var svg =
-    document.getElementById('barcodeCanvas');
-
-    var serializer =
-    new XMLSerializer();
-
-    var svgData =
-    serializer.serializeToString(svg);
-
-    var canvas =
-    document.createElement('canvas');
-
-    var ctx =
-    canvas.getContext('2d');
-
-    var img =
-    new Image();
-
-    img.onload = function(){
-
-        canvas.width = img.width;
-
-        canvas.height = img.height;
-
+document.getElementById('btnDownloadBarcode').onclick = function () {
+    if (!currentBarcodeItem) return;
+    var svg = document.getElementById('barcodeCanvas');
+    var svgData = new XMLSerializer().serializeToString(svg);
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var img = new Image();
+    img.onload = function () {
+        canvas.width = img.width || 300;
+        canvas.height = img.height || 150;
         ctx.fillStyle = '#ffffff';
-
-        ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-
-        var a =
-        document.createElement('a');
-
-        a.download = 'barcode.png';
-
-        a.href =
-        canvas.toDataURL('image/png');
-
+        var a = document.createElement('a');
+        a.download = 'SKU_' + currentBarcodeItem.sku + '.png';
+        a.href = canvas.toDataURL('image/png');
         a.click();
-
     };
-
-    img.src =
-    'data:image/svg+xml;base64,' +
-    btoa(svgData);
-
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
 };
 
-
-// PRINT BARCODE
-
-document.getElementById('btnPrintBarcode').onclick =
-function(){
-
-    var svg =
-    document.getElementById('barcodeCanvas')
-    .outerHTML;
-
-    var printWindow =
-    window.open(
-        '',
-        '',
-        'width=600,height=400'
+// PRINT
+document.getElementById('btnPrintBarcode').onclick = function () {
+    if (!currentBarcodeItem) return;
+    var svg = document.getElementById('barcodeCanvas');
+    var svgStr = new XMLSerializer().serializeToString(svg);
+    var item = currentBarcodeItem;
+    var win = window.open('', '_blank', 'width=420,height=320');
+    win.document.write(
+        '<!DOCTYPE html><html><head><title>Print Barcode — ' + item.sku + '</title>' +
+        '<style>body{margin:0;padding:24px;font-family:"Poppins",sans-serif;display:flex;flex-direction:column;align-items:center;}' +
+        '.print-nama{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px;}' +
+        '.print-meta{font-size:12px;color:#555;text-align:center;margin-bottom:12px;}' +
+        'img{max-width:320px;}' +
+        '@media print{body{padding:8px;}}' +
+        '</style></head><body>' +
+        '<div class="print-nama">' + item.nama + '</div>' +
+        '<div class="print-meta">SKU: ' + item.sku + '</div>' +
+        '<img src="data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr))) + '" />' +
+        '<script>window.onload=function(){window.print();window.close();}<\/script>' +
+        '</body></html>'
     );
-
-    printWindow.document.write(
-
-        '<html>' +
-
-        '<head>' +
-        '<title>Print Barcode</title>' +
-        '</head>' +
-
-        '<body style="' +
-        'display:flex;' +
-        'justify-content:center;' +
-        'align-items:center;' +
-        'height:100vh;' +
-        '">' +
-
-        svg +
-
-        '</body>' +
-
-        '</html>'
-
-    );
-
-    printWindow.document.close();
-
-    printWindow.focus();
-
-    setTimeout(function(){
-
-        printWindow.print();
-
-    }, 500);
-
+    win.document.close();
 };
 
-
-// INIT
-
+// ===== INIT =====
 loadGlobalStok();
