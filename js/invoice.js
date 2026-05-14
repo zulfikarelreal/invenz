@@ -1,4 +1,4 @@
-// ===== INVOICE.JS — REVISI: Scanner stabil, no hang =====
+// ===== INVOICE.JS — REVISI: + Lokasi Inventori (CustomDropdown) =====
 
 const params = new URLSearchParams(window.location.search);
 const invoiceId = params.get("id");
@@ -25,16 +25,10 @@ let rowCount = 0;
 let rowToDelete = null;
 
 // ========================================================
-// ===== SCANNER STATE — satu tempat, strict lifecycle ====
+// ===== SCANNER STATE ====================================
 // ========================================================
-const SKU_SCAN = {
-  stream: null,
-  reader: null,
-  active: false, // flag: apakah sedang decode
-  done: false, // flag: sudah dapat hasil, abaikan callback lanjutan
-};
+const SKU_SCAN = { stream: null, reader: null, active: false, done: false };
 
-// ===== ZXING LOADER — load sekali, cache di window =====
 let zxingLoadPromise = null;
 function loadZXing() {
   if (window.ZXing) return Promise.resolve();
@@ -53,28 +47,21 @@ function loadZXing() {
   return zxingLoadPromise;
 }
 
-// ===== STOP SCANNER — paksa bersih =====
 function stopSKUScanner() {
   SKU_SCAN.active = false;
   SKU_SCAN.done = false;
-
-  // 1. Reset reader (tangkap error)
   if (SKU_SCAN.reader) {
     try {
       SKU_SCAN.reader.reset();
     } catch (_) {}
     SKU_SCAN.reader = null;
   }
-
-  // 2. Stop semua track kamera
   if (SKU_SCAN.stream) {
     try {
       SKU_SCAN.stream.getTracks().forEach((t) => t.stop());
     } catch (_) {}
     SKU_SCAN.stream = null;
   }
-
-  // 3. Bersihkan video
   const video = document.getElementById("cameraStreamSKU");
   if (video) {
     try {
@@ -82,23 +69,17 @@ function stopSKUScanner() {
       video.srcObject = null;
     } catch (_) {}
   }
-
-  // 4. Kembalikan placeholder
   const ph = document.getElementById("scanPlaceholderSKU");
   if (ph) ph.style.display = "flex";
-
   setSKUScanStatus("");
 }
 
 function closeSKUPanel() {
   stopSKUScanner();
-  const panel = document.getElementById("scannerSKUPanel");
-  if (panel) panel.classList.add("hidden");
-  const resultEl = document.getElementById("scanResultSKU");
-  if (resultEl) resultEl.classList.add("hidden");
+  document.getElementById("scannerSKUPanel")?.classList.add("hidden");
+  document.getElementById("scanResultSKU")?.classList.add("hidden");
 }
 
-// ===== STATUS INDICATOR =====
 function setSKUScanStatus(state, msg = "") {
   let el = document.getElementById("skuScanStatus");
   if (!el) {
@@ -123,7 +104,9 @@ function setSKUScanStatus(state, msg = "") {
         : `<i class="bx bx-error-circle"></i><span>${msg}</span>`;
 }
 
-// ===== DROPDOWNS =====
+// ========================================================
+// ===== CUSTOM DROPDOWNS =================================
+// ========================================================
 const ddNama = new CustomDropdown("cdNama", "barang", { icon: "bx-package" });
 const ddKategori = new CustomDropdown("cdKategori", "kategori", {
   icon: "bx-category",
@@ -131,14 +114,16 @@ const ddKategori = new CustomDropdown("cdKategori", "kategori", {
 const ddMerk = new CustomDropdown("cdMerk", "merk", {
   icon: "bx-purchase-tag",
 });
+const ddLokasi = new CustomDropdown("cdLokasi", "lokasi", { icon: "bx-map" }); // ← BARU
 
-// ===== FORMAT =====
+// ========================================================
+// ===== HELPERS ==========================================
+// ========================================================
 function formatRp(num) {
   if (!num || num === 0) return "Rp 0";
   return "Rp " + parseInt(num).toLocaleString("id-ID");
 }
 
-// ===== LINKED DATA =====
 function getLinkedData() {
   try {
     const d = JSON.parse(localStorage.getItem("linkedData") || "{}");
@@ -168,7 +153,6 @@ function autoAddToLinkedData(key, value) {
   if (!value || value === "-") return;
   const ex = JSON.parse(localStorage.getItem("linkedData") || "{}");
   if (!ex[key]) ex[key] = [];
-  // support both array-of-strings and array-of-objects
   const exists = ex[key].some(
     (i) => (typeof i === "string" ? i : i.nama) === value,
   );
@@ -191,7 +175,9 @@ function findSKUInLinkedData(sku) {
   return (getLinkedData().sku || []).find((s) => s.sku === sku) || null;
 }
 
-// ===== GLOBAL STOCK =====
+// ========================================================
+// ===== GLOBAL STOCK SYNC ================================
+// ========================================================
 function syncToGlobalStock(item) {
   const gs = JSON.parse(localStorage.getItem("globalStock") || "{}");
   const key = item.sku || item.nama;
@@ -201,6 +187,7 @@ function syncToGlobalStock(item) {
       nama: item.nama,
       merk: item.merk,
       kategori: item.kategori,
+      lokasi: item.lokasi || "-", // ← LOKASI DISIMPAN
       hargaHPP: item.hargaHPP,
       hargaJual: item.hargaJual,
       totalStok: parseInt(item.stok) || 0,
@@ -208,6 +195,7 @@ function syncToGlobalStock(item) {
   } else {
     gs[key].hargaHPP = item.hargaHPP;
     gs[key].hargaJual = item.hargaJual;
+    gs[key].lokasi = item.lokasi || gs[key].lokasi || "-"; // ← UPDATE LOKASI
     gs[key].totalStok =
       (parseInt(gs[key].totalStok) || 0) + (parseInt(item.stok) || 0);
   }
@@ -226,7 +214,9 @@ function removeFromGlobalStock(item) {
   }
 }
 
-// ===== SUBTOTAL PREVIEW =====
+// ========================================================
+// ===== SUBTOTAL PREVIEW =================================
+// ========================================================
 function updateSubtotalPreview() {
   subtotalVal.textContent = formatRp(
     (parseInt(inputStok.value) || 0) * (parseFloat(inputHargaHPP.value) || 0),
@@ -235,7 +225,9 @@ function updateSubtotalPreview() {
 inputStok.addEventListener("input", updateSubtotalPreview);
 inputHargaHPP.addEventListener("input", updateSubtotalPreview);
 
-// ===== SKU AUTOFILL =====
+// ========================================================
+// ===== SKU AUTOFILL =====================================
+// ========================================================
 function handleSKULookup(sku) {
   if (!sku) return;
   const found = findSKUInLinkedData(sku);
@@ -243,6 +235,7 @@ function handleSKULookup(sku) {
     ddNama.setValue(found.nama || "");
     ddMerk.setValue(found.merk || "");
     ddKategori.setValue(found.kategori || "");
+    // lokasi tidak di-autofill dari SKU — user pilih sendiri
     autofillNotice.classList.remove("hidden");
     inputStok.focus();
   } else {
@@ -257,37 +250,28 @@ document.getElementById("inputSKU").addEventListener("keydown", function (e) {
   if (e.key === "Enter") handleSKULookup(this.value.trim());
 });
 
-// ===== TOGGLE SCANNER PANEL =====
+// ========================================================
+// ===== SCANNER EVENTS ===================================
+// ========================================================
 document.getElementById("btnScanSKU").addEventListener("click", () => {
   const panel = document.getElementById("scannerSKUPanel");
-  if (panel.classList.contains("hidden")) {
-    panel.classList.remove("hidden");
-  } else {
-    closeSKUPanel();
-  }
+  panel.classList.contains("hidden")
+    ? panel.classList.remove("hidden")
+    : closeSKUPanel();
 });
+document
+  .getElementById("btnCloseScannerSKU")
+  .addEventListener("click", closeSKUPanel);
 
-document.getElementById("btnCloseScannerSKU").addEventListener("click", () => {
-  closeSKUPanel();
-});
-
-// ===== BUKA KAMERA — ZXing =====
 document.getElementById("btnOpenCamSKU").addEventListener("click", async () => {
-  // Stop sesi lama dulu, selalu
   stopSKUScanner();
   setSKUScanStatus("loading", "Memuat scanner...");
-
   try {
     await loadZXing();
-
-    // Buat reader BARU setiap kali
     const reader = new ZXing.BrowserMultiFormatReader();
     SKU_SCAN.reader = reader;
     SKU_SCAN.done = false;
-
     const video = document.getElementById("cameraStreamSKU");
-
-    // Minta stream kamera
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "environment",
@@ -298,57 +282,41 @@ document.getElementById("btnOpenCamSKU").addEventListener("click", async () => {
     SKU_SCAN.stream = stream;
     SKU_SCAN.active = true;
     video.srcObject = stream;
-
     document.getElementById("scanPlaceholderSKU").style.display = "none";
     setSKUScanStatus("scanning", "Arahkan ke barcode SKU produk...");
-
-    // decodeFromStream — callback terus sampai di-reset
-    reader.decodeFromStream(stream, video, (result, err) => {
-      // Abaikan callback setelah done atau tidak aktif
+    reader.decodeFromStream(stream, video, (result) => {
       if (SKU_SCAN.done || !SKU_SCAN.active) return;
-
       if (result) {
-        SKU_SCAN.done = true; // tandai agar callback berikutnya diabaikan
+        SKU_SCAN.done = true;
         const text = result.getText();
-
-        // Tampilkan hasil
         document.getElementById("scanResultValSKU").textContent = text;
         document.getElementById("scanResultSKU").classList.remove("hidden");
         setSKUScanStatus("");
-
-        // Stop kamera setelah dapat hasil
         stopSKUScanner();
       }
-      // err NotFoundException — normal, abaikan
     });
   } catch (err) {
     stopSKUScanner();
-    const msg =
+    setSKUScanStatus(
+      "error",
       err.message.includes("getUserMedia") || err.message.includes("Permission")
-        ? "Izin kamera ditolak. Izinkan akses kamera di browser."
-        : err.message.includes("ZXing") || err.message.includes("dimuat")
-          ? "Gagal memuat library scanner. Cek koneksi internet."
-          : "Kamera gagal: " + err.message;
-    setSKUScanStatus("error", msg);
+        ? "Izin kamera ditolak."
+        : "Kamera gagal: " + err.message,
+    );
   }
 });
 
-// ===== UPLOAD GAMBAR — ZXing decode dari file =====
 document
   .getElementById("galleryInputSKU")
   .addEventListener("change", async function (e) {
     const file = e.target.files[0];
     if (!file) return;
-    this.value = ""; // reset input agar bisa upload ulang file yang sama
+    this.value = "";
     setSKUScanStatus("loading", "Membaca barcode dari gambar...");
-
     try {
       await loadZXing();
-
-      // Buat reader baru khusus untuk decode gambar
       const reader = new ZXing.BrowserMultiFormatReader();
       const url = URL.createObjectURL(file);
-
       try {
         const result = await reader.decodeFromImageUrl(url);
         document.getElementById("scanResultValSKU").textContent =
@@ -361,7 +329,6 @@ document
           "Barcode tidak terbaca. Coba foto lebih dekat & kontras.",
         );
       } finally {
-        // Selalu cleanup
         try {
           reader.reset();
         } catch (_) {}
@@ -372,7 +339,6 @@ document
     }
   });
 
-// ===== GUNAKAN HASIL SCAN =====
 document.getElementById("btnUseScanSKU").addEventListener("click", () => {
   const val = document.getElementById("scanResultValSKU").textContent;
   document.getElementById("inputSKU").value = val;
@@ -381,7 +347,9 @@ document.getElementById("btnUseScanSKU").addEventListener("click", () => {
   handleSKULookup(val);
 });
 
-// ===== INIT =====
+// ========================================================
+// ===== INIT =============================================
+// ========================================================
 function init() {
   if (!invoiceId) {
     invoiceInfo.innerHTML = '<p style="color:red">Invoice tidak ditemukan.</p>';
@@ -397,7 +365,11 @@ function init() {
       data.items.forEach((item) => tambahBaris(item, false));
     }
   } else {
-    invoiceInfo.innerHTML = `<div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${invoiceId}</span></div>`;
+    invoiceInfo.innerHTML = `
+      <div class="info-item">
+        <span class="info-label">Invoice</span>
+        <span class="info-value">${invoiceId}</span>
+      </div>`;
   }
   updateTotalHargaDisplay();
 }
@@ -444,11 +416,14 @@ function updateTotalHargaDisplay() {
   );
 }
 
-// ===== MODAL =====
+// ========================================================
+// ===== MODAL TAMBAH BARANG ==============================
+// ========================================================
 openTambahBtn.addEventListener("click", () => {
   ddNama.refresh();
   ddKategori.refresh();
   ddMerk.refresh();
+  ddLokasi.refresh(); // ← refresh lokasi dari linkedData terbaru
   subtotalVal.textContent = "Rp 0";
   autofillNotice.classList.add("hidden");
   errorMsg.textContent = "";
@@ -463,7 +438,6 @@ modalOverlay.addEventListener("click", (e) => {
 simpanBtn.addEventListener("click", simpanItem);
 
 function tutupModal() {
-  // PENTING: stop scanner sebelum tutup modal
   closeSKUPanel();
   modalOverlay.classList.remove("active");
   clearForm();
@@ -483,6 +457,7 @@ function clearForm() {
   ddNama.clear();
   ddKategori.clear();
   ddMerk.clear();
+  ddLokasi.clear(); // ← clear lokasi
 }
 
 function simpanItem() {
@@ -490,14 +465,16 @@ function simpanItem() {
   const nama = ddNama.getValue();
   const merk = ddMerk.getValue();
   const kategori = ddKategori.getValue();
-  const expiredEl = document.getElementById("inputExpired");
-  const expired = expiredEl ? expiredEl.value || "-" : "-";
+  const lokasi = ddLokasi.getValue(); // ← AMBIL NILAI LOKASI
+  const expired = document.getElementById("inputExpired").value || "-";
   const hargaHPP = inputHargaHPP.value.trim();
   const hargaJual = inputHargaJual.value.trim() || "0";
   const stok = inputStok.value.trim();
 
-  if (!sku || !nama || !merk || !kategori || !stok || !hargaHPP) {
-    errorMsg.textContent = "Field bertanda * wajib diisi!";
+  // ===== VALIDASI — lokasi wajib =====
+  if (!sku || !nama || !merk || !kategori || !lokasi || !stok || !hargaHPP) {
+    errorMsg.textContent =
+      "Semua field bertanda * wajib diisi, termasuk Lokasi Inventori!";
     return;
   }
   if (parseInt(stok) < 1) {
@@ -505,9 +482,11 @@ function simpanItem() {
     return;
   }
 
+  // ===== AUTO-ADD KE LINKED DATA =====
   autoAddToLinkedData("barang", nama);
   autoAddToLinkedData("kategori", kategori);
   autoAddToLinkedData("merk", merk);
+  autoAddToLinkedData("lokasi", lokasi); // ← auto-add lokasi baru jika belum ada
   autoAddSKUToLinkedData({ sku, nama, merk, kategori });
 
   const item = {
@@ -515,24 +494,29 @@ function simpanItem() {
     nama,
     merk,
     kategori,
+    lokasi,
     expired,
     hargaHPP,
     hargaJual,
     stok,
   };
 
+  // ===== SIMPAN KE INVOICES =====
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
   if (!invoices[invoiceId])
     invoices[invoiceId] = { invoice: invoiceId, items: [] };
   invoices[invoiceId].items.push(item);
   localStorage.setItem("invoices", JSON.stringify(invoices));
 
-  syncToGlobalStock(item);
+  syncToGlobalStock(item); // ← lokasi ikut disimpan di globalStock
   updateTotal();
   tambahBaris(item, true);
   tutupModal();
 }
 
+// ========================================================
+// ===== RENDER BARIS TABEL (12 kolom) ====================
+// ========================================================
 function tambahBaris(item, removeEmpty = true) {
   if (removeEmpty) itemTableBody.querySelector(".empty-row")?.remove();
   rowCount++;
@@ -545,6 +529,7 @@ function tambahBaris(item, removeEmpty = true) {
     <td>${item.nama}</td>
     <td>${item.merk}</td>
     <td>${item.kategori}</td>
+    <td>${item.lokasi || "-"}</td>
     <td>${item.expired && item.expired !== "-" ? item.expired : '<span class="no-expired">—</span>'}</td>
     <td>${formatRp(item.hargaHPP || 0)}</td>
     <td>${formatRp(item.hargaJual || 0)}</td>
@@ -559,7 +544,9 @@ function tambahBaris(item, removeEmpty = true) {
   itemTableBody.appendChild(tr);
 }
 
-// ===== HAPUS =====
+// ========================================================
+// ===== HAPUS BARIS ======================================
+// ========================================================
 confirmYes.addEventListener("click", () => {
   if (rowToDelete) {
     const rows = Array.from(
@@ -596,7 +583,7 @@ function updateNomor() {
     const tr = document.createElement("tr");
     tr.className = "empty-row";
     tr.innerHTML =
-      '<td colspan="11">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>';
+      '<td colspan="12">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>';
     itemTableBody.appendChild(tr);
     rowCount = 0;
   } else {
@@ -607,13 +594,13 @@ function updateNomor() {
   }
 }
 
-// ===== BACK — stop scanner sebelum pindah halaman =====
+// ========================================================
+// ===== NAVIGASI & SAFETY NET ============================
+// ========================================================
 backBtn.addEventListener("click", () => {
   stopSKUScanner();
   window.location.href = "inputBarang.html";
 });
-
-// ===== SAFETY NET: stop scanner saat halaman ditinggal =====
 window.addEventListener("beforeunload", () => stopSKUScanner());
 window.addEventListener("pagehide", () => stopSKUScanner());
 window.addEventListener("visibilitychange", () => {

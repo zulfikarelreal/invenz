@@ -1,4 +1,5 @@
 // ===== INPUTBARANG.JS — REVISI: Scanner stabil, no hang =====
+// + Filter: Tahun Lalu & Custom Range
 
 const loggedUser =
   (typeof window.loggedUser !== "undefined" && window.loggedUser) ||
@@ -38,6 +39,20 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
 let allInvoices = {};
 let rowToDelete = null;
 let currentTab = "manual";
+
+// ===== CUSTOM RANGE STATE =====
+let customRangeActive = false; // flag: apakah sedang pakai custom range
+let customRangeFrom = null; // Date object
+let customRangeTo = null; // Date object
+
+// ===== ELEMEN CUSTOM RANGE =====
+const filterWaktu = document.getElementById("filterWaktu");
+const customRangePanel = document.getElementById("customRangePanel");
+const customFromEl = document.getElementById("customFrom");
+const customToEl = document.getElementById("customTo");
+const btnApplyRange = document.getElementById("btnApplyRange");
+const rangeBadge = document.getElementById("rangeBadge");
+const rangeBadgeText = document.getElementById("rangeBadgeText");
 
 // ========================================================
 // ===== SCANNER STATE — strict lifecycle =================
@@ -105,7 +120,6 @@ const modalOverlay = document.getElementById("modalOverlay");
 const confirmOverlay = document.getElementById("confirmOverlay");
 const tableBody = document.getElementById("tableBody");
 const errorMsg = document.getElementById("errorMsg");
-const filterWaktu = document.getElementById("filterWaktu");
 
 // ===== CUSTOM DROPDOWN =====
 const ddSupplier = new CustomDropdown("cdSupplier", "supplier", {
@@ -158,10 +172,14 @@ function autoAddToLinkedData(key, value) {
   }
 }
 
+// ========================================================
 // ===== DATE FILTER =====
+// ========================================================
+
 function getDateRange(filter) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   switch (filter) {
     case "today":
       return { from: today, to: new Date() };
@@ -196,8 +214,23 @@ function getDateRange(filter) {
         from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()),
         to: new Date(),
       };
+
+    // ===== BARU: Tahun Lalu =====
+    case "lastyear":
+      return {
+        from: new Date(now.getFullYear() - 1, 0, 1), // 1 Jan tahun lalu
+        to: new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59), // 31 Des tahun lalu
+      };
+
+    // ===== BARU: Custom Range =====
+    case "custom":
+      if (customRangeActive && customRangeFrom && customRangeTo) {
+        return { from: customRangeFrom, to: customRangeTo };
+      }
+      return null; // belum diisi → all time
+
     default:
-      return null;
+      return null; // all time
   }
 }
 
@@ -207,6 +240,78 @@ function isInRange(tanggalStr, range) {
   return d >= range.from && d <= range.to;
 }
 
+// ===== FORMAT TANGGAL UNTUK BADGE =====
+function formatDateShort(date) {
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+// ===== TAMPIL / SEMBUNYIKAN PANEL CUSTOM RANGE =====
+filterWaktu.addEventListener("change", () => {
+  const val = filterWaktu.value;
+
+  if (val === "custom") {
+    customRangePanel.classList.add("visible");
+    // Isi default: dari awal tahun ini sampai hari ini
+    if (!customFromEl.value) {
+      const now = new Date();
+      customFromEl.value = new Date(now.getFullYear(), 0, 1)
+        .toISOString()
+        .split("T")[0];
+      customToEl.value = now.toISOString().split("T")[0];
+    }
+  } else {
+    customRangePanel.classList.remove("visible");
+    customRangeActive = false;
+    rangeBadge.classList.remove("visible");
+    renderTable();
+  }
+});
+
+// ===== TERAPKAN CUSTOM RANGE =====
+btnApplyRange.addEventListener("click", () => {
+  const fromVal = customFromEl.value;
+  const toVal = customToEl.value;
+
+  if (!fromVal || !toVal) {
+    alert("Pilih tanggal dari dan sampai terlebih dahulu.");
+    return;
+  }
+
+  const fromDate = new Date(fromVal + "T00:00:00");
+  const toDate = new Date(toVal + "T23:59:59");
+
+  if (fromDate > toDate) {
+    alert("Tanggal 'Dari' tidak boleh lebih besar dari 'Sampai'.");
+    return;
+  }
+
+  customRangeFrom = fromDate;
+  customRangeTo = toDate;
+  customRangeActive = true;
+
+  // Tampilkan badge
+  rangeBadgeText.textContent = `${formatDateShort(fromDate)} – ${formatDateShort(toDate)}`;
+  rangeBadge.classList.add("visible");
+  customRangePanel.classList.remove("visible");
+
+  renderTable();
+});
+
+// ===== HAPUS BADGE / RESET CUSTOM =====
+rangeBadge.addEventListener("click", () => {
+  customRangeActive = false;
+  customRangeFrom = null;
+  customRangeTo = null;
+  rangeBadge.classList.remove("visible");
+  filterWaktu.value = "all";
+  renderTable();
+});
+
+// ===== HITUNG TOTAL HARGA =====
 function hitungTotalHarga(id) {
   const inv = allInvoices[id];
   if (!inv || !inv.items) return 0;
@@ -260,8 +365,6 @@ function renderTable() {
   });
 }
 
-filterWaktu.addEventListener("change", renderTable);
-
 // ===== BUKA MODAL =====
 document.getElementById("openModalBtn").addEventListener("click", () => {
   ddSupplier.refresh();
@@ -293,18 +396,16 @@ window.switchTab = function (tab) {
     .getElementById("tabManual")
     .classList.toggle("active", tab === "manual");
   document.getElementById("tabScan").classList.toggle("active", tab === "scan");
-  // Jika keluar dari tab scan, stop kamera
   if (tab !== "scan") stopInvScanner();
 };
 
 // ===== KAMERA — ZXing =====
 document.getElementById("btnOpenCam").addEventListener("click", async () => {
-  stopInvScanner(); // bersihkan sesi lama
+  stopInvScanner();
   setScanStatus("loading", "Memuat scanner...");
 
   try {
     await loadZXing();
-
     const reader = new ZXing.BrowserMultiFormatReader();
     INV_SCAN.reader = reader;
     INV_SCAN.done = false;
@@ -324,15 +425,13 @@ document.getElementById("btnOpenCam").addEventListener("click", async () => {
     document.getElementById("scanPlaceholder").style.display = "none";
     setScanStatus("scanning", "Arahkan ke barcode invoice...");
 
-    reader.decodeFromStream(stream, video, (result, err) => {
+    reader.decodeFromStream(stream, video, (result) => {
       if (INV_SCAN.done || !INV_SCAN.active) return;
-
       if (result) {
         INV_SCAN.done = true;
         showScanResult(result.getText());
         stopInvScanner();
       }
-      // NotFoundException — abaikan
     });
   } catch (err) {
     stopInvScanner();
@@ -344,7 +443,7 @@ document.getElementById("btnOpenCam").addEventListener("click", async () => {
   }
 });
 
-// ===== GALLERY — ZXing decode gambar =====
+// ===== GALLERY =====
 document
   .getElementById("galleryInput")
   .addEventListener("change", async function (e) {
@@ -479,7 +578,6 @@ confirmOverlay.addEventListener("click", (e) => {
 
 // ===== TUTUP MODAL =====
 function tutupModal() {
-  // PENTING: stop scanner sebelum tutup
   stopInvScanner();
   modalOverlay.classList.remove("active");
   errorMsg.textContent = "";
