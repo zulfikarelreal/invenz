@@ -37,6 +37,7 @@
                     <th>Nama Produk</th>
                     <th>Merk</th>
                     <th>Kategori</th>
+                    <th>Lokasi Inventori</th>
                     <th>Expired</th>
                     <th>Harga HPP</th>
                     <th>Harga Jual</th>
@@ -47,7 +48,7 @@
             </thead>
             <tbody id="itemTableBody">
                 <tr class="empty-row">
-                    <td colspan="11">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>
+                    <td colspan="12">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>
                 </tr>
             </tbody>
         </table>
@@ -156,9 +157,29 @@
                     </div>
                 </div>
 
+                <!-- ===== LOKASI INVENTORI — linked to linkedData.lokasi ===== -->
+                <div class="form-row">
+                    <label>Lokasi Inventori <span class="req">*</span></label>
+                    <div class="cd-wrapper" id="cdLokasi">
+                        <div class="cd-input-row">
+                            <input class="cd-input" id="inputLokasi" type="text"
+                                   placeholder="Pilih atau ketik lokasi inventori" autocomplete="off">
+                            <i class="bx bx-chevron-down cd-arrow"></i>
+                        </div>
+                        <div class="cd-dropdown">
+                            <div class="cd-search-box">
+                                <i class="bx bx-search"></i>
+                                <input class="cd-search" type="text" placeholder="Cari lokasi...">
+                            </div>
+                            <ul class="cd-list"></ul>
+                            <div class="cd-empty">Belum ada lokasi. Tambah dulu di Linked Data → Lokasi Inventori.</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-section-label" style="margin-top:4px">Tanggal & Harga</div>
 
-                <!-- Expired Date — manual only -->
+                <!-- Expired Date -->
                 <div class="form-row">
                     <label>Expired Date <span class="opt">(opsional)</span></label>
                     <input type="date" id="inputExpired">

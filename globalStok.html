@@ -9,6 +9,81 @@
     <link rel="stylesheet" href="css/globalStok.css">
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <title>Global Stok | Invenz</title>
+
+    <style>
+        /* ===== CUSTOM RANGE PANEL ===== */
+        .custom-range-wrap {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 8px;
+            box-shadow: 2px 3px 0 0 #111;
+            padding: 6px 10px;
+            margin-left: 0;
+        }
+        .custom-range-wrap.visible { display: flex; }
+
+        .custom-range-wrap label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .custom-range-wrap input[type="date"] {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            font-size: 12px;
+            font-family: "Poppins", sans-serif;
+            background: rgb(229,229,229);
+            outline: none;
+            cursor: pointer;
+        }
+        .custom-range-wrap input[type="date"]:focus {
+            border-color: rgb(16,44,168);
+            background: #e8f0ff;
+        }
+
+        .range-sep { font-size: 13px; color: #888; font-weight: 600; }
+
+        .btn-apply-range {
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgb(16,44,168);
+            color: white;
+            border: 1px solid #111;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0 0 #111;
+            cursor: pointer;
+            font-family: "Poppins", sans-serif;
+            transition: transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-apply-range:hover { transform: scale(0.93); }
+
+        /* Badge rentang custom aktif */
+        .range-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: #dce8ff;
+            border: 1px solid rgb(16,44,168);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgb(16,44,168);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .range-badge.visible { display: flex; }
+        .range-badge i { font-size: 13px !important; }
+    </style>
 </head>
 <body>
 
@@ -52,6 +127,7 @@
     <div class="main">
 
         <div class="nav-controll">
+            <!-- Filter dropdown -->
             <div class="filter-wrap">
                 <i class="bx bx-filter-alt filter-icon"></i>
                 <select id="filterWaktu" class="filter-select">
@@ -65,8 +141,29 @@
                     <option value="6m">6 Bulan Terakhir</option>
                     <option value="ytd">YTD (Tahun Ini)</option>
                     <option value="1y">12 Bulan Terakhir</option>
+                    <option value="lastyear">Tahun Lalu</option>
+                    <option value="custom">Custom Range...</option>
                 </select>
             </div>
+
+            <!-- Custom date range (muncul saat pilih "Custom Range") -->
+            <div class="custom-range-wrap" id="customRangeWrap">
+                <label>Dari</label>
+                <input type="date" id="customFrom">
+                <span class="range-sep">—</span>
+                <label>Sampai</label>
+                <input type="date" id="customTo">
+                <button class="btn-apply-range" id="btnApplyRange">Terapkan</button>
+            </div>
+
+            <!-- Badge rentang custom aktif -->
+            <div class="range-badge" id="rangeBadge" title="Klik untuk reset filter custom">
+                <i class="bx bx-calendar"></i>
+                <span id="rangeBadgeText"></span>
+                <i class="bx bx-x"></i>
+            </div>
+
+            <!-- Search box -->
             <input type="text" class="search-box" id="searchInput" placeholder="🔍 Cari barang...">
         </div>
 
@@ -85,20 +182,20 @@
                         <th>Harga HPP</th>
                         <th>Harga Jual</th>
                         <th>Lokasi Inventori</th>
-                        <th>Barcode</th>
                     </tr>
-                </thead>
+                    <!-- Kolom Barcode dihapus -->
+                <!-- </thead>
                 <tbody id="globalTableBody">
                     <tr class="empty-row">
-                        <td colspan="12">Belum ada data — tambahkan barang melalui Input Barang</td>
+                        <td colspan="11">Belum ada data — tambahkan barang melalui Input Barang</td>
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </div> -->
 
     </div>
 
-    <!-- MODAL BARCODE -->
+    <!-- MODAL BARCODE (tetap ada, dipanggil via klik kolom SKU) -->
     <div class="modal-overlay" id="barcodeOverlay">
         <div class="modal modal-barcode">
             <div class="modal-top-bar">

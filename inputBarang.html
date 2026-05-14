@@ -9,6 +9,80 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Input Barang | Invenz</title>
+
+    <!-- Tambahan style untuk custom date range picker -->
+    <style>
+        /* ===== CUSTOM DATE RANGE PANEL ===== */
+        .custom-range-panel {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 8px;
+            box-shadow: 2px 3px 0 0 #111;
+            padding: 6px 10px;
+        }
+        .custom-range-panel.visible { display: flex; }
+
+        .custom-range-panel label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .custom-range-panel input[type="date"] {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            font-size: 12px;
+            font-family: "Poppins", sans-serif;
+            background: rgb(229,229,229);
+            outline: none;
+            cursor: pointer;
+        }
+        .custom-range-panel input[type="date"]:focus {
+            border-color: rgb(16,44,168);
+            background: #e8f0ff;
+        }
+
+        .range-sep { font-size: 13px; color: #888; font-weight: 600; }
+
+        .btn-apply-range {
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgb(16,44,168);
+            color: white;
+            border: 1px solid #111;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0 0 #111;
+            cursor: pointer;
+            font-family: "Poppins", sans-serif;
+            transition: transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-apply-range:hover { transform: scale(0.93); }
+
+        /* Badge rentang aktif */
+        .range-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: #dce8ff;
+            border: 1px solid rgb(16,44,168);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgb(16,44,168);
+            cursor: pointer;
+        }
+        .range-badge.visible { display: flex; }
+        .range-badge i { font-size: 13px !important; }
+    </style>
 </head>
 <body>
 
@@ -63,8 +137,30 @@
                 <option value="6m">6 Bulan Terakhir</option>
                 <option value="ytd">YTD (Tahun Ini)</option>
                 <option value="1y">12 Bulan Terakhir</option>
+                <option value="lastyear">Tahun Lalu</option>
+                <option value="custom">Custom Range...</option>
             </select>
         </div>
+
+        <!-- Custom date range panel (muncul jika pilih "custom") -->
+        <div class="custom-range-panel" id="customRangePanel">
+            <label>Dari</label>
+            <input type="date" id="customFrom">
+            <span class="range-sep">—</span>
+            <label>Sampai</label>
+            <input type="date" id="customTo">
+            <button class="btn-apply-range" id="btnApplyRange">
+                <i class="bx bx-check"></i> Terapkan
+            </button>
+        </div>
+
+        <!-- Badge menampilkan rentang custom yang aktif -->
+        <div class="range-badge" id="rangeBadge" title="Klik untuk hapus filter custom">
+            <i class="bx bx-calendar"></i>
+            <span id="rangeBadgeText">-</span>
+            <i class="bx bx-x"></i>
+        </div>
+
         <p class="hint-text">* klik invoice untuk menambah barang</p>
         <button class="inputbarang-btn" id="openModalBtn">
             <i class="bx bx-plus"></i> Input Invoice
@@ -79,7 +175,7 @@
         </div>
         <div class="summary-divider"></div>
         <div class="summary-item">
-            <span class="summary-label">Total Invoice</span>
+            <span class="summary-label">Total Barang</span>
             <span class="summary-val" id="sumBarang">0</span>
         </div>
         <div class="summary-divider"></div>
@@ -141,7 +237,6 @@
                     </div>
                     <div class="form-row">
                         <label>Supplier <span class="req">*</span></label>
-                        <!-- Custom dropdown supplier -->
                         <div class="cd-wrapper" id="cdSupplier">
                             <div class="cd-input-row">
                                 <input class="cd-input" id="inputSupplier" type="text"
@@ -192,7 +287,6 @@
                         </div>
                         <button class="btn-use-scan" id="btnUseScan">Gunakan</button>
                     </div>
-                    <!-- Manual input juga tersedia di tab scan -->
                     <div class="scan-manual-fallback">
                         <p class="scan-fallback-label">Atau input manual:</p>
                         <input type="text" id="inputInvoiceScan" placeholder="No. Invoice" autocomplete="off">
