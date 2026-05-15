@@ -106,19 +106,8 @@
                 </div>
                 <div class="table-wrapper">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Kode SKU</th>
-                                <th>Nama Barang</th>
-                                <th>Merk</th>
-                                <th>Kategori</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBarang">
-                            <tr class="empty-row"><td colspan="6">Belum ada data barang</td></tr>
-                        </tbody>
+                        <thead><tr><th>#</th><th>Kode SKU</th><th>Nama Barang</th><th>Merk</th><th>Kategori</th><th>Actions</th></tr></thead>
+                        <tbody id="tableBarang"><tr class="empty-row"><td colspan="6">Belum ada data barang</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -135,19 +124,21 @@
                 </div>
             </div>
 
-            <!-- PENERIMA -->
+            <!-- PENERIMA / CUSTOMER — ✅ kolom Telepon ditambahkan -->
             <div class="tab-content" data-content="penerima">
                 <div class="section-header">
                     <h3>Data Customer</h3>
-                    <button class="btn-add" id="btnAddPenerima"><i class="bx bx-plus"></i> Tambah Penerima</button>
+                    <button class="btn-add" id="btnAddPenerima"><i class="bx bx-plus"></i> Tambah Customer</button>
                 </div>
                 <div class="table-wrapper">
-                    <table><thead><tr><th>#</th><th>Nama Customer</th><th>Keterangan</th><th>Actions</th></tr></thead>
-                    <tbody id="tablePenerima"><tr class="empty-row"><td colspan="4">Belum ada data Customer</td></tr></tbody></table>
+                    <table>
+                        <thead><tr><th>#</th><th>Nama Customer</th><th>No. Telepon</th><th>Keterangan</th><th>Actions</th></tr></thead>
+                        <tbody id="tablePenerima"><tr class="empty-row"><td colspan="5">Belum ada data Customer</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- ===== PAYMENT (BARU) ===== -->
+            <!-- PAYMENT -->
             <div class="tab-content" data-content="payment">
                 <div class="section-header">
                     <h3>Metode Pembayaran</h3>
@@ -159,18 +150,8 @@
                 </div>
                 <div class="table-wrapper">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Metode</th>
-                                <th>Keterangan</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablePayment">
-                            <tr class="empty-row"><td colspan="5">Memuat data...</td></tr>
-                        </tbody>
+                        <thead><tr><th>#</th><th>Nama Metode</th><th>Keterangan</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="tablePayment"><tr class="empty-row"><td colspan="5">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -178,7 +159,7 @@
         </div>
     </div>
 
-    <!-- ===== MODAL UNIVERSAL (non-barang, non-payment) ===== -->
+    <!-- MODAL UNIVERSAL -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <h3 id="modalTitle">Tambah Data</h3>
@@ -191,7 +172,7 @@
         </div>
     </div>
 
-    <!-- ===== MODAL BARANG ===== -->
+    <!-- MODAL BARANG -->
     <div class="modal-overlay" id="modalBarangOverlay">
         <div class="modal modal-barang">
             <div class="modal-top-bar">
@@ -240,15 +221,11 @@
                 <div class="form-grid-2">
                     <div class="form-row">
                         <label>Merk <span class="req">*</span></label>
-                        <select id="fBarangMerk" class="form-select">
-                            <option value="">-- Pilih Merk --</option>
-                        </select>
+                        <select id="fBarangMerk" class="form-select"><option value="">-- Pilih Merk --</option></select>
                     </div>
                     <div class="form-row">
                         <label>Kategori <span class="req">*</span></label>
-                        <select id="fBarangKategori" class="form-select">
-                            <option value="">-- Pilih Kategori --</option>
-                        </select>
+                        <select id="fBarangKategori" class="form-select"><option value="">-- Pilih Kategori --</option></select>
                     </div>
                 </div>
                 <p class="field-hint" id="hintMerkKategori" style="display:none">
@@ -264,7 +241,7 @@
         </div>
     </div>
 
-    <!-- ===== MODAL PAYMENT (BARU) ===== -->
+    <!-- MODAL PAYMENT -->
     <div class="modal-overlay" id="modalPaymentOverlay">
         <div class="modal modal-payment">
             <div class="modal-top-bar">
@@ -299,7 +276,7 @@
         </div>
     </div>
 
-    <!-- ===== MODAL BARCODE POPUP ===== -->
+    <!-- MODAL BARCODE POPUP -->
     <div class="modal-overlay" id="barcodeOverlay">
         <div class="modal modal-barcode">
             <div class="modal-top-bar">
@@ -311,12 +288,8 @@
                 <svg id="barcodeCanvas"></svg>
             </div>
             <div class="barcode-actions">
-                <button class="btn-download-bc" id="btnDownloadBarcode">
-                    <i class="bx bx-download"></i> Download PNG
-                </button>
-                <button class="btn-print-bc" id="btnPrintBarcode">
-                    <i class="bx bx-printer"></i> Print
-                </button>
+                <button class="btn-download-bc" id="btnDownloadBarcode"><i class="bx bx-download"></i> Download PNG</button>
+                <button class="btn-print-bc" id="btnPrintBarcode"><i class="bx bx-printer"></i> Print</button>
             </div>
         </div>
     </div>
