@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/laporan.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <title>Laporan | Invenz</title>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>INVENZ</span>
+            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+        </div>
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+            <div>
+                <div class="sidebar-username" id="sidebarUsername">Admin</div>
+                <div class="sidebar-role">Operator Inventori</div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+            <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
+            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+            <li><a href="laporan.html" class="active"><i class="bx bx-bar-chart-alt-2"></i> Laporan</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="logoutBtn">
+                <i class="bx bx-log-out"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== NAVBAR ===== -->
+    <div class="navbar">
+        <i class="bx bx-menu hamburger" id="hamburger"></i>
+        <div class="title">
+            <i class="bxf bx-bar-chart-alt-2"></i>
+            <h6>LAPORAN & ANALISIS</h6>
+        </div>
+        <i class="bxf bx-user-circle"></i>
+    </div>
+
+    <!-- ===== MAIN ===== -->
+    <div class="main">
+
+        <!-- ===== FILTER BAR ===== -->
+        <div class="filter-bar" id="filterBar">
+            <div class="filter-group">
+                <i class="bx bx-filter-alt filter-icon"></i>
+                <select id="filterPeriode" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="thismonth" selected>Bulan Ini</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="lastmonth">Bulan Kemarin</option>
+                    <option value="3m">3 Bulan Terakhir</option>
+                    <option value="6m">6 Bulan Terakhir</option>
+                    <option value="ytd">YTD (Tahun Ini)</option>
+                    <option value="1y">12 Bulan Terakhir</option>
+                    <option value="lastyear">Tahun Lalu</option>
+                    <option value="custom">Custom Range...</option>
+                </select>
+            </div>
+
+            <!-- Custom date range -->
+            <div class="custom-range-panel" id="customRangePanel">
+                <label>Dari</label>
+                <input type="date" id="customFrom">
+                <span class="range-sep">—</span>
+                <label>Sampai</label>
+                <input type="date" id="customTo">
+                <button class="btn-apply-range" id="btnApplyRange">
+                    <i class="bx bx-check"></i> Terapkan
+                </button>
+            </div>
+
+            <!-- Active range badge -->
+            <div class="range-badge" id="rangeBadge" title="Klik untuk reset">
+                <i class="bx bx-calendar"></i>
+                <span id="rangeBadgeText"></span>
+                <i class="bx bx-x"></i>
+            </div>
+
+            <!-- Export buttons -->
+            <div class="export-group">
+                <button class="btn-export btn-excel" id="btnExportExcel" title="Export ke Excel">
+                    <i class="bx bx-table"></i> Excel
+                </button>
+                <button class="btn-export btn-pdf" id="btnExportPDF" title="Export ke PDF">
+                    <i class="bx bx-file-blank"></i> PDF
+                </button>
+                <button class="btn-export btn-print" id="btnPrint" title="Print Laporan">
+                    <i class="bx bx-printer"></i> Print
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== PERIOD LABEL ===== -->
+        <div class="period-label" id="periodLabel">
+            <i class="bx bx-calendar-check"></i>
+            <span id="periodText">Bulan Ini</span>
+        </div>
+
+        <!-- ===== SECTION: NERACA KEUANGAN ===== -->
+        <div class="section-title"><i class="bx bx-dollar-circle"></i> Neraca Keuangan</div>
+        <div class="kpi-grid" id="kpiGrid">
+            <div class="kpi-card kpi-revenue">
+                <div class="kpi-icon"><i class="bx bx-trending-up"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Revenue / Pendapatan</div>
+                    <div class="kpi-value" id="kpiRevenue">Rp 0</div>
+                    <div class="kpi-sub" id="kpiRevenueSub">dari penjualan</div>
+                </div>
+            </div>
+            <div class="kpi-card kpi-hpp">
+                <div class="kpi-icon"><i class="bx bx-coin-stack"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Total HPP / Modal</div>
+                    <div class="kpi-value" id="kpiHPP">Rp 0</div>
+                    <div class="kpi-sub" id="kpiHPPSub">harga pokok penjualan</div>
+                </div>
+            </div>
+            <div class="kpi-card kpi-profit">
+                <div class="kpi-icon"><i class="bxf bx-badge-check"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Profit / Keuntungan</div>
+                    <div class="kpi-value" id="kpiProfit">Rp 0</div>
+                    <div class="kpi-sub" id="kpiProfitSub">margin bersih</div>
+                </div>
+            </div>
+            <div class="kpi-card kpi-margin">
+                <div class="kpi-icon"><i class="bx bx-pie-chart"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Profit Margin</div>
+                    <div class="kpi-value" id="kpiMargin">0%</div>
+                    <div class="kpi-sub" id="kpiMarginSub">persentase keuntungan</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: RINGKASAN INVENTORI ===== -->
+        <div class="section-title"><i class="bx bx-package"></i> Ringkasan Inventori & Transaksi</div>
+        <div class="inv-grid">
+            <div class="inv-card inv-masuk">
+                <div class="inv-icon"><i class="bx bx-import"></i></div>
+                <div class="inv-body">
+                    <div class="inv-label">Total Barang Masuk</div>
+                    <div class="inv-value" id="invMasukQty">0 pcs</div>
+                    <div class="inv-sub" id="invMasukInv">dari 0 invoice</div>
+                </div>
+            </div>
+            <div class="inv-card inv-keluar">
+                <div class="inv-icon"><i class="bx bx-export"></i></div>
+                <div class="inv-body">
+                    <div class="inv-label">Total Barang Keluar</div>
+                    <div class="inv-value" id="invKeluarQty">0 pcs</div>
+                    <div class="inv-sub" id="invKeluarInv">dari 0 transaksi</div>
+                </div>
+            </div>
+            <div class="inv-card inv-transaksi">
+                <div class="inv-icon"><i class="bx bx-receipt"></i></div>
+                <div class="inv-body">
+                    <div class="inv-label">Total Transaksi</div>
+                    <div class="inv-value" id="invTransaksi">0</div>
+                    <div class="inv-sub" id="invTransaksiSub">invoice keluar</div>
+                </div>
+            </div>
+            <div class="inv-card inv-penjualan">
+                <div class="inv-icon"><i class="bx bx-money"></i></div>
+                <div class="inv-body">
+                    <div class="inv-label">Total Penjualan</div>
+                    <div class="inv-value" id="invPenjualan">Rp 0</div>
+                    <div class="inv-sub" id="invPenjualanSub">nilai stock out</div>
+                </div>
+            </div>
+            <div class="inv-card inv-stok">
+                <div class="inv-icon"><i class="bx bx-store"></i></div>
+                <div class="inv-body">
+                    <div class="inv-label">Stok Tersisa</div>
+                    <div class="inv-value" id="invStokSisa">0 pcs</div>
+                    <div class="inv-sub" id="invStokSub">di gudang saat ini</div>
+                </div>
+            </div>
+            <div class="inv-card inv-customer">
+                <div class="inv-icon"><i class="bx bx-user-check"></i></div>
+                <div class="inv-body">
+                    <div class="inv-label">Total Customer</div>
+                    <div class="inv-value" id="invCustomer">0</div>
+                    <div class="inv-sub" id="invCustomerSub">pelanggan unik</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== GRAFIK ROW 1 ===== -->
+        <div class="section-title"><i class="bx bx-bar-chart"></i> Grafik Penjualan & Revenue</div>
+        <div class="charts-row">
+            <div class="chart-card chart-wide">
+                <div class="chart-header">
+                    <h4><i class="bx bx-line-chart"></i> Grafik Revenue & HPP</h4>
+                    <div class="chart-legend">
+                        <span class="legend-dot" style="background:#10B981"></span> Revenue
+                        <span class="legend-dot" style="background:#F59E0B"></span> HPP
+                        <span class="legend-dot" style="background:#3B82F6"></span> Profit
+                    </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
+                <div class="chart-empty hidden" id="emptyRevenue">
+                    <i class="bx bx-bar-chart"></i><p>Belum ada data penjualan</p>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4><i class="bx bx-pie-chart-alt"></i> Penjualan per Kategori</h4>
+                </div>
+                <div class="chart-wrap"><canvas id="chartKategori"></canvas></div>
+                <div class="chart-empty hidden" id="emptyKategori">
+                    <i class="bx bx-pie-chart-alt"></i><p>Belum ada data</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== GRAFIK ROW 2 ===== -->
+        <div class="section-title"><i class="bx bx-transfer"></i> Grafik Barang Masuk & Keluar</div>
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4><i class="bx bx-import"></i> Barang Masuk (Qty per Bulan)</h4>
+                </div>
+                <div class="chart-wrap"><canvas id="chartMasuk"></canvas></div>
+                <div class="chart-empty hidden" id="emptyMasuk">
+                    <i class="bx bx-import"></i><p>Belum ada data barang masuk</p>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4><i class="bx bx-export"></i> Barang Keluar (Qty per Bulan)</h4>
+                </div>
+                <div class="chart-wrap"><canvas id="chartKeluar"></canvas></div>
+                <div class="chart-empty hidden" id="emptyKeluar">
+                    <i class="bx bx-export"></i><p>Belum ada data barang keluar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TOP PRODUK ===== -->
+        <div class="section-title"><i class="bx bx-trophy"></i> Top 10 Produk Terlaris</div>
+        <div class="table-card">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Produk</th>
+                        <th>Kategori</th>
+                        <th>Qty Terjual</th>
+                        <th>Revenue</th>
+                        <th>HPP</th>
+                        <th>Profit</th>
+                        <th>Margin</th>
+                    </tr>
+                </thead>
+                <tbody id="tableTopProduk">
+                    <tr class="empty-row"><td colspan="8">Belum ada data penjualan</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== LAPORAN TRANSAKSI ===== -->
+        <div class="section-title"><i class="bx bx-list-ul"></i> Riwayat Transaksi Stock Out</div>
+        <div class="table-card">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Invoice</th>
+                        <th>Tanggal</th>
+                        <th>Customer</th>
+                        <th>Metode Bayar</th>
+                        <th>Total Item</th>
+                        <th>Revenue</th>
+                        <th>HPP</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody id="tableTransaksi">
+                    <tr class="empty-row"><td colspan="9">Belum ada data transaksi</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== LAPORAN INVENTORI MASUK ===== -->
+        <div class="section-title"><i class="bx bx-package"></i> Riwayat Barang Masuk</div>
+        <div class="table-card">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Invoice</th>
+                        <th>Tanggal</th>
+                        <th>Supplier</th>
+                        <th>Total Qty</th>
+                        <th>Jenis Barang</th>
+                        <th>Nilai HPP</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBarangMasuk">
+                    <tr class="empty-row"><td colspan="7">Belum ada data barang masuk</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div><!-- end .main -->
+
+    <!-- ===== PRINT AREA (hidden, shown on print) ===== -->
+    <div id="printArea" class="print-area"></div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/laporan.js"></script>
+</body>
+</html>
