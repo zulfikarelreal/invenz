@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/globalStok.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <title>Global Stok | Invenz</title>
+
+    <style>
+        /* ===== CUSTOM RANGE PANEL ===== */
+        .custom-range-wrap {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 8px;
+            box-shadow: 2px 3px 0 0 #111;
+            padding: 6px 10px;
+            margin-left: 0;
+        }
+        .custom-range-wrap.visible { display: flex; }
+
+        .custom-range-wrap label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .custom-range-wrap input[type="date"] {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            font-size: 12px;
+            font-family: "Poppins", sans-serif;
+            background: rgb(229,229,229);
+            outline: none;
+            cursor: pointer;
+        }
+        .custom-range-wrap input[type="date"]:focus {
+            border-color: rgb(16,44,168);
+            background: #e8f0ff;
+        }
+
+        .range-sep { font-size: 13px; color: #888; font-weight: 600; }
+
+        .btn-apply-range {
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgb(16,44,168);
+            color: white;
+            border: 1px solid #111;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0 0 #111;
+            cursor: pointer;
+            font-family: "Poppins", sans-serif;
+            transition: transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-apply-range:hover { transform: scale(0.93); }
+
+        .range-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: #dce8ff;
+            border: 1px solid rgb(16,44,168);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgb(16,44,168);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .range-badge.visible { display: flex; }
+        .range-badge i { font-size: 13px !important; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>INVENZ</span>
+            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+        </div>
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+            <div>
+                <div class="sidebar-username" id="sidebarUsername">Admin</div>
+                <div class="sidebar-role">Operator Inventori</div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+            <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
+            <li><a href="globalStok.html" class="active"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="logoutBtn">
+                <i class="bx bx-log-out"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <i class="bx bx-menu hamburger" id="hamburger"></i>
+        <div class="nav-title">
+            <i class="bx bx-list-ul-square"></i>
+            <span>GLOBAL STOK</span>
+        </div>
+        <i class="bxf bx-user-circle"></i>
+    </div>
+
+    <div class="main">
+
+        <div class="nav-controll">
+            <!-- Filter dropdown -->
+            <div class="filter-wrap">
+                <i class="bx bx-filter-alt filter-icon"></i>
+                <select id="filterWaktu" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="thismonth">Bulan Ini</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="lastmonth">Bulan Kemarin</option>
+                    <option value="3m">3 Bulan Terakhir</option>
+                    <option value="6m">6 Bulan Terakhir</option>
+                    <option value="ytd">YTD (Tahun Ini)</option>
+                    <option value="1y">12 Bulan Terakhir</option>
+                    <option value="lastyear">Tahun Lalu</option>
+                    <option value="custom">Custom Range...</option>
+                </select>
+            </div>
+
+            <!-- Custom date range -->
+            <div class="custom-range-wrap" id="customRangeWrap">
+                <label>Dari</label>
+                <input type="date" id="customFrom">
+                <span class="range-sep">—</span>
+                <label>Sampai</label>
+                <input type="date" id="customTo">
+                <button class="btn-apply-range" id="btnApplyRange">Terapkan</button>
+            </div>
+
+            <!-- Badge rentang custom aktif -->
+            <div class="range-badge" id="rangeBadge" title="Klik untuk reset filter custom">
+                <i class="bx bx-calendar"></i>
+                <span id="rangeBadgeText"></span>
+                <i class="bx bx-x"></i>
+            </div>
+
+            <!-- Search box -->
+            <input type="text" class="search-box" id="searchInput" placeholder="🔍 Cari barang...">
+        </div>
+
+        <div class="container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Invoice</th>
+                        <th>SKU</th>
+                        <th>Nama Barang</th>
+                        <th>Merk</th>
+                        <th>Kategori</th>
+                        <th>Expired Date</th>
+                        <th>Qty/Stok</th>
+                        <th>Harga HPP</th>
+                        <th>Harga Jual</th>
+                        <th>Lokasi Inventori</th>
+                    </tr>
+                </thead>
+                <tbody id="globalTableBody">
+                    <tr class="empty-row">
+                        <td colspan="11">Belum ada data — tambahkan barang melalui Input Barang</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- MODAL BARCODE -->
+    <div class="modal-overlay" id="barcodeOverlay">
+        <div class="modal modal-barcode">
+            <div class="modal-top-bar">
+                <h3><i class="bx bx-barcode"></i> Barcode SKU</h3>
+                <button class="modal-close-x" id="btnCloseBarcode"><i class="bx bx-x"></i></button>
+            </div>
+            <div class="barcode-info">
+                <p><strong>Nama Barang:</strong> <span id="bcNama">-</span></p>
+                <p><strong>SKU:</strong> <span id="bcSKU">-</span></p>
+            </div>
+            <div class="barcode-canvas-wrap">
+                <svg id="barcodeCanvas"></svg>
+            </div>
+            <div class="barcode-actions">
+                <button class="btn-download-bc" id="btnDownloadBarcode">
+                    <i class="bx bx-download"></i> Download PNG
+                </button>
+                <button class="btn-print-bc" id="btnPrintBarcode">
+                    <i class="bx bx-printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/globalStok.js"></script>
+</body>
+</html>

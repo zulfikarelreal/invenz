@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/inputBarang.css">
+    <link rel="stylesheet" href="css/customDropdown.css">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Input Barang | Invenz</title>
+
+    <style>
+        /* ===== CUSTOM DATE RANGE PANEL ===== */
+        .custom-range-panel {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 8px;
+            box-shadow: 2px 3px 0 0 #111;
+            padding: 6px 10px;
+        }
+        .custom-range-panel.visible { display: flex; }
+
+        .custom-range-panel label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .custom-range-panel input[type="date"] {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            font-size: 12px;
+            font-family: "Poppins", sans-serif;
+            background: rgb(229,229,229);
+            outline: none;
+            cursor: pointer;
+        }
+        .custom-range-panel input[type="date"]:focus {
+            border-color: rgb(16,44,168);
+            background: #e8f0ff;
+        }
+
+        .range-sep { font-size: 13px; color: #888; font-weight: 600; }
+
+        .btn-apply-range {
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgb(16,44,168);
+            color: white;
+            border: 1px solid #111;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0 0 #111;
+            cursor: pointer;
+            font-family: "Poppins", sans-serif;
+            transition: transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-apply-range:hover { transform: scale(0.93); }
+
+        /* Badge rentang aktif */
+        .range-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: #dce8ff;
+            border: 1px solid rgb(16,44,168);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgb(16,44,168);
+            cursor: pointer;
+        }
+        .range-badge.visible { display: flex; }
+        .range-badge i { font-size: 13px !important; }
+
+        /* ===== SUMMARY STRIP — 4 kolom ===== */
+        .summary-strip {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            width: 90%;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 10px;
+            box-shadow: 3px 4px 0 0 #111;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .summary-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 12px;
+            gap: 2px;
+        }
+        .summary-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #888;
+            text-align: center;
+        }
+        .summary-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: rgb(16,44,168);
+        }
+        .summary-divider {
+            width: 1px;
+            height: 40px;
+            background: #eee;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>INVENZ</span>
+            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+        </div>
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+            <div>
+                <div class="sidebar-username" id="sidebarUsername">Admin</div>
+                <div class="sidebar-role">Operator Inventori</div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+            <li><a href="inputBarang.html" class="active"><i class="bx bx-package"></i> Input Barang</a></li>
+            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="logoutBtn">
+                <i class="bx bx-log-out"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <i class="bx bx-menu hamburger" id="hamburger"></i>
+        <div class="title">
+            <i class="bxf bx-package"></i>
+            <h6>INPUT BARANG</h6>
+        </div>
+        <i class="bxf bx-user-circle"></i>
+    </div>
+
+    <!-- Nav Control -->
+    <div class="nav-controll">
+        <div class="filter-wrap">
+            <i class="bx bx-filter-alt filter-icon"></i>
+            <select id="filterWaktu" class="filter-select">
+                <option value="all">All Time</option>
+                <option value="today">Hari Ini</option>
+                <option value="7d">7 Hari Terakhir</option>
+                <option value="thismonth">Bulan Ini</option>
+                <option value="30d">30 Hari Terakhir</option>
+                <option value="lastmonth">Bulan Kemarin</option>
+                <option value="3m">3 Bulan Terakhir</option>
+                <option value="6m">6 Bulan Terakhir</option>
+                <option value="ytd">YTD (Tahun Ini)</option>
+                <option value="1y">12 Bulan Terakhir</option>
+                <option value="lastyear">Tahun Lalu</option>
+                <option value="custom">Custom Range...</option>
+            </select>
+        </div>
+
+        <!-- Custom date range panel -->
+        <div class="custom-range-panel" id="customRangePanel">
+            <label>Dari</label>
+            <input type="date" id="customFrom">
+            <span class="range-sep">—</span>
+            <label>Sampai</label>
+            <input type="date" id="customTo">
+            <button class="btn-apply-range" id="btnApplyRange">
+                <i class="bx bx-check"></i> Terapkan
+            </button>
+        </div>
+
+        <!-- Badge custom range aktif -->
+        <div class="range-badge" id="rangeBadge" title="Klik untuk hapus filter custom">
+            <i class="bx bx-calendar"></i>
+            <span id="rangeBadgeText">-</span>
+            <i class="bx bx-x"></i>
+        </div>
+
+        <p class="hint-text">* klik invoice untuk menambah barang</p>
+        <button class="inputbarang-btn" id="openModalBtn">
+            <i class="bx bx-plus"></i> Input Invoice
+        </button>
+    </div>
+
+    <!-- Summary Strip — 4 stat -->
+    <div class="summary-strip" id="summaryStrip">
+        <div class="summary-item">
+            <span class="summary-label">Total Transaksi</span>
+            <span class="summary-val" id="sumTransaksi">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Total Barang (Qty)</span>
+            <span class="summary-val" id="sumBarang">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <!-- ✅ BARU: Total Jenis Barang -->
+        <div class="summary-item">
+            <span class="summary-label">Jenis Barang</span>
+            <span class="summary-val" id="sumJenis">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Total Nilai</span>
+            <span class="summary-val" id="sumHarga">Rp 0</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice</th>
+                    <th>Tanggal Masuk</th>
+                    <th>Supplier</th>
+                    <th>Total Barang</th>
+                    <th>Total Harga</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="empty-row">
+                    <td colspan="7">Belum ada data — klik "Input Barang" untuk menambah</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ===== MODAL INPUT INVOICE ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal modal-input">
+            <div class="modal-top-bar">
+                <h3><i class="bx bx-package"></i> Input Invoice</h3>
+                <button class="modal-close-x" id="modalCloseX"><i class="bx bx-x"></i></button>
+            </div>
+
+            <div class="scan-toggle">
+                <button class="scan-tab active" id="tabManual" onclick="switchTab('manual')">
+                    <i class="bx bx-edit"></i> Manual
+                </button>
+                <button class="scan-tab" id="tabScan" onclick="switchTab('scan')">
+                    <i class="bx bx-scan-barcode"></i> Scan Barcode
+                </button>
+            </div>
+
+            <!-- Manual -->
+            <div class="tab-panel" id="panelManual">
+                <div class="modal-form">
+                    <div class="form-row">
+                        <label>No. Invoice <span class="req">*</span></label>
+                        <input type="text" id="inputInvoice" placeholder="Contoh: INV-2024-001" autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <label>Tanggal Masuk <span class="req">*</span></label>
+                        <input type="date" id="inputTanggal">
+                    </div>
+                    <div class="form-row">
+                        <label>Supplier <span class="req">*</span></label>
+                        <div class="cd-wrapper" id="cdSupplier">
+                            <div class="cd-input-row">
+                                <input class="cd-input" id="inputSupplier" type="text"
+                                       placeholder="Pilih atau ketik supplier" autocomplete="off">
+                                <i class="bx bx-chevron-down cd-arrow"></i>
+                            </div>
+                            <div class="cd-dropdown">
+                                <div class="cd-search-box">
+                                    <i class="bx bx-search"></i>
+                                    <input class="cd-search" type="text" placeholder="Cari supplier...">
+                                </div>
+                                <ul class="cd-list"></ul>
+                                <div class="cd-empty">Belum ada data supplier</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan -->
+            <div class="tab-panel hidden" id="panelScan">
+                <div class="scan-area">
+                    <div class="scan-box" id="scanBox">
+                        <video id="cameraStream" autoplay playsinline></video>
+                        <div class="scan-frame"><div class="scan-line"></div></div>
+                        <div class="scan-placeholder" id="scanPlaceholder">
+                            <i class="bx bx-barcode-reader"></i>
+                            <p>Kamera belum aktif</p>
+                        </div>
+                    </div>
+                    <div class="scan-actions">
+                        <button class="btn-cam" id="btnOpenCam">
+                            <i class="bx bx-camera"></i> Buka Kamera
+                        </button>
+                        <span class="scan-or">atau</span>
+                        <label class="btn-gallery" for="galleryInput">
+                            <i class="bx bx-image"></i> Pilih Gambar
+                        </label>
+                        <input type="file" id="galleryInput" accept="image/*" style="display:none">
+                    </div>
+                    <div class="scan-result" id="scanResult" style="display:none">
+                        <i class="bx bx-check-circle"></i>
+                        <div>
+                            <span class="scan-result-label">Hasil Scan:</span>
+                            <span class="scan-result-val" id="scanResultVal">—</span>
+                        </div>
+                        <button class="btn-use-scan" id="btnUseScan">Gunakan</button>
+                    </div>
+                    <div class="scan-manual-fallback">
+                        <p class="scan-fallback-label">Atau input manual:</p>
+                        <input type="text" id="inputInvoiceScan" placeholder="No. Invoice" autocomplete="off">
+                        <input type="date" id="inputTanggalScan">
+                        <div class="cd-wrapper" id="cdSupplierScan">
+                            <div class="cd-input-row">
+                                <input class="cd-input" id="inputSupplierScan" type="text"
+                                       placeholder="Pilih atau ketik supplier" autocomplete="off">
+                                <i class="bx bx-chevron-down cd-arrow"></i>
+                            </div>
+                            <div class="cd-dropdown">
+                                <div class="cd-search-box">
+                                    <i class="bx bx-search"></i>
+                                    <input class="cd-search" type="text" placeholder="Cari supplier...">
+                                </div>
+                                <ul class="cd-list"></ul>
+                                <div class="cd-empty">Belum ada data supplier</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="error-msg" id="errorMsg"></p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="batalBtn">Batal</button>
+                <button class="btn-simpan" id="simpanBtn">
+                    <i class="bx bx-save"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus -->
+    <div class="modal-overlay" id="confirmOverlay">
+        <div class="modal modal-confirm">
+            <div class="confirm-icon">🗑️</div>
+            <h3>Hapus Invoice?</h3>
+            <p class="confirm-desc">Data invoice ini akan dihapus permanen dan tidak bisa dikembalikan.</p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="confirmNo">Tidak</button>
+                <button class="btn-hapus-confirm" id="confirmYes">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/customDropdown.js"></script>
+    <script src="js/inputBarang.js"></script>
+</body>
+</html>

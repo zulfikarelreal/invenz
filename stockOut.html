@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/stockOut.css">
+    <link rel="stylesheet" href="css/customDropdown.css">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Stock Out | Invenz</title>
+
+    <style>
+        /* ===== STATS STRIP ===== */
+        .stats-strip {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            width: 90%;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 10px;
+            box-shadow: 3px 4px 0 0 #111;
+            margin: 10px auto 12px;
+            overflow: hidden;
+        }
+        .stats-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 12px;
+            gap: 2px;
+        }
+        .stats-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #888;
+            text-align: center;
+        }
+        .stats-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ff6b35;
+        }
+        .stats-divider {
+            width: 1px;
+            height: 40px;
+            background: #eee;
+            flex-shrink: 0;
+        }
+
+        /* ===== NAV CONTROL EXTENDED ===== */
+        .nav-controll {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            margin-top: 65px;
+            padding: 5px 0;
+            gap: 8px;
+        }
+        .nav-left-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        /* ===== FILTER ===== */
+        .filter-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 8px;
+            box-shadow: 2px 3px 0 0 #111;
+            padding: 5px 10px;
+        }
+        .filter-icon { font-size: 16px !important; color: #ff6b35; cursor: default; }
+        .filter-select {
+            font-family: "Poppins", sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            outline: none;
+            background: transparent;
+            cursor: pointer;
+            color: #111;
+        }
+
+        /* ===== SEARCH BOX ===== */
+        .search-box-so {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+            font-size: 12px;
+            font-family: "Poppins", sans-serif;
+            outline: none;
+            width: 200px;
+        }
+        .search-box-so:focus {
+            border-color: #ff6b35;
+            background: #fff5f0;
+        }
+
+        /* ===== CUSTOM RANGE PANEL ===== */
+        .custom-range-panel-so {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: white;
+            border: 1px solid #111;
+            border-radius: 8px;
+            box-shadow: 2px 3px 0 0 #111;
+            padding: 6px 10px;
+            width: 90%;
+            margin: 0 auto;
+        }
+        .custom-range-panel-so.visible { display: flex; }
+        .custom-range-panel-so label { font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; }
+        .custom-range-panel-so input[type="date"] {
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #aaa;
+            font-size: 12px; font-family: "Poppins", sans-serif;
+            background: rgb(229,229,229); outline: none; cursor: pointer;
+        }
+        .custom-range-panel-so input[type="date"]:focus { border-color: #ff6b35; background: #fff5f0; }
+        .range-sep-so { font-size: 13px; color: #888; font-weight: 600; }
+        .btn-apply-range-so {
+            padding: 4px 12px; font-size: 11px; font-weight: 700;
+            background: #ff6b35; color: white;
+            border: 1px solid #111; border-radius: 6px;
+            box-shadow: 2px 2px 0 0 #111; cursor: pointer;
+            font-family: "Poppins", sans-serif; transition: transform 0.1s; white-space: nowrap;
+        }
+        .btn-apply-range-so:hover { transform: scale(0.93); }
+
+        /* ===== RANGE BADGE ===== */
+        .range-badge-so {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: #ffe8dc;
+            border: 1px solid #ff6b35;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px; font-weight: 600; color: #d44a00;
+            cursor: pointer; white-space: nowrap;
+        }
+        .range-badge-so.visible { display: flex; }
+        .range-badge-so i { font-size: 13px !important; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>INVENZ</span>
+            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+        </div>
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+            <div>
+                <div class="sidebar-username" id="sidebarUsername">Admin</div>
+                <div class="sidebar-role">Operator Inventori</div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+            <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
+            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="stockOut.html" class="active"><i class="bx bx-truck"></i> Stock Out</a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="logoutBtn">
+                <i class="bx bx-log-out"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <i class="bx bx-menu hamburger" id="hamburger"></i>
+        <div class="title">
+            <i class="bxf bx-truck"></i>
+            <h6>STOCK OUT</h6>
+        </div>
+        <i class="bxf bx-user-circle"></i>
+    </div>
+
+    <!-- Nav Control -->
+    <div class="nav-controll">
+        <div class="nav-left-controls">
+            <!-- Filter waktu -->
+            <div class="filter-wrap">
+                <i class="bx bx-filter-alt filter-icon"></i>
+                <select id="filterWaktuSO" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="thismonth">Bulan Ini</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="lastmonth">Bulan Kemarin</option>
+                    <option value="3m">3 Bulan Terakhir</option>
+                    <option value="6m">6 Bulan Terakhir</option>
+                    <option value="ytd">YTD (Tahun Ini)</option>
+                    <option value="1y">12 Bulan Terakhir</option>
+                    <option value="lastyear">Tahun Lalu</option>
+                    <option value="custom">Custom Range...</option>
+                </select>
+            </div>
+            <!-- Badge custom range -->
+            <div class="range-badge-so" id="rangeBadgeSO" title="Klik untuk reset">
+                <i class="bx bx-calendar"></i>
+                <span id="rangeBadgeTextSO"></span>
+                <i class="bx bx-x"></i>
+            </div>
+            <!-- Search -->
+            <input type="text" class="search-box-so" id="searchSO"
+                   placeholder="🔍 Cari customer / invoice...">
+        </div>
+        <button class="stockout-btn" id="openModalBtn">
+            <i class="bx bx-plus"></i> Stock Out
+        </button>
+    </div>
+
+    <!-- Custom Date Range Panel -->
+    <div class="custom-range-panel-so" id="customRangePanelSO">
+        <label>Dari</label>
+        <input type="date" id="customFromSO">
+        <span class="range-sep-so">—</span>
+        <label>Sampai</label>
+        <input type="date" id="customToSO">
+        <button class="btn-apply-range-so" id="btnApplyRangeSO">Terapkan</button>
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="stats-strip" id="statsStrip">
+        <div class="stats-item">
+            <span class="stats-label">Total Invoice</span>
+            <span class="stats-val" id="statInvoiceOut">0</span>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stats-item">
+            <span class="stats-label">Total Barang</span>
+            <span class="stats-val" id="statBarangOut">0</span>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stats-item">
+            <span class="stats-label">Jenis Barang</span>
+            <span class="stats-val" id="statJenisOut">0</span>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stats-item">
+            <span class="stats-label">Total Nilai</span>
+            <span class="stats-val" id="statNilaiOut">Rp 0</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice Keluar</th>
+                    <th>Tanggal Keluar</th>
+                    <th>Customer</th>
+                    <th>No. Telepon</th>
+                    <th>Metode Bayar</th>
+                    <th>Total Barang</th>
+                    <th>Total Harga</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="empty-row">
+                    <td colspan="9">Belum ada data — klik "Stock Out" untuk membuat invoice keluar</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ===== MODAL BUAT INVOICE KELUAR ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-top-bar">
+                <h3><i class="bx bx-truck"></i> Stock Out Barang</h3>
+                <button class="modal-close-x" id="modalCloseX"><i class="bx bx-x"></i></button>
+            </div>
+            <div class="modal-form">
+                <div class="form-row">
+                    <label>No. Invoice Keluar <span class="req">*</span></label>
+                    <div class="invoice-preview-box" id="invoicePreviewBox">
+                        <i class="bx bx-barcode"></i>
+                        <span id="invoiceAutoPreview">INV-OUT-...</span>
+                        <span class="auto-badge">Auto</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Tanggal Keluar <span class="req">*</span></label>
+                    <input type="date" id="inputTanggal">
+                </div>
+                <div class="form-row">
+                    <label>Nama Customer <span class="req">*</span></label>
+                    <div class="cd-wrapper" id="cdPenerima">
+                        <div class="cd-input-row">
+                            <input class="cd-input" id="inputPenerima" type="text"
+                                   placeholder="Pilih atau ketik nama customer" autocomplete="off">
+                            <i class="bx bx-chevron-down cd-arrow"></i>
+                        </div>
+                        <div class="cd-dropdown">
+                            <div class="cd-search-box">
+                                <i class="bx bx-search"></i>
+                                <input class="cd-search" type="text" placeholder="Cari customer...">
+                            </div>
+                            <ul class="cd-list"></ul>
+                            <div class="cd-empty">Belum ada data customer di Linked Data</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>No. Telepon <span class="opt">(opsional)</span></label>
+                    <div class="phone-input-wrap">
+                        <span class="phone-prefix"><i class="bx bx-phone"></i></span>
+                        <input type="tel" id="inputTelepon"
+                               placeholder="Contoh: 08123456789" autocomplete="off">
+                    </div>
+                    <span class="field-hint" id="phonAutofillHint" style="display:none">
+                        <i class="bx bx-info-circle"></i> No. telepon terisi otomatis dari data customer.
+                    </span>
+                </div>
+                <div class="form-row">
+                    <label>Metode Pembayaran <span class="req">*</span></label>
+                    <div class="payment-options" id="paymentOptions"></div>
+                    <p class="payment-empty-hint" id="paymentEmptyHint" style="display:none">
+                        <i class="bx bx-info-circle"></i>
+                        Belum ada metode pembayaran.
+                        <a href="linkedData.html">Tambahkan di Linked Data → Payment</a>
+                    </p>
+                </div>
+            </div>
+            <p class="error-msg" id="errorMsg"></p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="batalBtn">Batal</button>
+                <button class="btn-simpan" id="simpanBtn">
+                    <i class="bx bx-save"></i> Simpan & Lanjut
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus -->
+    <div class="modal-overlay" id="confirmOverlay">
+        <div class="modal modal-confirm">
+            <div class="confirm-icon">🗑️</div>
+            <h3>Hapus Invoice Keluar?</h3>
+            <p class="confirm-desc">Data invoice keluar ini akan dihapus permanen dan stok akan dikembalikan.</p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="confirmNo">Tidak</button>
+                <button class="btn-hapus-confirm" id="confirmYes">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/customDropdown.js"></script>
+    <script src="js/stockOut.js"></script>
+</body>
+</html>

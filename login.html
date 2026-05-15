@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/login.css">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/animations.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <title>Login | Invenz</title>
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow" id="bgGlow"></div>
+
+    <!-- Back button -->
+    <a href="index.html" class="btn-back">
+        <i class="bx bx-caret-big-left"></i>
+    </a>
+
+    <!-- Left panel: branding -->
+    <div class="panel-left">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            INVENZ
+        </div>
+        <h2 class="panel-tagline">Inventori<br>lebih<br><span>terkontrol.</span></h2>
+        <p class="panel-sub">Platform manajemen stok terpusat — dari pencatatan barang masuk hingga distribusi keluar.</p>
+
+        <div class="panel-features">
+            <div class="pf-item">
+                <span class="pf-icon"><i class="bx bx-package"></i></span>
+                <span>Input & tracking barang masuk</span>
+            </div>
+            <div class="pf-item">
+                <span class="pf-icon"><i class="bx bx-truck"></i></span>
+                <span>Pencatatan stock out otomatis</span>
+            </div>
+            <div class="pf-item">
+                <span class="pf-icon"><i class="bx bx-chart-trend"></i></span>
+                <span>Dashboard stok real-time</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel: login form -->
+    <div class="panel-right">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Selamat Datang</h1>
+                <p>Masuk ke akun Invenz kamu</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="field-group">
+                    <label>Username</label>
+                    <div class="field-wrap">
+                        <i class="bx bx-user field-icon"></i>
+                        <input type="text" id="username" placeholder="Masukkan username" autocomplete="off" required>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label>Password</label>
+                    <div class="field-wrap">
+                        <i class="bxf bx-lock-keyhole field-icon"></i>
+                        <input type="password" id="password" placeholder="Masukkan password" required>
+                        <button type="button" class="eye-btn" id="eyeBtn">
+                            <i class="bx bx-show" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="error-box" id="errorBox"></div>
+
+                <button type="submit" class="btn-login" id="submitBtn">
+                    <span id="btnText">Masuk</span>
+                    <span id="btnLoader" class="btn-loader" style="display:none">
+                        <span></span><span></span><span></span>
+                    </span>
+                </button>
+            </form>
+
+            <p class="login-hint">Gunakan akun yang telah disiapkan oleh administrator.</p>
+        </div>
+    </div>
+
+    <script>
+        const validUsers = [
+            { username: "admin", password: "admin123" },
+            { username: "invenz", password: "invenz123" }
+        ];
+
+        // Glow follow mouse
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.getElementById('bgGlow');
+            const x = (e.clientX / window.innerWidth) * 100;
+            const y = (e.clientY / window.innerHeight) * 100;
+            glow.style.background = `radial-gradient(500px circle at ${x}% ${y}%, rgba(16,44,168,0.15), transparent 60%)`;
+        });
+
+        // Toggle password visibility
+        document.getElementById('eyeBtn').addEventListener('click', () => {
+            const input = document.getElementById('password');
+            const icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bx bx-hide';
+            } else {
+                input.type = 'password';
+                icon.className = 'bx bx-show';
+            }
+        });
+
+        // Login submit
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorBox = document.getElementById('errorBox');
+            const btnText  = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+
+            errorBox.textContent = '';
+            errorBox.classList.remove('show');
+
+            // Loading state
+            btnText.style.display   = 'none';
+            btnLoader.style.display = 'flex';
+
+            setTimeout(() => {
+                const user = validUsers.find(u => u.username === username && u.password === password);
+
+                btnText.style.display   = '';
+                btnLoader.style.display = 'none';
+
+                if (user) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    const formattedName = username.charAt(0).toUpperCase() + username.slice(1);
+                    localStorage.setItem('loggedUser', formattedName);
+
+                    btnText.textContent = '✓ Berhasil!';
+                    document.getElementById('submitBtn').classList.add('success');
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 600);
+                } else {
+                    errorBox.textContent = 'Username atau password salah. Coba lagi.';
+                    errorBox.classList.add('show');
+                    document.getElementById('loginForm').classList.add('shake');
+                    setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 500);
+                }
+            }, 800);
+        });
+    </script>
+</body>
+</html>
