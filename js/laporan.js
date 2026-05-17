@@ -166,10 +166,11 @@ let chartRevenue  = null;
 let chartKategori = null;
 let chartMasuk    = null;
 let chartKeluar   = null;
+let chartLineRevenue = null; // TAMBAHAN BARU
 
 function destroyCharts() {
-  [chartRevenue, chartKategori, chartMasuk, chartKeluar].forEach(c => { if (c) c.destroy(); });
-  chartRevenue = chartKategori = chartMasuk = chartKeluar = null;
+  [chartRevenue, chartKategori, chartMasuk, chartKeluar, chartLineRevenue].forEach(c => { if (c) c.destroy(); });
+  chartRevenue = chartKategori = chartMasuk = chartKeluar = chartLineRevenue = null;
 }
 
 // ============================================================
@@ -315,6 +316,7 @@ function renderAll() {
   renderChartKategori(kategoriMap);
   renderChartMasuk(filteredInvoices);
   renderChartKeluar(keluarMonthMap);
+  renderChartLineRevenue(filteredStockOuts); // TAMBAHAN BARU
 
   // ============================================================
   // ===== RENDER TABLES ========================================
@@ -483,6 +485,144 @@ function renderChartKeluar(keluarMonthMap) {
       scales: {
         x: { ticks: { font: { family: "Poppins", size: 10 } } },
         y: { beginAtZero: true, ticks: { font: { family: "Poppins", size: 10 } } },
+      },
+    },
+  });
+}
+
+// ============================================================
+// ===== CHART: LINE REVENUE HARIAN ===========================
+// ============================================================
+function renderChartLineRevenue(stockOuts) {
+  const dailyMap = {}; // tanggal → revenue
+
+  stockOuts.forEach(so => {
+    const tanggal = so.tanggal; // format YYYY-MM-DD
+    if (!dailyMap[tanggal]) dailyMap[tanggal] = 0;
+    
+    (so.items || []).forEach(item => {
+      const qty  = parseInt(item.jumlahKeluar) || 0;
+      const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
+      dailyMap[tanggal] += jual * qty;
+    });
+  });
+
+  // Sort by date
+  const sortedDates = Object.keys(dailyMap).sort();
+  const labels = sortedDates.map(d => fmtDate(d)); // Format tanggal untuk label
+  const revenues = sortedDates.map(d => dailyMap[d]);
+
+  // Calculate moving average (7-day)
+  const movingAvg = [];
+  const window = 7;
+  for (let i = 0; i < revenues.length; i++) {
+    const start = Math.max(0, i - window + 1);
+    const slice = revenues.slice(start, i + 1);
+    const avg = slice.reduce((a, b) => a + b, 0) / slice.length;
+    movingAvg.push(avg);
+  }
+
+  const empty = labels.length === 0;
+  document.getElementById("emptyLineRevenue").classList.toggle("hidden", !empty);
+
+  const ctx = document.getElementById("chartLineRevenue");
+  if (empty) { 
+    ctx.style.display = "none"; 
+    return; 
+  }
+  ctx.style.display = "";
+
+  chartLineRevenue = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Revenue Harian",
+          data: revenues,
+          backgroundColor: "rgba(16,185,129,0.1)",
+          borderColor: "#10B981",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: "#10B981",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2,
+        },
+        {
+          label: "Moving Average (7 hari)",
+          data: movingAvg,
+          backgroundColor: "transparent",
+          borderColor: "#3B82F6",
+          borderWidth: 2,
+          borderDash: [5, 5],
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: "top",
+          labels: {
+            font: { family: "Poppins", size: 11 },
+            usePointStyle: true,
+            padding: 15,
+          },
+        },
+        tooltip: {
+          backgroundColor: "rgba(0,0,0,0.8)",
+          titleFont: { family: "Poppins", size: 12, weight: "600" },
+          bodyFont: { family: "Poppins", size: 11 },
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) label += ': ';
+              label += fmtRp(context.parsed.y);
+              return label;
+            }
+          }
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            font: { family: "Poppins", size: 10 },
+            maxRotation: 45,
+            minRotation: 45,
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { family: "Poppins", size: 10 },
+            callback: v => {
+              if (v >= 1000000) return "Rp " + (v / 1000000).toFixed(1) + "jt";
+              if (v >= 1000) return "Rp " + (v / 1000).toFixed(0) + "rb";
+              return "Rp " + v;
+            },
+          },
+          grid: {
+            color: "rgba(0,0,0,0.05)",
+          },
+        },
       },
     },
   });
@@ -690,6 +830,26 @@ function exportExcel() {
   ws4["!cols"] = [{ wch: 4 },{ wch: 30 },{ wch: 16 },{ wch: 14 },{ wch: 18 },{ wch: 18 },{ wch: 18 },{ wch: 12 }];
   XLSX.utils.book_append_sheet(wb, ws4, "Top Produk");
 
+  // ===== SHEET 5: REVENUE HARIAN ===== (TAMBAHAN BARU)
+  const dailyMap = {};
+  allSOs.forEach(so => {
+    const tanggal = so.tanggal;
+    if (!dailyMap[tanggal]) dailyMap[tanggal] = 0;
+    (so.items || []).forEach(item => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
+      dailyMap[tanggal] += parseFloat(item.hargaJual || item.hargaHPP || 0) * qty;
+    });
+  });
+
+  const dailyRows = [["Tanggal", "Revenue"]];
+  Object.keys(dailyMap).sort().forEach(date => {
+    dailyRows.push([date, dailyMap[date]]);
+  });
+
+  const ws5 = XLSX.utils.aoa_to_sheet(dailyRows);
+  ws5["!cols"] = [{ wch: 14 }, { wch: 18 }];
+  XLSX.utils.book_append_sheet(wb, ws5, "Revenue Harian");
+
   // Download
   const fname = "Laporan_INVENZ_" + period.replace(/\s+/g, "_") + "_" + new Date().toISOString().slice(0,10) + ".xlsx";
   XLSX.writeFile(wb, fname);
@@ -768,6 +928,28 @@ function exportPDF() {
       <td style="color:${(rev-h) >= 0 ? '#0a6640' : '#cc2222'}">${fmtRp(rev - h)}</td>
     </tr>`;
   }).join("");
+
+  // TAMBAHAN: Daily revenue for PDF
+  const dailyRevMap = {};
+  allSOs.forEach(so => {
+    const tanggal = so.tanggal;
+    if (!dailyRevMap[tanggal]) dailyRevMap[tanggal] = 0;
+    (so.items || []).forEach(item => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
+      dailyRevMap[tanggal] += parseFloat(item.hargaJual || item.hargaHPP || 0) * qty;
+    });
+  });
+
+  const dailyRevenueRows = Object.keys(dailyRevMap)
+    .sort()
+    .reverse()
+    .slice(0, 10)
+    .map((date, i) => `<tr>
+      <td>${i + 1}</td>
+      <td>${fmtDate(date)}</td>
+      <td style="font-weight:700;color:#0a6640">${fmtRp(dailyRevMap[date])}</td>
+    </tr>`)
+    .join("");
 
   const now = new Date().toLocaleString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
@@ -848,6 +1030,14 @@ function exportPDF() {
   <table>
     <thead><tr><th>#</th><th>Produk</th><th>Kategori</th><th>Qty</th><th>Revenue</th><th>HPP</th><th>Profit</th><th>Margin</th></tr></thead>
     <tbody>${topRows || '<tr><td colspan="8" style="color:#aaa;font-style:italic;padding:16px">Belum ada data</td></tr>'}</tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Trend Revenue Harian (10 Hari Terakhir)</div>
+  <table>
+    <thead><tr><th>#</th><th>Tanggal</th><th>Revenue</th></tr></thead>
+    <tbody>${dailyRevenueRows || '<tr><td colspan="3" style="color:#aaa;font-style:italic;padding:16px">Belum ada data</td></tr>'}</tbody>
   </table>
 </div>
 
