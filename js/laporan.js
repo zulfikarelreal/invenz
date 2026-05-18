@@ -690,53 +690,228 @@ function renderTableBarangMasuk(invoices) {
 // ============================================================
 // ===== EXPORT EXCEL =========================================
 // ============================================================
+
 document.getElementById("btnExportExcel").addEventListener("click", exportExcel);
 
 function exportExcel() {
   const range  = getDateRange(filterPeriode.value);
   const period = document.getElementById("periodText").textContent;
+  const printedAt = new Date().toLocaleString("id-ID", {
+    day: "2-digit", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
 
-  const allInvoices  = loadInvoices().filter(inv => inRange(inv.tanggal, range));
-  const allSOs       = loadStockOuts().filter(so  => inRange(so.tanggal, range));
+  // ── RAW DATA ──────────────────────────────────────────────
+  const allInvoices = loadInvoices().filter(inv => inRange(inv.tanggal, range));
+  const allSOs      = loadStockOuts().filter(so  => inRange(so.tanggal, range));
+
+  // ── HITUNG RINGKASAN ─────────────────────────────────────
+  let totalRevenue = 0, totalHPP = 0, qtyMasuk = 0, qtyKeluar = 0;
+  const prodMap = {};
+  const kategoriMap = {};
+  const customerSet = new Set();
+
+  allInvoices.forEach(inv =>
+    (inv.items || []).forEach(i => { qtyMasuk += parseInt(i.stok) || 0; })
+  );
+
+  allSOs.forEach(so => {
+    if (so.penerima) customerSet.add(so.penerima.toLowerCase());
+    (so.items || []).forEach(item => {
+      const qty  = parseInt(item.jumlahKeluar) || 0;
+      const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
+      const hpp  = parseFloat(item.hargaHPP || 0);
+      const rev  = jual * qty;
+      const hppT = hpp * qty;
+      totalRevenue += rev;
+      totalHPP     += hppT;
+      qtyKeluar    += qty;
+
+      const kat = item.kategori || "Lainnya";
+      if (!kategoriMap[kat]) kategoriMap[kat] = { revenue: 0, qty: 0 };
+      kategoriMap[kat].revenue += rev;
+      kategoriMap[kat].qty     += qty;
+
+      const key = item.nama || "—";
+      if (!prodMap[key]) prodMap[key] = { nama: key, kategori: item.kategori || "—", qty: 0, revenue: 0, hpp: 0 };
+      prodMap[key].qty     += qty;
+      prodMap[key].revenue += rev;
+      prodMap[key].hpp     += hppT;
+    });
+  });
+
+  const totalProfit = totalRevenue - totalHPP;
+  const marginPct   = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   const wb = XLSX.utils.book_new();
 
-  // ===== SHEET 1: RINGKASAN =====
-  let revenue = 0, hpp = 0, qtyMasuk = 0, qtyKeluar = 0;
-  allInvoices.forEach(inv => (inv.items || []).forEach(i => { qtyMasuk += parseInt(i.stok) || 0; }));
-  allSOs.forEach(so => (so.items || []).forEach(i => {
-    const qty = parseInt(i.jumlahKeluar) || 0;
-    revenue += parseFloat(i.hargaJual || i.hargaHPP || 0) * qty;
-    hpp     += parseFloat(i.hargaHPP || 0) * qty;
-    qtyKeluar += qty;
-  }));
-  const profit = revenue - hpp;
-  const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(2) : 0;
+  // ════════════════════════════════════════════════════════
+  // SHEET 1 — RINGKASAN / COVER
+  // ════════════════════════════════════════════════════════
+  const ws1 = XLSX.utils.aoa_to_sheet([]);
 
-  const summaryData = [
-    ["LAPORAN INVENZ — " + period],
-    ["Dicetak oleh:", loggedUser],
-    ["Tanggal cetak:", new Date().toLocaleString("id-ID")],
-    [],
-    ["NERACA KEUANGAN"],
-    ["Keterangan", "Nilai"],
-    ["Revenue / Pendapatan", revenue],
-    ["Total HPP / Modal", hpp],
-    ["Profit / Keuntungan", profit],
-    ["Profit Margin (%)", parseFloat(margin)],
-    [],
-    ["RINGKASAN INVENTORI"],
-    ["Total Barang Masuk (qty)", qtyMasuk],
-    ["Total Barang Keluar (qty)", qtyKeluar],
-    ["Total Transaksi (invoice keluar)", allSOs.length],
-    ["Total Invoice Masuk", allInvoices.length],
+  const s1Data = [
+    /* 1  */ ["LAPORAN KEUANGAN & INVENTORI"],
+    /* 2  */ ["INVENZ — Sistem Manajemen Inventori"],
+    /* 3  */ [],
+    /* 4  */ ["Periode Laporan", period],
+    /* 5  */ ["Dicetak oleh",    loggedUser],
+    /* 6  */ ["Tanggal cetak",   printedAt],
+    /* 7  */ [],
+    /* 8  */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
+    /* 9  */ ["NERACA KEUANGAN"],
+    /* 10 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
+    /* 11 */ ["Keterangan", "Nilai (Rp)", "Catatan"],
+    /* 12 */ ["Revenue / Pendapatan Kotor", totalRevenue, "Total penjualan pada periode ini"],
+    /* 13 */ ["Total HPP / Harga Pokok Penjualan", totalHPP, "Modal yang dikeluarkan"],
+    /* 14 */ ["Profit / Laba Bersih", totalProfit, totalProfit >= 0 ? "Positif ✔" : "Negatif ✘"],
+    /* 15 */ ["Profit Margin (%)", marginPct / 100, "Persentase keuntungan dari revenue"],
+    /* 16 */ [],
+    /* 17 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
+    /* 18 */ ["RINGKASAN INVENTORI & TRANSAKSI"],
+    /* 19 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
+    /* 20 */ ["Keterangan", "Nilai", "Satuan"],
+    /* 21 */ ["Total Barang Masuk",  qtyMasuk,          "pcs"],
+    /* 22 */ ["Total Invoice Masuk", allInvoices.length, "invoice"],
+    /* 23 */ ["Total Barang Keluar", qtyKeluar,          "pcs"],
+    /* 24 */ ["Total Transaksi Keluar", allSOs.length,   "transaksi"],
+    /* 25 */ ["Total Customer Unik",  customerSet.size,  "pelanggan"],
+    /* 26 */ [],
+    /* 27 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
+    /* 28 */ ["DISTRIBUSI PER KATEGORI"],
+    /* 29 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
+    /* 30 */ ["Kategori", "Total Revenue (Rp)", "Total Qty", "Kontribusi (%)"],
   ];
-  const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-  ws1["!cols"] = [{ wch: 35 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan");
 
-  // ===== SHEET 2: TRANSAKSI STOCK OUT =====
-  const soRows = [["#","Invoice","Tanggal","Customer","Metode Bayar","Total Qty","Revenue","HPP","Profit"]];
+  // Tambahkan baris kategori
+  Object.entries(kategoriMap)
+    .sort((a, b) => b[1].revenue - a[1].revenue)
+    .forEach(([kat, data]) => {
+      const kontribusi = totalRevenue > 0 ? data.revenue / totalRevenue : 0;
+      s1Data.push([kat, data.revenue, data.qty, kontribusi]);
+    });
+
+  XLSX.utils.sheet_add_aoa(ws1, s1Data, { origin: "A1" });
+
+  // ── COLUMN WIDTHS ─────────────────────────────────────
+  ws1["!cols"] = [{ wch: 38 }, { wch: 22 }, { wch: 30 }, { wch: 20 }];
+
+  // ── MERGES ───────────────────────────────────────────
+  ws1["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Judul utama
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Sub-judul
+    { s: { r: 7, c: 0 }, e: { r: 7, c: 3 } },
+    { s: { r: 8, c: 0 }, e: { r: 8, c: 3 } },
+    { s: { r: 9, c: 0 }, e: { r: 9, c: 3 } },
+    { s: { r: 16, c: 0 }, e: { r: 16, c: 3 } },
+    { s: { r: 17, c: 0 }, e: { r: 17, c: 3 } },
+    { s: { r: 18, c: 0 }, e: { r: 18, c: 3 } },
+    { s: { r: 26, c: 0 }, e: { r: 26, c: 3 } },
+    { s: { r: 27, c: 0 }, e: { r: 27, c: 3 } },
+    { s: { r: 28, c: 0 }, e: { r: 28, c: 3 } },
+  ];
+
+  // ── CELL STYLES ──────────────────────────────────────
+  // Judul utama
+  applyExcelStyle(ws1, "A1", {
+    font: { name: "Arial", bold: true, sz: 16, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "102CA8" } },
+    alignment: { horizontal: "center", vertical: "center" },
+  });
+  // Sub-judul
+  applyExcelStyle(ws1, "A2", {
+    font: { name: "Arial", bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "1E3FB8" } },
+    alignment: { horizontal: "center", vertical: "center" },
+  });
+  // Meta info labels (baris 4–6 col A)
+  ["A4","A5","A6"].forEach(cell => applyExcelStyle(ws1, cell, {
+    font: { name: "Arial", bold: true, sz: 10 },
+    fill: { fgColor: { rgb: "EEF2FF" } },
+  }));
+  ["B4","B5","B6"].forEach(cell => applyExcelStyle(ws1, cell, {
+    font: { name: "Arial", sz: 10 },
+    fill: { fgColor: { rgb: "EEF2FF" } },
+  }));
+
+  // Section headers
+  ["A9","A18","A28"].forEach(cell => applyExcelStyle(ws1, cell, {
+    font: { name: "Arial", bold: true, sz: 11, color: { rgb: "102CA8" } },
+    alignment: { horizontal: "center" },
+  }));
+
+  // Tabel Neraca — header baris 11
+  ["A11","B11","C11"].forEach(cell => applyExcelStyle(ws1, cell, {
+    font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "102CA8" } },
+    alignment: { horizontal: "center" },
+    border: { bottom: { style: "medium", color: { rgb: "000000" } } },
+  }));
+
+  // Baris data neraca (12–15)
+  for (let r = 11; r <= 14; r++) {
+    const addr = String.fromCharCode(65) + (r + 1);  // A12..A15
+    applyExcelStyle(ws1, `A${r+1}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: r % 2 === 1 ? "F0F4FF" : "FFFFFF" } } });
+    applyExcelStyle(ws1, `B${r+1}`, { font: { name: "Arial", sz: 10, bold: true }, fill: { fgColor: { rgb: r % 2 === 1 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
+    applyExcelStyle(ws1, `C${r+1}`, { font: { name: "Arial", sz: 10, italic: true, color: { rgb: "666666" } }, fill: { fgColor: { rgb: r % 2 === 1 ? "F0F4FF" : "FFFFFF" } } });
+  }
+  // Margin row (baris 15) — format persen
+  applyExcelStyle(ws1, "B15", { font: { name: "Arial", sz: 10, bold: true }, alignment: { horizontal: "right" }, numFmt: '0.00%' });
+
+  // Profit baris — warna sesuai nilai
+  if (totalProfit >= 0) {
+    applyExcelStyle(ws1, "A14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "0A6640" } } });
+    applyExcelStyle(ws1, "B14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "0A6640" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
+  } else {
+    applyExcelStyle(ws1, "A14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "CC2222" } } });
+    applyExcelStyle(ws1, "B14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "CC2222" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
+  }
+
+  // Tabel Inventori — header baris 20
+  ["A20","B20","C20"].forEach(cell => applyExcelStyle(ws1, cell, {
+    font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "102CA8" } },
+    alignment: { horizontal: "center" },
+  }));
+  for (let r = 20; r <= 24; r++) {
+    applyExcelStyle(ws1, `A${r+1}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: r % 2 === 0 ? "F0F4FF" : "FFFFFF" } } });
+    applyExcelStyle(ws1, `B${r+1}`, { font: { name: "Arial", bold: true, sz: 10 }, fill: { fgColor: { rgb: r % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
+    applyExcelStyle(ws1, `C${r+1}`, { font: { name: "Arial", sz: 10, color: { rgb: "888888" } }, fill: { fgColor: { rgb: r % 2 === 0 ? "F0F4FF" : "FFFFFF" } } });
+  }
+
+  // Kategori header — baris 30
+  ["A30","B30","C30","D30"].forEach(cell => applyExcelStyle(ws1, cell, {
+    font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "102CA8" } },
+    alignment: { horizontal: "center" },
+  }));
+  const katStartRow = 31;
+  Object.entries(kategoriMap).forEach(([_, __], idx) => {
+    const r = katStartRow + idx;
+    applyExcelStyle(ws1, `A${r}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } } });
+    applyExcelStyle(ws1, `B${r}`, { font: { name: "Arial", bold: true, sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
+    applyExcelStyle(ws1, `C${r}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" } });
+    applyExcelStyle(ws1, `D${r}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '0.00%' });
+  });
+
+  ws1["!rowheights"] = [{ hpt: 28 }, { hpt: 18 }]; // Baris 1 & 2 lebih tinggi
+  XLSX.utils.book_append_sheet(wb, ws1, "📊 Ringkasan");
+
+
+  // ════════════════════════════════════════════════════════
+  // SHEET 2 — TRANSAKSI STOCK OUT
+  // ════════════════════════════════════════════════════════
+  const ws2 = XLSX.utils.aoa_to_sheet([]);
+
+  const so_header = ["#", "No. Invoice", "Tanggal", "Customer / Penerima", "Metode Pembayaran", "Total Item (pcs)", "Revenue (Rp)", "HPP (Rp)", "Profit (Rp)", "Margin (%)"];
+  const so_rows = [
+    [`TRANSAKSI STOCK OUT — ${period}`],
+    [],
+    so_header,
+  ];
+
+  let so_totalRev = 0, so_totalHPP = 0, so_totalQty = 0;
+
   allSOs.forEach((so, i) => {
     let rev = 0, h = 0, qty = 0;
     (so.items || []).forEach(item => {
@@ -745,46 +920,327 @@ function exportExcel() {
       h   += parseFloat(item.hargaHPP || 0) * q;
       qty += q;
     });
-    soRows.push([i+1, so.invoice, so.tanggal, so.penerima || "—", so.paymentNama || "—", qty, rev, h, rev - h]);
+    const profit = rev - h;
+    const margin = rev > 0 ? profit / rev : 0;
+    so_totalRev += rev; so_totalHPP += h; so_totalQty += qty;
+    so_rows.push([i + 1, so.invoice, so.tanggal, so.penerima || "—", so.paymentNama || "—", qty, rev, h, profit, margin]);
   });
-  const ws2 = XLSX.utils.aoa_to_sheet(soRows);
-  ws2["!cols"] = [{ wch: 4 },{ wch: 20 },{ wch: 14 },{ wch: 22 },{ wch: 14 },{ wch: 12 },{ wch: 18 },{ wch: 18 },{ wch: 18 }];
-  XLSX.utils.book_append_sheet(wb, ws2, "Transaksi Stock Out");
 
-  // ===== SHEET 3: BARANG MASUK =====
-  const invRows = [["#","Invoice","Tanggal","Supplier","Total Qty","Jenis Barang","Nilai HPP"]];
+  // Baris total
+  so_rows.push([]);
+  so_rows.push(["TOTAL", "", "", "", "", so_totalQty, so_totalRev, so_totalHPP, so_totalRev - so_totalHPP, so_totalRev > 0 ? (so_totalRev - so_totalHPP) / so_totalRev : 0]);
+
+  XLSX.utils.sheet_add_aoa(ws2, so_rows, { origin: "A1" });
+  ws2["!cols"] = [
+    { wch: 5 }, { wch: 22 }, { wch: 14 }, { wch: 26 }, { wch: 20 },
+    { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 13 }
+  ];
+  ws2["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }];
+
+  // Style sheet 2
+  applyExcelStyle(ws2, "A1", {
+    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "102CA8" } },
+    alignment: { horizontal: "center", vertical: "center" },
+  });
+
+  so_header.forEach((_, ci) => {
+    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
+    applyExcelStyle(ws2, cell, {
+      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "1E3FB8" } },
+      alignment: { horizontal: "center" },
+      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
+    });
+  });
+
+  for (let ri = 3; ri < 3 + allSOs.length; ri++) {
+    const isEven = (ri - 3) % 2 === 0;
+    const bg = isEven ? "F0F4FF" : "FFFFFF";
+    for (let ci = 0; ci < 10; ci++) {
+      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws2[cell]) continue;
+      const numFmt = ci === 6 || ci === 7 || ci === 8 ? '#,##0' : ci === 9 ? '0.00%' : null;
+      applyExcelStyle(ws2, cell, {
+        font: { name: "Arial", sz: 10, bold: ci === 6 || ci === 9, color: ci === 8 ? { rgb: ws2[cell].v >= 0 ? "0A6640" : "CC2222" } : undefined },
+        fill: { fgColor: { rgb: bg } },
+        alignment: { horizontal: ci >= 5 ? "right" : ci === 0 ? "center" : "left" },
+        numFmt,
+      });
+    }
+  }
+
+  // Style baris TOTAL
+  const totalRowIdx = 3 + allSOs.length + 1;
+  for (let ci = 0; ci < 10; ci++) {
+    const cell = XLSX.utils.encode_cell({ r: totalRowIdx, c: ci });
+    if (!ws2[cell]) continue;
+    const numFmt = ci === 6 || ci === 7 || ci === 8 ? '#,##0' : ci === 9 ? '0.00%' : null;
+    applyExcelStyle(ws2, cell, {
+      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "102CA8" } },
+      alignment: { horizontal: ci >= 5 ? "right" : "center" },
+      numFmt,
+      border: { top: { style: "medium", color: { rgb: "000000" } } },
+    });
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws2, "📦 Transaksi Stock Out");
+
+
+  // ════════════════════════════════════════════════════════
+  // SHEET 3 — BARANG MASUK
+  // ════════════════════════════════════════════════════════
+  const ws3 = XLSX.utils.aoa_to_sheet([]);
+
+  const inv_header = ["#", "No. Invoice", "Tanggal", "Supplier", "Total Qty (pcs)", "Jenis Barang", "Nilai HPP (Rp)"];
+  const inv_rows = [
+    [`RIWAYAT BARANG MASUK — ${period}`],
+    [],
+    inv_header,
+  ];
+
+  let inv_totalQty = 0, inv_totalNilai = 0;
+
   allInvoices.forEach((inv, i) => {
     const qty   = (inv.items || []).reduce((s, it) => s + (parseInt(it.stok) || 0), 0);
-    const jenis = new Set((inv.items || []).map(it => it.nama)).size;
+    const jenis = new Set((inv.items || []).map(it => it.nama).filter(Boolean)).size;
     const nilai = (inv.items || []).reduce((s, it) => s + (parseFloat(it.hargaHPP || 0) * (parseInt(it.stok) || 0)), 0);
-    invRows.push([i+1, inv.invoice, inv.tanggal, inv.supplier || "—", qty, jenis, nilai]);
+    inv_totalQty   += qty;
+    inv_totalNilai += nilai;
+    inv_rows.push([i + 1, inv.invoice, inv.tanggal, inv.supplier || "—", qty, jenis, nilai]);
   });
-  const ws3 = XLSX.utils.aoa_to_sheet(invRows);
-  ws3["!cols"] = [{ wch: 4 },{ wch: 20 },{ wch: 14 },{ wch: 22 },{ wch: 12 },{ wch: 14 },{ wch: 18 }];
-  XLSX.utils.book_append_sheet(wb, ws3, "Barang Masuk");
 
-  // ===== SHEET 4: TOP PRODUK =====
-  const prodMap = {};
-  allSOs.forEach(so => (so.items || []).forEach(item => {
-    const key = item.nama || "—";
-    if (!prodMap[key]) prodMap[key] = { nama: key, kategori: item.kategori || "—", qty: 0, revenue: 0, hpp: 0 };
-    const qty = parseInt(item.jumlahKeluar) || 0;
-    prodMap[key].qty     += qty;
-    prodMap[key].revenue += parseFloat(item.hargaJual || item.hargaHPP || 0) * qty;
-    prodMap[key].hpp     += parseFloat(item.hargaHPP || 0) * qty;
-  }));
+  inv_rows.push([]);
+  inv_rows.push(["TOTAL", "", "", "", inv_totalQty, "", inv_totalNilai]);
 
-  const topRows = [["#", "Nama Produk", "Kategori", "Qty Terjual", "Revenue", "HPP", "Profit", "Margin (%)"]];
-  Object.values(prodMap).sort((a,b)=> b.qty - a.qty).slice(0, 10).forEach((p, i) => {
-    const prof = p.revenue - p.hpp;
-    const marg = p.revenue > 0 ? (prof / p.revenue) * 100 : 0;
-    topRows.push([i+1, p.nama, p.kategori, p.qty, p.revenue, p.hpp, prof, parseFloat(marg.toFixed(2))]);
+  XLSX.utils.sheet_add_aoa(ws3, inv_rows, { origin: "A1" });
+  ws3["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 14 }, { wch: 26 }, { wch: 16 }, { wch: 14 }, { wch: 20 }];
+  ws3["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }];
+
+  applyExcelStyle(ws3, "A1", {
+    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "0A6640" } },
+    alignment: { horizontal: "center" },
   });
-  const ws4 = XLSX.utils.aoa_to_sheet(topRows);
-  ws4["!cols"] = [{ wch: 4 },{ wch: 25 },{ wch: 15 },{ wch: 12 },{ wch: 18 },{ wch: 18 },{ wch: 18 },{ wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, ws4, "Top 10 Produk");
 
-  XLSX.writeFile(wb, `Laporan_Invenz_${period.replace(/ /g, "_")}.xlsx`);
+  inv_header.forEach((_, ci) => {
+    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
+    applyExcelStyle(ws3, cell, {
+      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "16A34A" } },
+      alignment: { horizontal: "center" },
+      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
+    });
+  });
+
+  for (let ri = 3; ri < 3 + allInvoices.length; ri++) {
+    const bg = (ri - 3) % 2 === 0 ? "F0FFF4" : "FFFFFF";
+    for (let ci = 0; ci < 7; ci++) {
+      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws3[cell]) continue;
+      applyExcelStyle(ws3, cell, {
+        font: { name: "Arial", sz: 10, bold: ci === 6 },
+        fill: { fgColor: { rgb: bg } },
+        alignment: { horizontal: ci >= 4 ? "right" : ci === 0 ? "center" : "left" },
+        numFmt: ci === 6 ? '#,##0' : null,
+      });
+    }
+  }
+
+  const inv_totalRowIdx = 3 + allInvoices.length + 1;
+  for (let ci = 0; ci < 7; ci++) {
+    const cell = XLSX.utils.encode_cell({ r: inv_totalRowIdx, c: ci });
+    if (!ws3[cell]) continue;
+    applyExcelStyle(ws3, cell, {
+      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "0A6640" } },
+      alignment: { horizontal: ci >= 4 ? "right" : "center" },
+      numFmt: ci === 6 ? '#,##0' : null,
+      border: { top: { style: "medium", color: { rgb: "000000" } } },
+    });
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws3, "🚚 Barang Masuk");
+
+
+  // ════════════════════════════════════════════════════════
+  // SHEET 4 — TOP 10 PRODUK TERLARIS
+  // ════════════════════════════════════════════════════════
+  const ws4 = XLSX.utils.aoa_to_sheet([]);
+
+  const top_header = ["#", "Nama Produk", "Kategori", "Qty Terjual (pcs)", "Revenue (Rp)", "HPP (Rp)", "Profit (Rp)", "Margin (%)"];
+  const top_rows = [
+    [`TOP 10 PRODUK TERLARIS — ${period}`],
+    [],
+    top_header,
+  ];
+
+  const sortedProds = Object.values(prodMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+  sortedProds.forEach((p, i) => {
+    const profit = p.revenue - p.hpp;
+    const margin = p.revenue > 0 ? profit / p.revenue : 0;
+    top_rows.push([i + 1, p.nama, p.kategori, p.qty, p.revenue, p.hpp, profit, margin]);
+  });
+
+  XLSX.utils.sheet_add_aoa(ws4, top_rows, { origin: "A1" });
+  ws4["!cols"] = [{ wch: 5 }, { wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 13 }];
+  ws4["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+
+  applyExcelStyle(ws4, "A1", {
+    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "5B21B6" } },
+    alignment: { horizontal: "center" },
+  });
+
+  top_header.forEach((_, ci) => {
+    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
+    applyExcelStyle(ws4, cell, {
+      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "7C3AED" } },
+      alignment: { horizontal: "center" },
+      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
+    });
+  });
+
+  sortedProds.forEach((p, idx) => {
+    const ri = 3 + idx;
+    const bg = idx % 2 === 0 ? "F5F3FF" : "FFFFFF";
+    const profit = p.revenue - p.hpp;
+    for (let ci = 0; ci < 8; ci++) {
+      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws4[cell]) continue;
+      const numFmt = ci === 4 || ci === 5 || ci === 6 ? '#,##0' : ci === 7 ? '0.00%' : null;
+      applyExcelStyle(ws4, cell, {
+        font: {
+          name: "Arial", sz: 10, bold: ci === 1 || ci === 6,
+          color: ci === 6 ? { rgb: profit >= 0 ? "0A6640" : "CC2222" } : undefined,
+        },
+        fill: { fgColor: { rgb: bg } },
+        alignment: { horizontal: ci >= 3 ? "right" : ci === 0 ? "center" : "left" },
+        numFmt,
+      });
+    }
+    // Nomor urut dengan rank medal effect (Top 3)
+    if (idx < 3) {
+      const colors = ["FFD700", "C0C0C0", "CD7F32"]; // Emas, Perak, Perunggu
+      applyExcelStyle(ws4, `A${ri + 1}`, {
+        font: { name: "Arial", bold: true, sz: 11, color: { rgb: colors[idx] } },
+        fill: { fgColor: { rgb: bg } },
+        alignment: { horizontal: "center" },
+      });
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws4, "🏆 Top 10 Produk");
+
+
+  // ════════════════════════════════════════════════════════
+  // SHEET 5 — DETAIL ITEM PER TRANSAKSI
+  // ════════════════════════════════════════════════════════
+  const ws5 = XLSX.utils.aoa_to_sheet([]);
+
+  const detail_header = ["#", "No. Invoice", "Tanggal", "Customer", "Nama Produk", "Kategori", "Qty (pcs)", "Harga Jual (Rp)", "HPP/Unit (Rp)", "Subtotal Revenue (Rp)", "Subtotal HPP (Rp)", "Subtotal Profit (Rp)"];
+  const detail_rows = [
+    [`DETAIL ITEM TRANSAKSI — ${period}`],
+    [],
+    detail_header,
+  ];
+
+  let rowCount = 0;
+  allSOs.forEach(so => {
+    (so.items || []).forEach(item => {
+      const qty  = parseInt(item.jumlahKeluar) || 0;
+      const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
+      const hpp  = parseFloat(item.hargaHPP || 0);
+      rowCount++;
+      detail_rows.push([
+        rowCount, so.invoice, so.tanggal, so.penerima || "—",
+        item.nama || "—", item.kategori || "—",
+        qty, jual, hpp,
+        jual * qty, hpp * qty, (jual - hpp) * qty,
+      ]);
+    });
+  });
+
+  XLSX.utils.sheet_add_aoa(ws5, detail_rows, { origin: "A1" });
+  ws5["!cols"] = [
+    { wch: 5 }, { wch: 20 }, { wch: 14 }, { wch: 22 }, { wch: 25 }, { wch: 15 },
+    { wch: 12 }, { wch: 18 }, { wch: 16 }, { wch: 20 }, { wch: 18 }, { wch: 18 }
+  ];
+  ws5["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }];
+
+  applyExcelStyle(ws5, "A1", {
+    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "856404" } },
+    alignment: { horizontal: "center" },
+  });
+
+  detail_header.forEach((_, ci) => {
+    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
+    applyExcelStyle(ws5, cell, {
+      font: { name: "Arial", bold: true, sz: 9, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "B45309" } },
+      alignment: { horizontal: "center", wrapText: true },
+      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
+    });
+  });
+
+  for (let ri = 3; ri < 3 + rowCount; ri++) {
+    const bg = (ri - 3) % 2 === 0 ? "FFFBEB" : "FFFFFF";
+    for (let ci = 0; ci < 12; ci++) {
+      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws5[cell]) continue;
+      const numFmt = [7, 8, 9, 10, 11].includes(ci) ? '#,##0' : null;
+      applyExcelStyle(ws5, cell, {
+        font: { name: "Arial", sz: 9, bold: [9, 11].includes(ci) },
+        fill: { fgColor: { rgb: bg } },
+        alignment: { horizontal: ci >= 6 ? "right" : ci === 0 ? "center" : "left" },
+        numFmt,
+      });
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws5, "📋 Detail Item");
+
+
+  // ════════════════════════════════════════════════════════
+  // SAVE FILE
+  // ════════════════════════════════════════════════════════
+  const safePeriod = period.replace(/[\/\\?%*:|"<>]/g, "_").replace(/ /g, "_");
+  XLSX.writeFile(wb, `Laporan_Invenz_${safePeriod}.xlsx`, {
+    bookType: "xlsx",
+    compression: true,
+  });
+}
+
+
+// ============================================================
+// ===== HELPER: APPLY CELL STYLE (SheetJS cell-level) ========
+// ============================================================
+// SheetJS Community Edition tidak mendukung styling secara native.
+// Fungsi ini meng-inject properti `s` ke cell object agar style
+// terbaca oleh file xlsx yang dibuka di Excel / LibreOffice Calc.
+// Catatan: Untuk fungsionalitas styling penuh, pertimbangkan upgrade
+// ke SheetJS Pro atau gunakan exceljs sebagai alternatif.
+
+function applyExcelStyle(ws, cellAddr, style) {
+  if (!ws[cellAddr]) {
+    // Buat cell kosong jika belum ada agar style bisa diterapkan
+    ws[cellAddr] = { t: "z", v: undefined };
+  }
+  // Gabungkan style yang sudah ada dengan style baru
+  ws[cellAddr].s = Object.assign(ws[cellAddr].s || {}, {
+    font:      style.font      || {},
+    fill:      style.fill      ? { patternType: "solid", ...style.fill } : undefined,
+    alignment: style.alignment || {},
+    border:    style.border    || {},
+    numFmt:    style.numFmt    || undefined,
+  });
+  // Bersihkan undefined keys
+  Object.keys(ws[cellAddr].s).forEach(k => {
+    if (ws[cellAddr].s[k] === undefined) delete ws[cellAddr].s[k];
+  });
 }
 
 // ============================================================
