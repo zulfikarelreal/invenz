@@ -26,7 +26,6 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
     btn.classList.add("active");
     document.querySelector(`[data-content="${target}"]`).classList.add("active");
-    // Saat tab barang dibuka — repair & render ulang
     if (target === "barang") { repairBarangFromInvoices(); renderTable("barang"); }
   });
 });
@@ -55,13 +54,62 @@ function getLinkedData() {
 function saveLinkedData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 // ============================================================
-// ===== SINKRONISASI SKU ↔ BARANG ===========================
+// ===== DEDUPLICATE & CLEANUP ================================
 // ============================================================
 
 /**
- * Setiap kali barang di linkedData.barang berubah, pastikan
- * linkedData.sku juga di-update agar invoice.js bisa autofill.
+ * Hapus entry duplikat di linkedData.barang:
+ * - Jika ada 2+ entry dengan nama sama, prioritaskan yang punya SKU.
+ * - Entry tanpa SKU yang namanya sudah ada di entry ber-SKU → hapus.
  */
+function cleanupDuplicateBarang(allData) {
+  if (!allData.barang || !allData.barang.length) return;
+
+  const skuMap   = {};  // sku  → index (entry lengkap)
+  const namaMap  = {};  // nama → sku (nama-ke-sku, untuk deteksi duplikat)
+  const toRemove = new Set();
+
+  // Pass 1: index semua entry ber-SKU
+  allData.barang.forEach((b, i) => {
+    if (b.sku) {
+      skuMap[b.sku] = i;
+      namaMap[(b.nama || "").toLowerCase()] = b.sku;
+    }
+  });
+
+  // Pass 2: tandai entry tanpa SKU yang namanya sudah ada di entry ber-SKU
+  allData.barang.forEach((b, i) => {
+    if (!b.sku) {
+      const key = (b.nama || "").toLowerCase();
+      if (namaMap[key]) {
+        // Ada entry ber-SKU dengan nama sama → hapus entry tanpa SKU ini
+        toRemove.add(i);
+      }
+    }
+  });
+
+  if (toRemove.size > 0) {
+    allData.barang = allData.barang.filter((_, i) => !toRemove.has(i));
+  }
+
+  // Pass 3: deduplicate by SKU (keep last / paling baru)
+  const seen = new Map();
+  const deduped = [];
+  allData.barang.forEach(b => {
+    if (!b.sku) {
+      deduped.push(b); // tanpa SKU tetap masuk (belum bisa dedupe)
+      return;
+    }
+    seen.set(b.sku, b); // overwrite → keep last
+  });
+  seen.forEach(b => deduped.push(b));
+  allData.barang = deduped;
+}
+
+// ============================================================
+// ===== SINKRONISASI SKU ↔ BARANG ===========================
+// ============================================================
+
 function syncSkuFromBarang(allData) {
   if (!allData.sku) allData.sku = [];
   allData.barang.forEach(b => {
@@ -75,8 +123,7 @@ function syncSkuFromBarang(allData) {
 
 /**
  * Scan semua invoice items dan upsert ke linkedData.barang & .sku.
- * Berjalan sekali saat tab Barang dibuka pertama kali untuk
- * "merepair" data lama yang belum tersinkron.
+ * Primary key: SKU. Entry tanpa SKU yang namanya clash → dihapus (cleanup).
  */
 function repairBarangFromInvoices() {
   let invoices = {};
@@ -93,7 +140,7 @@ function repairBarangFromInvoices() {
       const merk     = (item.merk     || "").trim();
       const kategori = (item.kategori || "").trim();
 
-      // upsert barang
+      // upsert barang by SKU
       const bIdx = allData.barang.findIndex(b => b.sku === sku);
       const obj  = { sku, nama, merk, kategori };
       if (bIdx === -1) allData.barang.push(obj);
@@ -106,6 +153,9 @@ function repairBarangFromInvoices() {
         allData.kategori.push({ nama: kategori });
     });
   });
+
+  // Bersihkan duplikat nama-saja yang terbentuk dari bug lama
+  cleanupDuplicateBarang(allData);
 
   syncSkuFromBarang(allData);
   saveLinkedData(allData);
@@ -273,7 +323,10 @@ document.getElementById("btnSimpanBarang").addEventListener("click", () => {
   if (editBarangIdx !== null) allData.barang[editBarangIdx] = item;
   else allData.barang.push(item);
 
-  // ── Sinkronisasi sku[] dari barang[] ──
+  // Bersihkan duplikat nama-saja setelah upsert
+  cleanupDuplicateBarang(allData);
+
+  // Sinkronisasi sku[] dari barang[]
   syncSkuFromBarang(allData);
 
   saveLinkedData(allData);
@@ -393,7 +446,6 @@ document.getElementById("btnUseScanBarang").addEventListener("click", () => {
   closeScannerBarang(); handleSKULookupBarang(val);
 });
 
-/** Auto-fill form dari SKU yang sudah ada di barang[] atau sku[] */
 function handleSKULookupBarang(sku) {
   if (!sku) return;
   const allData = getLinkedData();
@@ -410,7 +462,7 @@ function handleSKULookupBarang(sku) {
 document.getElementById("fBarangSKU").addEventListener("blur", function () { handleSKULookupBarang(this.value.trim()); });
 
 // ============================================================
-// ===== MODAL BARCODE POPUP (tab Linked Data → Barang) =======
+// ===== MODAL BARCODE POPUP ==================================
 // ============================================================
 const barcodeOverlay  = document.getElementById("barcodeOverlay");
 let currentBarcodeData = null;
@@ -489,18 +541,17 @@ document.getElementById("btnPrintBarcode").addEventListener("click", () => {
 function openConfirmDelete(type, index) { deleteType = type; deleteIndex = index; confirmOverlay.classList.add("active"); }
 
 document.getElementById("confirmYes").addEventListener("click", () => {
-  // Cek payment delete dulu (jika _pendingDeletePaymentId aktif)
   if (typeof _pendingDeletePaymentId !== "undefined" && _pendingDeletePaymentId) {
     executeDeletePayment(); return;
   }
   if (deleteType !== null && deleteIndex !== null) {
     const allData = getLinkedData();
-    allData[deleteType].splice(deleteIndex, 1);
     // Jika hapus barang, juga hapus dari sku[]
     if (deleteType === "barang") {
       const deletedSKU = (allData.barang[deleteIndex] || {}).sku;
       if (deletedSKU) allData.sku = allData.sku.filter(s => s.sku !== deletedSKU);
     }
+    allData[deleteType].splice(deleteIndex, 1);
     saveLinkedData(allData);
     renderTable(deleteType);
   }
@@ -550,10 +601,8 @@ function renderTable(type) {
   });
 }
 
-// ===== RENDER TABLE BARANG (khusus — dengan kolom sumber invoice) =====
 function renderTableBarang() {
   const tbody = document.getElementById("tableBarang");
-  // Jalankan repair dulu agar tidak ada data yang hilang
   repairBarangFromInvoices();
   const data  = getLinkedData().barang;
 
@@ -563,13 +612,15 @@ function renderTableBarang() {
 
   tbody.innerHTML = "";
   data.forEach((item, idx) => {
+    // Hanya tampilkan entry yang punya SKU (entry tanpa SKU sudah dibersihkan oleh cleanup)
+    const skuDisplay = item.sku || "-";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${idx + 1}</td>
       <td>
-        <button class="sku-clickable" title="Klik untuk lihat Barcode">
+        <button class="sku-clickable" title="Klik untuk lihat Barcode" ${!item.sku ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>
           <i class="bx bx-barcode"></i>
-          <span>${item.sku || "-"}</span>
+          <span>${skuDisplay}</span>
         </button>
       </td>
       <td>${item.nama || "-"}</td>
@@ -582,7 +633,9 @@ function renderTableBarang() {
         </div>
       </td>`;
 
-    tr.querySelector(".sku-clickable").addEventListener("click",   () => showBarcodePopup(item));
+    if (item.sku) {
+      tr.querySelector(".sku-clickable").addEventListener("click", () => showBarcodePopup(item));
+    }
     tr.querySelector(".btn-edit-barang").addEventListener("click", () => openModalBarang("edit", idx));
     tr.querySelector(".btn-delete").addEventListener("click",      () => openConfirmDelete("barang", idx));
     tbody.appendChild(tr);
@@ -600,12 +653,22 @@ Object.entries(addBtnMap).forEach(([btnId, type]) => {
 });
 document.getElementById("btnAddBarang").addEventListener("click", () => openModalBarang("add"));
 
+// Tombol Sync manual
+const btnSync = document.getElementById("btnSyncBarang");
+if (btnSync) {
+  btnSync.addEventListener("click", () => {
+    repairBarangFromInvoices();
+    renderTableBarang();
+    btnSync.textContent = "✓ Tersinkronisasi";
+    setTimeout(() => { btnSync.innerHTML = '<i class="bx bx-sync"></i> Sync dari Invoice'; }, 1500);
+  });
+}
+
 // ============================================================
 // ===== INIT =================================================
 // ============================================================
 ["kategori","merk","supplier","lokasi","penerima"].forEach(renderTable);
 
-// Pada tab barang — repair dulu baru render
 repairBarangFromInvoices();
 renderTableBarang();
 
@@ -725,7 +788,5 @@ function bindPaymentEvents() {
   });
 }
 
-// ── Jalankan setelah DOM siap ──
 document.addEventListener("DOMContentLoaded", () => { initPayments(); });
-// Fallback jika DOMContentLoaded sudah lewat
 if (document.readyState !== "loading") initPayments();

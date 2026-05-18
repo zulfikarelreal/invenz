@@ -107,8 +107,15 @@ function getLinkedData() {
   }
 }
 
+/**
+ * autoAddToLinkedData — HANYA untuk kategori, merk, lokasi.
+ * JANGAN dipanggil dengan key "barang" karena akan membuat entry
+ * duplikat tanpa SKU. Gunakan syncItemToLinkedData() untuk barang.
+ */
 function autoAddToLinkedData(key, value) {
   if (!value || value === "-") return;
+  // Guard: jangan tambah barang tanpa SKU lewat sini
+  if (key === "barang") return;
   const ex = JSON.parse(localStorage.getItem("linkedData") || "{}");
   if (!ex[key]) ex[key] = [];
   const exists = ex[key].some(i => (typeof i === "string" ? i : i.nama) === value);
@@ -121,7 +128,8 @@ function autoAddToLinkedData(key, value) {
 
 /**
  * Upsert item ke linkedData.barang DAN linkedData.sku
- * sehingga keduanya selalu sinkron.
+ * berdasarkan SKU (bukan nama) sebagai primary key,
+ * sehingga tidak terjadi duplikat.
  */
 function syncItemToLinkedData(item) {
   if (!item || !item.sku || !item.nama) return;
@@ -135,13 +143,20 @@ function syncItemToLinkedData(item) {
   const merk     = (item.merk    || "").trim();
   const kategori = (item.kategori|| "").trim();
 
-  // ── linkedData.barang ──
+  // ── Bersihkan duplikat nama-saja (entry tanpa SKU) ──
+  // Hapus entry di barang[] yang punya nama sama tapi tidak punya SKU
+  ex.barang = ex.barang.filter(b => {
+    if (b.nama && b.nama.toLowerCase() === nama.toLowerCase() && !b.sku) return false;
+    return true;
+  });
+
+  // ── linkedData.barang — upsert by SKU ──
   const bIdx = ex.barang.findIndex(b => b.sku === sku);
   const barangObj = { sku, nama, merk, kategori };
   if (bIdx === -1) ex.barang.push(barangObj);
   else ex.barang[bIdx] = { ...ex.barang[bIdx], ...barangObj };
 
-  // ── linkedData.sku ──
+  // ── linkedData.sku — upsert by SKU ──
   const sIdx = ex.sku.findIndex(s => s.sku === sku);
   if (sIdx === -1) ex.sku.push(barangObj);
   else ex.sku[sIdx] = { ...ex.sku[sIdx], ...barangObj };
@@ -418,15 +433,15 @@ function simpanItem() {
   }
   if (parseInt(stok) < 1) { errorMsg.textContent = "Stok minimal 1!"; return; }
 
-  // Auto-add ke linkedData master fields
-  autoAddToLinkedData("barang",   nama);
+  // Auto-add ke linkedData master: HANYA kategori, merk, lokasi
+  // (BUKAN barang — itu ditangani oleh syncItemToLinkedData di bawah)
   autoAddToLinkedData("kategori", kategori);
   autoAddToLinkedData("merk",     merk);
   autoAddToLinkedData("lokasi",   lokasi);
 
   const item = { sku, nama, merk, kategori, lokasi, expired, hargaHPP, hargaJual, stok };
 
-  // ── SINKRONISASI SKU ↔ linkedData.barang ──
+  // ── SINKRONISASI SKU ↔ linkedData.barang (upsert by SKU, no duplicate) ──
   syncItemToLinkedData(item);
 
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
@@ -473,7 +488,6 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
   const tr = document.createElement("tr");
   tr.dataset.itemIndex = itemIndex;
 
-  // Tombol SKU — klik untuk popup barcode
   tr.innerHTML = `
     <td>${rowCount}</td>
     <td>
@@ -498,12 +512,10 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
     </td>
   `;
 
-  // Klik SKU badge → popup barcode
   tr.querySelector(".sku-badge-btn").addEventListener("click", () => {
     openBarcodePopup({ sku: item.sku, nama: item.nama, merk: item.merk, kategori: item.kategori });
   });
 
-  // Tombol Edit
   tr.querySelector(".btn-edit-item").addEventListener("click", () => {
     editRowIndex = parseInt(tr.dataset.itemIndex);
     const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
@@ -511,7 +523,6 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
     if (currentItem) bukaModal(currentItem);
   });
 
-  // Tombol Hapus
   tr.querySelector(".btn-hapus").addEventListener("click", () => {
     rowToDelete = tr; confirmOverlay.classList.add("active");
   });
@@ -520,7 +531,7 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
 }
 
 // ========================================================
-// ===== BARCODE POPUP (inline — tidak perlu library) =====
+// ===== BARCODE POPUP ====================================
 // ========================================================
 (function injectBarcodeOverlay() {
   if (document.getElementById("invoiceBarcodOverlay")) return;
@@ -571,21 +582,23 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
     const svgStr = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement("canvas");
     const img    = new Image();
+    const blob   = new Blob([svgStr], { type:"image/svg+xml;charset=utf-8" });
+    const url    = URL.createObjectURL(blob);
     img.onload = () => {
       canvas.width = img.width || 300; canvas.height = img.height || 150;
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.drawImage(img,0,0);
-      const a = document.createElement("a");
-      a.download = `SKU_${item.sku}.png`; a.href = canvas.toDataURL("image/png"); a.click();
+      ctx.drawImage(img,0,0); URL.revokeObjectURL(url);
+      const link = document.createElement("a");
+      link.download = `SKU_${item.sku}.png`; link.href = canvas.toDataURL("image/png"); link.click();
     };
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgStr)));
+    img.src = url;
   });
 
   document.getElementById("invBcPrint").addEventListener("click", () => {
-    const svg  = document.getElementById("invBcSvg");
-    const item = overlay._currentItem;
-    if (!item) return;
+    if (!overlay._currentItem) return;
+    const svg    = document.getElementById("invBcSvg");
+    const item   = overlay._currentItem;
     const svgStr = new XMLSerializer().serializeToString(svg);
     const win = window.open("", "_blank", "width=420,height=320");
     win.document.write(`<!DOCTYPE html><html><head><title>Print Barcode — ${item.sku}</title>
