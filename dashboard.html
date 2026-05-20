@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,107 +12,326 @@
 </head>
 <body>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <span>INVENZ</span>
-            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
-        </div>
-        <div class="sidebar-user">
-            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
-            <div>
-                <div class="sidebar-username" id="sidebarUsername">Admin</div>
-                <div class="sidebar-role">Operator Inventori</div>
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-mark">
+                <i class="bxf bx-package"></i>
             </div>
+            <span class="sidebar-logo-text">INVENZ</span>
         </div>
-        <ul class="sidebar-menu">
-            <li><a href="dashboard.html" class="active"><i class="bx bx-home"></i> Dashboard</a></li>
-            <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
-            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
-            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
-            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
-            <li><a href="laporan.html"><i class="bx bx-bar-chart-alt-2"></i> Laporan</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <button class="btn-logout" id="logoutBtn">
-                <i class="bx bx-log-out"></i> Logout
-            </button>
+        <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+        <div class="sidebar-user-info">
+            <div class="sidebar-username" id="sidebarUsername">Admin</div>
+            <div class="sidebar-role">
+                <span class="role-dot"></span>
+                Operator Inventori
+            </div>
         </div>
     </div>
 
-    <div class="navbar">
-        <i class="bx bx-menu hamburger" id="hamburger"></i>
-        <div class="nav-title">
-            <i class="bxf bx-bar-chart"></i>
-            <span>DASHBOARD</span>
+    <div class="sidebar-section-label">NAVIGASI</div>
+    <ul class="sidebar-menu">
+        <li>
+            <a href="dashboard.html" class="active">
+                <span class="menu-icon"><i class="bx bx-home"></i></span>
+                <span class="menu-text">Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="inputBarang.html">
+                <span class="menu-icon"><i class="bx bx-package"></i></span>
+                <span class="menu-text">Input Barang</span>
+            </a>
+        </li>
+        <li>
+            <a href="globalStok.html">
+                <span class="menu-icon"><i class="bx bx-list-ul"></i></span>
+                <span class="menu-text">Global Stok</span>
+            </a>
+        </li>
+        <li>
+            <a href="stockOut.html">
+                <span class="menu-icon"><i class="bx bx-truck"></i></span>
+                <span class="menu-text">Stock Out</span>
+            </a>
+        </li>
+        <li>
+            <a href="linkedData.html">
+                <span class="menu-icon"><i class="bx bx-network-chart"></i></span>
+                <span class="menu-text">Linked Data</span>
+            </a>
+        </li>
+        <li>
+            <a href="laporan.html">
+                <span class="menu-icon"><i class="bx bx-bar-chart-alt-2"></i></span>
+                <span class="menu-text">Laporan</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-section-label">OPERASIONAL</div>
+    <ul class="sidebar-menu">
+        <li>
+            <a href="sop.html">
+                <span class="menu-icon"><i class="bx bx-clipboard"></i></span>
+                <span class="menu-text">SOP Toko</span>
+                <span class="menu-badge">Baru</span>
+            </a>
+        </li>
+        <li>
+            <a href="penjualan.html">
+                <span class="menu-icon"><i class="bx bx-cart"></i></span>
+                <span class="menu-text">Penjualan</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-footer-info">
+            <div class="sidebar-ver">v2.0.0</div>
+            <div class="sidebar-ver-label">Versi Sistem</div>
         </div>
-        <i class="bxf bx-user-circle" id="navUser"></i>
+        <button class="btn-logout" id="logoutBtn">
+            <i class="bx bx-log-out"></i>
+            <span>Logout</span>
+        </button>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<div class="navbar" id="navbar">
+    <div class="navbar-left">
+        <button class="hamburger-btn" id="hamburger" aria-label="Buka menu">
+            <i class="bx bx-menu"></i>
+        </button>
+        <div class="nav-brand">
+            <div class="nav-brand-mark"><i class="bxf bx-package"></i></div>
+            <span class="nav-brand-text">INVENZ</span>
+        </div>
+    </div>
+    <div class="nav-page-title">
+        <i class="bxf bx-bar-chart"></i>
+        <span>DASHBOARD</span>
+    </div>
+    <div class="navbar-right">
+        <button class="nav-icon-btn" aria-label="Notifikasi">
+            <i class="bxf bx-bell"></i>
+            <span class="notif-badge">3</span>
+        </button>
+        <div class="nav-avatar" id="navUser" title="Admin">A</div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+    <!-- HERO BANNER -->
+    <div class="hero-banner">
+        <div class="hero-bg-circle hero-bg-circle-1"></div>
+        <div class="hero-bg-circle hero-bg-circle-2"></div>
+        <div class="hero-content">
+            <div class="hero-left">
+                <p class="hero-greeting">Selamat datang kembali,</p>
+                <h2 class="hero-name">
+                    <span id="welcomeUser">Admin</span>
+                    <span class="hero-wave">👋</span>
+                </h2>
+                <p class="hero-subtitle">Berikut ringkasan data inventori dan penjualan hari ini.</p>
+                <div class="hero-quick-stats">
+                    <div class="hero-qs-item">
+                        <span class="hero-qs-val accent" id="heroStok">0</span>
+                        <span class="hero-qs-label">Total Stok</span>
+                    </div>
+                    <div class="hero-qs-divider"></div>
+                    <div class="hero-qs-item">
+                        <span class="hero-qs-val" id="heroInvoice">0</span>
+                        <span class="hero-qs-label">Invoice</span>
+                    </div>
+                    <div class="hero-qs-divider"></div>
+                    <div class="hero-qs-item">
+                        <span class="hero-qs-val" id="heroJenis">0</span>
+                        <span class="hero-qs-label">Jenis Barang</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-clock-wrap">
+                    <div class="hero-clock" id="clockDisplay">--:--</div>
+                    <div class="hero-date" id="dateDisplay">--</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="main">
-
-        <div class="welcome-banner">
-            <div class="welcome-text">
-                <h2>Selamat Datang, <span id="welcomeUser">Admin</span></h2>
-                <p>Berikut ringkasan data inventori hari ini.</p>
+    <!-- STATS CARDS -->
+    <div class="section-header">
+        <span class="section-label">Ringkasan Stok</span>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card stat-blue">
+            <div class="stat-card-top">
+                <div class="stat-icon-wrap blue">
+                    <i class="bx bx-box"></i>
+                </div>
+                <span class="stat-trend up">
+                    <i class="bx bx-up-arrow-alt"></i> Live
+                </span>
             </div>
-            <div class="welcome-date">
-                <span id="clockDisplay">--:--</span>
-                <div id="dateDisplay">--</div>
+            <div class="stat-value" id="statTotalStok">0</div>
+            <div class="stat-label">Total Stok Barang</div>
+            <div class="stat-sub">unit tersedia</div>
+        </div>
+        <div class="stat-card stat-teal">
+            <div class="stat-card-top">
+                <div class="stat-icon-wrap teal">
+                    <i class="bx bx-category"></i>
+                </div>
+                <span class="stat-trend ok">
+                    <i class="bx bx-check"></i> Aktif
+                </span>
+            </div>
+            <div class="stat-value" id="statKategori">0</div>
+            <div class="stat-label">Jumlah Kategori</div>
+            <div class="stat-sub">kategori berbeda</div>
+        </div>
+        <div class="stat-card stat-amber">
+            <div class="stat-card-top">
+                <div class="stat-icon-wrap amber">
+                    <i class="bx bx-tag"></i>
+                </div>
+                <span class="stat-trend warn">
+                    <i class="bx bx-refresh"></i> Update
+                </span>
+            </div>
+            <div class="stat-value" id="statJenis">0</div>
+            <div class="stat-label">Jenis Barang</div>
+            <div class="stat-sub">nama unik</div>
+        </div>
+        <div class="stat-card stat-red">
+            <div class="stat-card-top">
+                <div class="stat-icon-wrap red">
+                    <i class="bx bx-file"></i>
+                </div>
+                <span class="stat-trend up">
+                    <i class="bx bx-up-arrow-alt"></i> Baru
+                </span>
+            </div>
+            <div class="stat-value" id="statInvoice">0</div>
+            <div class="stat-label">Total Invoice</div>
+            <div class="stat-sub">invoice masuk</div>
+        </div>
+    </div>
+
+    <!-- QUICK ACCESS MODULES -->
+    <div class="section-header">
+        <span class="section-label">Modul Sistem</span>
+        <span class="section-link">Akses cepat →</span>
+    </div>
+    <div class="modules-grid">
+        <a class="module-btn" href="inputBarang.html">
+            <div class="module-icon" style="background:#EEF2FF">
+                <i class="bx bx-package" style="color:#0F3CC9"></i>
+            </div>
+            <span class="module-label">Input Barang</span>
+            <i class="bx bx-chevron-right module-arrow"></i>
+        </a>
+        <a class="module-btn" href="globalStok.html">
+            <div class="module-icon" style="background:#E1F5EE">
+                <i class="bx bx-list-ul" style="color:#0F6E56"></i>
+            </div>
+            <span class="module-label">Global Stok</span>
+            <i class="bx bx-chevron-right module-arrow"></i>
+        </a>
+        <a class="module-btn" href="stockOut.html">
+            <div class="module-icon" style="background:#FAEEDA">
+                <i class="bx bx-truck" style="color:#854F0B"></i>
+            </div>
+            <span class="module-label">Stock Out</span>
+            <i class="bx bx-chevron-right module-arrow"></i>
+        </a>
+        <a class="module-btn" href="linkedData.html">
+            <div class="module-icon" style="background:#FCEBEB">
+                <i class="bx bx-network-chart" style="color:#A32D2D"></i>
+            </div>
+            <span class="module-label">Linked Data</span>
+            <i class="bx bx-chevron-right module-arrow"></i>
+        </a>
+        <a class="module-btn" href="laporan.html">
+            <div class="module-icon" style="background:#EEF2FF">
+                <i class="bx bx-bar-chart-alt-2" style="color:#0F3CC9"></i>
+            </div>
+            <span class="module-label">Laporan</span>
+            <i class="bx bx-chevron-right module-arrow"></i>
+        </a>
+        <a class="module-btn" href="sop.html">
+            <div class="module-icon" style="background:#E1F5EE">
+                <i class="bx bx-clipboard" style="color:#0F6E56"></i>
+            </div>
+            <span class="module-label">SOP Toko</span>
+            <i class="bx bx-chevron-right module-arrow"></i>
+        </a>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="section-header">
+        <span class="section-label">Distribusi Barang</span>
+    </div>
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div class="chart-card-title">
+                    <i class="bxf bx-pie-chart-alt"></i>
+                    Barang per Kategori
+                </div>
+            </div>
+            <canvas id="pieChart" height="200"></canvas>
+            <div class="empty-state" id="pieEmpty" style="display:none">
+                <i class="bx bx-pie-chart-alt"></i>
+                <span>Belum ada data barang</span>
             </div>
         </div>
-
-        <div class="section-title">Ringkasan Stok</div>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon blue"><i class="bx bx-box" style="color:rgb(16,44,168)"></i></div>
-                <div class="stat-label">Total Stok Barang</div>
-                <div class="stat-value" id="statTotalStok">0</div>
-                <div class="stat-sub">unit tersedia</div>
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div class="chart-card-title">
+                    <i class="bxf bx-bar-chart-big"></i>
+                    Stok per Merk
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon green"><i class="bx bx-categories" style="color:#0a6640"></i></div>
-                <div class="stat-label">Jumlah Kategori</div>
-                <div class="stat-value" id="statKategori">0</div>
-                <div class="stat-sub">kategori berbeda</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon yellow"><i class="bx bx-tag" style="color:#856404"></i></div>
-                <div class="stat-label">Jenis Barang</div>
-                <div class="stat-value" id="statJenis">0</div>
-                <div class="stat-sub">nama unik</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon red"><i class="bx bx-file" style="color:#cc0000"></i></div>
-                <div class="stat-label">Total Invoice</div>
-                <div class="stat-value" id="statInvoice">0</div>
-                <div class="stat-sub">invoice masuk</div>
+            <canvas id="barChart" height="200"></canvas>
+            <div class="empty-state" id="barEmpty" style="display:none">
+                <i class="bx bx-bar-chart-big"></i>
+                <span>Belum ada data barang</span>
             </div>
         </div>
+    </div>
 
-        <div class="section-title">Distribusi Barang</div>
-        <div class="charts-row">
-            <div class="chart-card">
-                <h4><i class="bxf bx-pie-chart-alt"></i> Piechart Barang per Kategori </h4>
-                <canvas id="pieChart" height="200"></canvas>
-                <div class="empty-state" id="pieEmpty" style="display:none">Belum ada data barang</div>
-            </div>
-            <div class="chart-card">
-                <h4><i class="bxf bx-bar-chart-big"></i> Chart Barang per Merk</h4>
-                <canvas id="barChart" height="200"></canvas>
-                <div class="empty-state" id="barEmpty" style="display:none">Belum ada data barang</div>
+    <!-- RECENT INVOICES -->
+    <div class="section-header">
+        <span class="section-label">Invoice Terbaru</span>
+        <a href="inputBarang.html" class="section-link">Lihat semua →</a>
+    </div>
+    <div class="recent-card">
+        <div class="recent-card-header">
+            <div class="recent-card-title">
+                <i class="bxf bx-receipt"></i>
+                Daftar Invoice Masuk
             </div>
         </div>
-
-        <div class="section-title">Invoice Terbaru</div>
-        <div class="recent-card">
-            <h4><i class="bxf bx-receipt"></i> Daftar Invoice Masuk</h4>
+        <div class="table-wrapper">
             <table class="recent-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Invoice</th>
+                        <th>No. Invoice</th>
                         <th>Supplier</th>
                         <th>Tanggal</th>
                         <th>Total Barang</th>
@@ -120,38 +339,25 @@
                     </tr>
                 </thead>
                 <tbody id="recentTableBody">
-                    <tr><td colspan="6" class="empty-state">Belum ada invoice</td></tr>
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="bx bx-receipt"></i>
+                            <span>Belum ada invoice</span>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Quick Access -->
-        <div class="section-title">Akses Cepat</div>
-        <div class="quick-grid">
-            <a class="quick-btn" href="inputBarang.html">
-                <i class="bx bx-package" style="color:rgb(16,44,168)"></i>
-                <span>Input Barang</span>
-            </a>
-            <a class="quick-btn" href="globalStok.html">
-                <i class="bx bx-list-ul-square" style="color:rgb(16,44,168)"></i>
-                <span>Global Stok</span>
-            </a>
-            <a class="quick-btn" href="stockOut.html">
-                <i class="bx bx-truck" style="color:rgb(16,44,168)"></i>
-                <span>Stock Out</span>
-            </a>
-            <a class="quick-btn" href="linkedData.html">
-                <i class="bx bx-network-chart" style="color:rgb(16,44,168)"></i>
-                <span>Linked Data</span>
-            </a>
-            <a class="quick-btn" href="laporan.html">
-                <i class="bx bx-bar-chart-alt-2" style="color:rgb(16,44,168)"></i>
-                <span>Laporan</span>
-            </a>
-        </div>
-
     </div>
 
-    <script src="js/dashboard.js"></script>
+    <!-- ALERT / INFO STRIP -->
+    <div class="info-strip">
+        <i class="bxf bx-info-circle"></i>
+        <span>Sistem berjalan normal &mdash; Terakhir diperbarui: <strong id="lastUpdate">--</strong></span>
+    </div>
+
+</div>
+
+<script src="js/dashboard.js"></script>
 </body>
 </html>
