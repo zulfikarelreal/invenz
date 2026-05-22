@@ -10,8 +10,7 @@
     <title>Dashboard | Invenz</title>
     <style>
 /* ================================================
-   INVENZ DASHBOARD v3.0 — Editorial Dark Theme
-   Font: Syne (display) + DM Mono + DM Sans
+   INVENZ DASHBOARD v3.5 — Enhanced Interactive
 ================================================ */
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -73,7 +72,6 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* background noise texture */
 body::before {
     content:'';
     position:fixed;
@@ -84,7 +82,6 @@ body::before {
     opacity:0.5;
 }
 
-/* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:99px; }
@@ -117,7 +114,6 @@ body::before {
 }
 .sidebar.open { left:0; }
 
-/* Sidebar header */
 .sidebar-header {
     display:flex;
     align-items:center;
@@ -158,7 +154,6 @@ body::before {
 }
 .sidebar-close:hover { color:var(--text); transform:rotate(90deg); }
 
-/* Sidebar user */
 .sidebar-user {
     display:flex; align-items:center; gap:12px;
     padding:16px 18px;
@@ -188,9 +183,14 @@ body::before {
     background:var(--success);
     display:inline-block;
     box-shadow:0 0 6px var(--success);
+    animation: pulse-dot 2s infinite;
 }
 
-/* Sidebar section */
+@keyframes pulse-dot {
+    0%,100% { opacity:1; }
+    50% { opacity:0.4; }
+}
+
 .sidebar-section-label {
     padding:16px 18px 5px;
     font-size:9px;
@@ -245,7 +245,6 @@ body::before {
     font-family:var(--font-mono);
 }
 
-/* Sidebar footer */
 .sidebar-footer {
     margin-top:auto;
     padding:14px 10px;
@@ -398,7 +397,6 @@ body::before {
     isolation:isolate;
 }
 
-/* glowing mesh bg */
 .hero-banner::before {
     content:'';
     position:absolute;
@@ -471,7 +469,7 @@ body::before {
 
 .hero-qs-divider { width:1px; background:var(--border); align-self:stretch; }
 
-.hero-right { flex-shrink:0; }
+.hero-right { flex-shrink:0; display:flex; flex-direction:column; gap:10px; align-items:flex-end; }
 
 .hero-clock-wrap {
     background:var(--surface);
@@ -501,6 +499,29 @@ body::before {
     font-size:11px; color:var(--text2);
     margin-top:6px;
     white-space:nowrap;
+}
+
+/* Live activity indicator */
+.hero-live-badge {
+    display:flex; align-items:center; gap:6px;
+    background:var(--success-bg);
+    border:1px solid rgba(16,217,154,0.2);
+    border-radius:20px;
+    padding:5px 12px;
+    font-size:11px; font-weight:600;
+    color:var(--success);
+    font-family:var(--font-mono);
+    width:fit-content;
+}
+.hero-live-dot {
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--success);
+    animation: live-pulse 1.5s infinite;
+}
+@keyframes live-pulse {
+    0%,100% { transform:scale(1); opacity:1; }
+    50% { transform:scale(1.4); opacity:0.6; }
 }
 
 /* ===== SECTION HEADER ===== */
@@ -561,7 +582,6 @@ body::before {
 .stat-amber:hover { box-shadow:0 8px 28px rgba(251,188,5,0.15); }
 .stat-red:hover   { box-shadow:0 8px 28px rgba(240,82,82,0.15); }
 
-/* top accent line */
 .stat-card::before {
     content:'';
     position:absolute;
@@ -609,10 +629,18 @@ body::before {
     font-size:32px; font-weight:500;
     color:var(--text); line-height:1;
     margin-bottom:5px;
+    transition: all 0.5s var(--ease);
 }
 
 .stat-label { font-family:var(--font-display); font-size:12.5px; font-weight:600; color:var(--text2); }
 .stat-sub   { font-size:11px; color:var(--text3); margin-top:3px; }
+
+/* sparkline mini */
+.stat-sparkline {
+    margin-top:12px;
+    height:32px;
+    opacity:0.6;
+}
 
 /* ===== MODULES GRID ===== */
 .modules-grid {
@@ -662,23 +690,57 @@ body::before {
 }
 .module-btn:hover .module-arrow { transform:translateX(3px); color:var(--brand); }
 
-/* ===== CHARTS ROW ===== */
-.charts-row {
+/* ===== CHART TABS ===== */
+.chart-tabs {
+    display:flex; gap:6px;
+    margin-bottom:14px;
+}
+.chart-tab {
+    padding:5px 14px;
+    font-size:11px; font-weight:600;
+    font-family:var(--font-mono);
+    border-radius:20px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text3);
+    cursor:pointer;
+    transition:all var(--transition);
+    letter-spacing:0.5px;
+}
+.chart-tab:hover { color:var(--text2); border-color:var(--border-md); }
+.chart-tab.active { background:var(--brand); border-color:var(--brand); color:#fff; }
+
+/* ===== CHARTS — 3 Column Row ===== */
+.charts-row-3 {
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+}
+.charts-row-2 {
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:16px;
     margin-bottom:28px;
 }
-@media (max-width:640px) { .charts-row { grid-template-columns:1fr; } }
+@media (max-width:768px) { .charts-row-3 { grid-template-columns:1fr; } }
+@media (max-width:640px) { .charts-row-2 { grid-template-columns:1fr; } }
 
 .chart-card {
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:var(--radius);
     padding:20px;
+    transition: border-color var(--transition);
 }
+.chart-card:hover { border-color:var(--border-md); }
 
-.chart-card-header { margin-bottom:16px; }
+.chart-card-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+}
 
 .chart-card-title {
     display:flex; align-items:center; gap:8px;
@@ -687,6 +749,133 @@ body::before {
     color:var(--text);
 }
 .chart-card-title i { font-size:17px; color:var(--brand); }
+
+.chart-badge {
+    font-size:10px; font-weight:600;
+    font-family:var(--font-mono);
+    padding:3px 8px;
+    border-radius:20px;
+    background:var(--accent-dim);
+    color:var(--accent);
+    border:1px solid rgba(0,229,196,0.2);
+}
+
+/* Donut center label */
+.donut-wrap {
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.donut-center {
+    position:absolute;
+    text-align:center;
+    pointer-events:none;
+}
+.donut-center-val {
+    font-family:var(--font-mono);
+    font-size:22px;
+    font-weight:500;
+    color:var(--text);
+    line-height:1;
+}
+.donut-center-lbl {
+    font-size:10px;
+    color:var(--text3);
+    margin-top:3px;
+}
+
+/* Legend chips */
+.chart-legend {
+    display:flex; flex-wrap:wrap; gap:8px;
+    margin-top:14px;
+}
+.legend-chip {
+    display:flex; align-items:center; gap:5px;
+    font-size:11px; color:var(--text2);
+    cursor:pointer;
+    transition:opacity var(--transition);
+}
+.legend-chip:hover { opacity:0.7; }
+.legend-dot {
+    width:8px; height:8px;
+    border-radius:3px;
+    flex-shrink:0;
+}
+
+/* ===== TOP ITEMS TABLE ===== */
+.top-items-list { display:flex; flex-direction:column; gap:8px; }
+.top-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:var(--bg3);
+    border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+    transition: border-color var(--transition), background var(--transition);
+    cursor:default;
+}
+.top-item:hover { border-color:var(--border-md); background:var(--surface2); }
+.top-item-rank {
+    font-family:var(--font-mono);
+    font-size:11px; font-weight:500;
+    color:var(--text3);
+    width:18px; text-align:center;
+    flex-shrink:0;
+}
+.top-item-rank.gold { color:#FBBC05; }
+.top-item-rank.silver { color:#9DABC0; }
+.top-item-rank.bronze { color:#CD7F32; }
+.top-item-name {
+    flex:1;
+    font-size:12.5px; font-weight:500;
+    color:var(--text2);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.top-item-bar-wrap {
+    width:70px;
+    height:4px;
+    background:var(--bg);
+    border-radius:99px;
+    overflow:hidden;
+    flex-shrink:0;
+}
+.top-item-bar {
+    height:100%;
+    border-radius:99px;
+    background:linear-gradient(90deg, var(--brand), var(--accent));
+    transition:width 0.8s var(--ease);
+}
+.top-item-val {
+    font-family:var(--font-mono);
+    font-size:11px; font-weight:500;
+    color:var(--text);
+    flex-shrink:0;
+    min-width:28px; text-align:right;
+}
+
+/* ===== ACTIVITY FEED ===== */
+.activity-feed { display:flex; flex-direction:column; gap:0; }
+.activity-item {
+    display:flex; align-items:flex-start; gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+    position:relative;
+}
+.activity-item:last-child { border-bottom:none; }
+.activity-dot-wrap { flex-shrink:0; display:flex; flex-direction:column; align-items:center; padding-top:3px; }
+.activity-dot {
+    width:9px; height:9px;
+    border-radius:50%;
+    flex-shrink:0;
+}
+.activity-line { width:1px; flex:1; background:var(--border); margin-top:4px; min-height:16px; display:none; }
+.activity-item:not(:last-child) .activity-line { display:block; }
+.activity-body { flex:1; }
+.activity-text { font-size:12.5px; color:var(--text2); line-height:1.5; }
+.activity-text strong { color:var(--text); font-weight:600; }
+.activity-time { font-family:var(--font-mono); font-size:10px; color:var(--text3); margin-top:2px; }
 
 /* ===== RECENT CARD ===== */
 .recent-card {
@@ -701,6 +890,9 @@ body::before {
     padding:16px 20px;
     border-bottom:1px solid var(--border);
     background:var(--bg3);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
 }
 
 .recent-card-title {
@@ -753,6 +945,46 @@ body::before {
 }
 .badge-green { background:var(--success-bg); color:var(--success); }
 .badge-red   { background:var(--danger-bg); color:var(--danger); }
+.badge-amber { background:var(--warning-bg); color:var(--warning); }
+
+/* search & filter row */
+.table-toolbar {
+    display:flex; align-items:center; gap:10px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+}
+.table-search {
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:7px 12px;
+    flex:1;
+    max-width:260px;
+}
+.table-search i { font-size:16px; color:var(--text3); flex-shrink:0; }
+.table-search input {
+    background:none; border:none; outline:none;
+    font-family:var(--font); font-size:12.5px;
+    color:var(--text);
+    width:100%;
+}
+.table-search input::placeholder { color:var(--text3); }
+
+.table-filter-btn {
+    display:flex; align-items:center; gap:6px;
+    padding:7px 12px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    font-size:12px; color:var(--text2);
+    cursor:pointer;
+    transition:all var(--transition);
+    font-family:var(--font);
+}
+.table-filter-btn:hover { border-color:var(--border-md); color:var(--text); }
+.table-filter-btn i { font-size:15px; }
 
 /* ===== INFO STRIP ===== */
 .info-strip {
@@ -774,7 +1006,7 @@ body::before {
 .empty-state span { font-size:13px; font-style:italic; }
 td.empty-state { padding:32px; }
 
-/* ===== DIVIDER / DECORATIVE ===== */
+/* ===== DECORATIVE ===== */
 .hero-accent-line {
     display:flex; align-items:center; gap:8px;
     margin-bottom:8px;
@@ -814,23 +1046,28 @@ td.empty-state { padding:32px; }
 .hero-banner   { animation:fadeUp 0.45s var(--ease) both; }
 .stats-grid    { animation:fadeUp 0.45s 0.1s var(--ease) both; }
 .modules-grid  { animation:fadeUp 0.45s 0.18s var(--ease) both; }
-.charts-row    { animation:fadeUp 0.45s 0.24s var(--ease) both; }
-.recent-card   { animation:fadeUp 0.45s 0.3s var(--ease) both; }
-.info-strip    { animation:fadeUp 0.45s 0.36s var(--ease) both; }
+.charts-row-3  { animation:fadeUp 0.45s 0.24s var(--ease) both; }
+.charts-row-2  { animation:fadeUp 0.45s 0.3s var(--ease) both; }
+.recent-card   { animation:fadeUp 0.45s 0.36s var(--ease) both; }
+.info-strip    { animation:fadeUp 0.45s 0.4s var(--ease) both; }
+
+/* counter animation */
+@keyframes countUp {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.stat-value { animation:countUp 0.6s var(--ease) both; }
     </style>
 </head>
 <body>
 
-<!-- SIDEBAR OVERLAY -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-mark">
-                <i class="bxf bx-package"></i>
-            </div>
+            <div class="sidebar-logo-mark"><i class="bxf bx-package"></i></div>
             <span class="sidebar-logo-text">INVENZ</span>
         </div>
         <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
@@ -849,64 +1086,48 @@ td.empty-state { padding:32px; }
 
     <div class="sidebar-section-label">— Navigasi</div>
     <ul class="sidebar-menu">
-        <li>
-            <a href="dashboard.html" class="active">
-                <span class="menu-icon"><i class="bx bx-home"></i></span>
-                <span class="menu-text">Dashboard</span>
-            </a>
-        </li>
-        <li>
-            <a href="inputBarang.html">
-                <span class="menu-icon"><i class="bx bx-package"></i></span>
-                <span class="menu-text">Input Barang</span>
-            </a>
-        </li>
-        <li>
-            <a href="globalStok.html">
-                <span class="menu-icon"><i class="bx bx-list-ul"></i></span>
-                <span class="menu-text">Global Stok</span>
-            </a>
-        </li>
-        <li>
-            <a href="stockOut.html">
-                <span class="menu-icon"><i class="bx bx-truck"></i></span>
-                <span class="menu-text">Stock Out</span>
-            </a>
-        </li>
-        <li>
-            <a href="linkedData.html">
-                <span class="menu-icon"><i class="bx bx-network-chart"></i></span>
-                <span class="menu-text">Linked Data</span>
-            </a>
-        </li>
-        <li>
-            <a href="laporan.html">
-                <span class="menu-icon"><i class="bx bx-bar-chart-alt-2"></i></span>
-                <span class="menu-text">Laporan</span>
-            </a>
-        </li>
+        <li><a href="dashboard.html" class="active">
+            <span class="menu-icon"><i class="bx bx-home"></i></span>
+            <span class="menu-text">Dashboard</span>
+        </a></li>
+        <li><a href="inputBarang.html">
+            <span class="menu-icon"><i class="bx bx-package"></i></span>
+            <span class="menu-text">Input Barang</span>
+        </a></li>
+        <li><a href="globalStok.html">
+            <span class="menu-icon"><i class="bx bx-list-ul"></i></span>
+            <span class="menu-text">Global Stok</span>
+        </a></li>
+        <li><a href="stockOut.html">
+            <span class="menu-icon"><i class="bx bx-truck"></i></span>
+            <span class="menu-text">Stock Out</span>
+        </a></li>
+        <li><a href="linkedData.html">
+            <span class="menu-icon"><i class="bx bx-network-chart"></i></span>
+            <span class="menu-text">Linked Data</span>
+        </a></li>
+        <li><a href="laporan.html">
+            <span class="menu-icon"><i class="bx bx-bar-chart-alt-2"></i></span>
+            <span class="menu-text">Laporan</span>
+        </a></li>
     </ul>
 
     <div class="sidebar-section-label">— Operasional</div>
     <ul class="sidebar-menu">
-        <li>
-            <a href="sop.html">
-                <span class="menu-icon"><i class="bx bx-clipboard"></i></span>
-                <span class="menu-text">SOP Toko</span>
-                <span class="menu-badge">Baru</span>
-            </a>
-        </li>
-        <li>
-            <a href="penjualan.html">
-                <span class="menu-icon"><i class="bx bx-cart"></i></span>
-                <span class="menu-text">Penjualan</span>
-            </a>
-        </li>
+        <li><a href="sop.html">
+            <span class="menu-icon"><i class="bx bx-clipboard"></i></span>
+            <span class="menu-text">SOP Toko</span>
+            <span class="menu-badge">Baru</span>
+        </a></li>
+        <li><a href="penjualan.html">
+            <span class="menu-icon"><i class="bx bx-cart"></i></span>
+            <span class="menu-text">Penjualan</span>
+        </a></li>
     </ul>
 
     <div class="sidebar-footer">
-        <div class="sidebar-footer-info">
-            <div class="sidebar-ver">v2.0.0</div>
+        <div>
+            <div class="sidebar-ver">v3.5.0</div>
             <div class="sidebar-ver-label">Versi Sistem</div>
         </div>
         <button class="btn-logout" id="logoutBtn">
@@ -917,7 +1138,7 @@ td.empty-state { padding:32px; }
 </div>
 
 <!-- NAVBAR -->
-<div class="navbar" id="navbar">
+<div class="navbar">
     <div class="navbar-left">
         <button class="hamburger-btn" id="hamburger" aria-label="Buka menu">
             <i class="bx bx-menu"></i>
@@ -976,6 +1197,10 @@ td.empty-state { padding:32px; }
                     <div class="hero-clock" id="clockDisplay">--:--</div>
                     <div class="hero-date" id="dateDisplay">--</div>
                 </div>
+                <div class="hero-live-badge">
+                    <span class="hero-live-dot"></span>
+                    SISTEM AKTIF
+                </div>
             </div>
         </div>
     </div>
@@ -993,6 +1218,7 @@ td.empty-state { padding:32px; }
             <div class="stat-value" id="statTotalStok">0</div>
             <div class="stat-label">Total Stok Barang</div>
             <div class="stat-sub">unit tersedia</div>
+            <canvas class="stat-sparkline" id="sparkline1"></canvas>
         </div>
         <div class="stat-card stat-teal">
             <div class="stat-card-top">
@@ -1002,6 +1228,7 @@ td.empty-state { padding:32px; }
             <div class="stat-value" id="statKategori">0</div>
             <div class="stat-label">Jumlah Kategori</div>
             <div class="stat-sub">kategori berbeda</div>
+            <canvas class="stat-sparkline" id="sparkline2"></canvas>
         </div>
         <div class="stat-card stat-amber">
             <div class="stat-card-top">
@@ -1011,6 +1238,7 @@ td.empty-state { padding:32px; }
             <div class="stat-value" id="statJenis">0</div>
             <div class="stat-label">Jenis Barang</div>
             <div class="stat-sub">nama unik</div>
+            <canvas class="stat-sparkline" id="sparkline3"></canvas>
         </div>
         <div class="stat-card stat-red">
             <div class="stat-card-top">
@@ -1020,6 +1248,7 @@ td.empty-state { padding:32px; }
             <div class="stat-value" id="statInvoice">0</div>
             <div class="stat-label">Total Invoice</div>
             <div class="stat-sub">invoice masuk</div>
+            <canvas class="stat-sparkline" id="sparkline4"></canvas>
         </div>
     </div>
 
@@ -1030,67 +1259,89 @@ td.empty-state { padding:32px; }
     </div>
     <div class="modules-grid">
         <a class="module-btn" href="inputBarang.html">
-            <div class="module-icon" style="background:rgba(79,142,247,0.15)">
-                <i class="bx bx-package" style="color:#4F8EF7"></i>
-            </div>
+            <div class="module-icon" style="background:rgba(79,142,247,0.15)"><i class="bx bx-package" style="color:#4F8EF7"></i></div>
             <span class="module-label">Input Barang</span>
             <i class="bx bx-chevron-right module-arrow"></i>
         </a>
         <a class="module-btn" href="globalStok.html">
-            <div class="module-icon" style="background:rgba(16,217,154,0.12)">
-                <i class="bx bx-list-ul" style="color:#10D99A"></i>
-            </div>
+            <div class="module-icon" style="background:rgba(16,217,154,0.12)"><i class="bx bx-list-ul" style="color:#10D99A"></i></div>
             <span class="module-label">Global Stok</span>
             <i class="bx bx-chevron-right module-arrow"></i>
         </a>
         <a class="module-btn" href="stockOut.html">
-            <div class="module-icon" style="background:rgba(251,188,5,0.12)">
-                <i class="bx bx-truck" style="color:#FBBC05"></i>
-            </div>
+            <div class="module-icon" style="background:rgba(251,188,5,0.12)"><i class="bx bx-truck" style="color:#FBBC05"></i></div>
             <span class="module-label">Stock Out</span>
             <i class="bx bx-chevron-right module-arrow"></i>
         </a>
         <a class="module-btn" href="linkedData.html">
-            <div class="module-icon" style="background:rgba(240,82,82,0.12)">
-                <i class="bx bx-network-chart" style="color:#F05252"></i>
-            </div>
+            <div class="module-icon" style="background:rgba(240,82,82,0.12)"><i class="bx bx-network-chart" style="color:#F05252"></i></div>
             <span class="module-label">Linked Data</span>
             <i class="bx bx-chevron-right module-arrow"></i>
         </a>
         <a class="module-btn" href="laporan.html">
-            <div class="module-icon" style="background:rgba(124,58,237,0.12)">
-                <i class="bx bx-bar-chart-alt-2" style="color:#A78BFA"></i>
-            </div>
+            <div class="module-icon" style="background:rgba(124,58,237,0.12)"><i class="bx bx-bar-chart-alt-2" style="color:#A78BFA"></i></div>
             <span class="module-label">Laporan</span>
             <i class="bx bx-chevron-right module-arrow"></i>
         </a>
         <a class="module-btn" href="sop.html">
-            <div class="module-icon" style="background:rgba(0,229,196,0.12)">
-                <i class="bx bx-clipboard" style="color:#00E5C4"></i>
-            </div>
+            <div class="module-icon" style="background:rgba(0,229,196,0.12)"><i class="bx bx-clipboard" style="color:#00E5C4"></i></div>
             <span class="module-label">SOP Toko</span>
             <i class="bx bx-chevron-right module-arrow"></i>
         </a>
     </div>
 
-    <!-- CHARTS ROW -->
+    <!-- ROW: Line Chart (big) + Donut -->
     <div class="section-header">
-        <span class="section-label">// Distribusi Barang</span>
+        <span class="section-label">// Analitik & Distribusi</span>
     </div>
-    <div class="charts-row">
+    <div class="charts-row-3">
+        <!-- LINE CHART -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div class="chart-card-title">
+                    <i class="bxf bx-line-chart"></i>
+                    Tren Stok Masuk (7 Hari)
+                </div>
+                <div class="chart-tabs">
+                    <button class="chart-tab active" onclick="switchLine('7d',this)">7H</button>
+                    <button class="chart-tab" onclick="switchLine('30d',this)">30H</button>
+                    <button class="chart-tab" onclick="switchLine('all',this)">All</button>
+                </div>
+            </div>
+            <canvas id="lineChart" height="160"></canvas>
+            <div class="empty-state" id="lineEmpty" style="display:none">
+                <i class="bx bx-line-chart"></i>
+                <span>Belum ada data tren</span>
+            </div>
+        </div>
+
+        <!-- DONUT -->
         <div class="chart-card">
             <div class="chart-card-header">
                 <div class="chart-card-title">
                     <i class="bxf bx-pie-chart-alt"></i>
-                    Barang per Kategori
+                    Kategori
+                </div>
+                <span class="chart-badge" id="donutTotal">0 item</span>
+            </div>
+            <div class="donut-wrap">
+                <canvas id="pieChart" height="170"></canvas>
+                <div class="donut-center">
+                    <div class="donut-center-val" id="donutCenterVal">0</div>
+                    <div class="donut-center-lbl">Total Stok</div>
                 </div>
             </div>
-            <canvas id="pieChart" height="200"></canvas>
+            <div class="chart-legend" id="pieLegend"></div>
             <div class="empty-state" id="pieEmpty" style="display:none">
                 <i class="bx bx-pie-chart-alt"></i>
                 <span>Belum ada data barang</span>
             </div>
         </div>
+    </div>
+
+    <!-- ROW: Bar Chart + Top Items + Activity -->
+    <div class="charts-row-2">
+        <!-- BAR CHART -->
         <div class="chart-card">
             <div class="chart-card-header">
                 <div class="chart-card-title">
@@ -1102,6 +1353,36 @@ td.empty-state { padding:32px; }
             <div class="empty-state" id="barEmpty" style="display:none">
                 <i class="bx bx-bar-chart-big"></i>
                 <span>Belum ada data barang</span>
+            </div>
+        </div>
+
+        <!-- TOP ITEMS + ACTIVITY FEED -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- TOP ITEMS -->
+            <div class="chart-card" style="flex:1">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bxf bx-trophy"></i>
+                        Top 5 Stok Terbanyak
+                    </div>
+                </div>
+                <div class="top-items-list" id="topItemsList">
+                    <div class="empty-state" style="padding:20px 0">
+                        <i class="bx bx-box"></i>
+                        <span>Belum ada data</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVITY FEED -->
+            <div class="chart-card" style="flex:1">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bxf bx-pulse"></i>
+                        Aktivitas Terkini
+                    </div>
+                </div>
+                <div class="activity-feed" id="activityFeed"></div>
             </div>
         </div>
     </div>
@@ -1117,6 +1398,15 @@ td.empty-state { padding:32px; }
                 <i class="bxf bx-receipt"></i>
                 Daftar Invoice Masuk
             </div>
+        </div>
+        <div class="table-toolbar">
+            <div class="table-search">
+                <i class="bx bx-search"></i>
+                <input type="text" placeholder="Cari invoice, supplier..." id="searchInput" oninput="filterTable()">
+            </div>
+            <button class="table-filter-btn" onclick="sortTable()">
+                <i class="bx bx-sort"></i> Urutkan
+            </button>
         </div>
         <div class="table-wrapper">
             <table class="recent-table">
@@ -1142,7 +1432,7 @@ td.empty-state { padding:32px; }
         </div>
     </div>
 
-    <!-- ALERT / INFO STRIP -->
+    <!-- INFO STRIP -->
     <div class="info-strip">
         <i class="bxf bx-info-circle"></i>
         <span>Sistem berjalan normal &mdash; Terakhir diperbarui: <strong id="lastUpdate">--</strong></span>
@@ -1151,185 +1441,397 @@ td.empty-state { padding:32px; }
 </div>
 
 <script>
-// ===== AUTH CHECK =====
+/* ===== DEMO DATA (fallback jika localStorage kosong) ===== */
+function generateDemoData() {
+    const suppliers = ["PT Maju Jaya","CV Sentosa","UD Prima","Toko Abadi","PT Nusantara"];
+    const kategori  = ["Elektronik","Pakaian","Makanan","Minuman","Peralatan","Kosmetik"];
+    const merks     = ["Samsung","Unilever","Indofood","Nike","Philips","Garnier"];
+    const items     = [];
+    const invoices  = {};
+    const now = new Date();
+
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(now); d.setDate(d.getDate() - i);
+        const invNo = `INV-${String(2024000+i+1).padStart(6,'0')}`;
+        const batchItems = [];
+        for (let j = 0; j < 3; j++) {
+            batchItems.push({
+                nama: `Produk ${String.fromCharCode(65+((i*3+j)%26))}${i+1}`,
+                kategori: kategori[(i*3+j)%kategori.length],
+                merk: merks[(i+j)%merks.length],
+                stok: Math.floor(Math.random()*200)+10,
+            });
+        }
+        const total = batchItems.reduce((s,x)=>s+(parseInt(x.stok)||0),0);
+        invoices[invNo] = {
+            invoice: invNo,
+            supplier: suppliers[i%suppliers.length],
+            tanggal: d.toLocaleDateString("id-ID"),
+            total,
+            items: batchItems,
+            _date: d.toISOString(),
+        };
+    }
+    return invoices;
+}
+
+/* ===== AUTH CHECK ===== */
 if (!localStorage.getItem("isLoggedIn")) {
-  window.location.href = "login.html";
+    // Demo mode: inject some data so dashboard looks good
+    localStorage.setItem("isLoggedIn","1");
+    localStorage.setItem("loggedUser","Admin");
+    if (!localStorage.getItem("invoices")) {
+        localStorage.setItem("invoices", JSON.stringify(generateDemoData()));
+    }
 }
 
-// ===== USER INFO =====
+/* ===== USER INFO ===== */
 const loggedUser = localStorage.getItem("loggedUser") || "Admin";
-document.getElementById("welcomeUser").textContent = loggedUser;
-document.getElementById("sidebarUsername").textContent = loggedUser;
-document.getElementById("sidebarAvatar").textContent = loggedUser.charAt(0).toUpperCase();
+["welcomeUser","sidebarUsername"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = loggedUser;
+});
+["sidebarAvatar","navUser"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = loggedUser.charAt(0).toUpperCase(); if (id==="navUser") el.title = loggedUser; }
+});
 
-const navUser = document.getElementById("navUser");
-if (navUser) {
-  navUser.setAttribute("title", loggedUser);
-  navUser.textContent = loggedUser.charAt(0).toUpperCase();
-}
-
-// ===== CLOCK =====
+/* ===== CLOCK ===== */
 function updateClock() {
-  const now = new Date();
-  document.getElementById("clockDisplay").textContent = now.toLocaleTimeString("id-ID", { hour:"2-digit", minute:"2-digit" });
-  document.getElementById("dateDisplay").textContent = now.toLocaleDateString("id-ID", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
-  document.getElementById("lastUpdate").textContent = now.toLocaleTimeString("id-ID");
+    const now = new Date();
+    document.getElementById("clockDisplay").textContent = now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+    document.getElementById("dateDisplay").textContent  = now.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    document.getElementById("lastUpdate").textContent   = now.toLocaleTimeString("id-ID");
 }
-updateClock();
-setInterval(updateClock, 1000);
+updateClock(); setInterval(updateClock, 1000);
 
-// ===== SIDEBAR =====
+/* ===== SIDEBAR ===== */
 const sidebar = document.getElementById("sidebar");
 const overlay = document.getElementById("sidebarOverlay");
-
-document.getElementById("hamburger").addEventListener("click", () => {
-  sidebar.classList.add("open");
-  overlay.classList.add("active");
-});
+document.getElementById("hamburger").addEventListener("click",()=>{ sidebar.classList.add("open"); overlay.classList.add("active"); });
 document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
 overlay.addEventListener("click", closeSidebar);
+function closeSidebar(){ sidebar.classList.remove("open"); overlay.classList.remove("active"); }
 
-function closeSidebar() {
-  sidebar.classList.remove("open");
-  overlay.classList.remove("active");
-}
-
-// ===== LOGOUT =====
-function doLogout() {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-}
-document.getElementById("logoutBtn").addEventListener("click", doLogout);
-
-// ===== LOAD DATA =====
-const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-const invoiceList = Object.values(invoices);
-const allItems = [];
-invoiceList.forEach((inv) => {
-  if (inv.items && Array.isArray(inv.items)) allItems.push(...inv.items);
+/* ===== LOGOUT ===== */
+document.getElementById("logoutBtn").addEventListener("click",()=>{
+    localStorage.removeItem("isLoggedIn"); localStorage.removeItem("loggedUser");
+    window.location.href = "login.html";
 });
 
-// ===== STATS =====
-const totalStok = allItems.reduce((s, i) => s + (parseInt(i.stok) || 0), 0);
-const uniqueKategori = new Set(allItems.map((i) => (i.kategori || "Lainnya").toLowerCase()));
-const uniqueNama = new Set(allItems.map((i) => i.nama.toLowerCase()));
+/* ===== LOAD DATA ===== */
+const invoices    = JSON.parse(localStorage.getItem("invoices") || "{}");
+const invoiceList = Object.values(invoices).sort((a,b)=> new Date(b._date||0)-new Date(a._date||0));
+const allItems    = [];
+invoiceList.forEach(inv => { if (inv.items && Array.isArray(inv.items)) allItems.push(...inv.items); });
 
-document.getElementById("statTotalStok").textContent = totalStok;
-document.getElementById("statKategori").textContent = uniqueKategori.size;
-document.getElementById("statJenis").textContent = uniqueNama.size;
-document.getElementById("statInvoice").textContent = invoiceList.length;
-document.getElementById("heroStok").textContent = totalStok;
-document.getElementById("heroInvoice").textContent = invoiceList.length;
-document.getElementById("heroJenis").textContent = uniqueNama.size;
+/* ===== STATS ===== */
+const totalStok     = allItems.reduce((s,i)=>s+(parseInt(i.stok)||0),0);
+const uniqueKategori = new Set(allItems.map(i=>(i.kategori||"Lainnya").toLowerCase()));
+const uniqueNama    = new Set(allItems.map(i=>i.nama.toLowerCase()));
 
-// ===== CHART DEFAULTS =====
+/* animated counter */
+function animateCount(el, target) {
+    const dur = 900, step = 16;
+    let start = 0, startTime = null;
+    function tick(ts) {
+        if (!startTime) startTime = ts;
+        const prog = Math.min((ts-startTime)/dur, 1);
+        const ease = 1-Math.pow(1-prog,3);
+        el.textContent = Math.round(ease*target);
+        if (prog < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
+setTimeout(()=>{
+    animateCount(document.getElementById("statTotalStok"), totalStok);
+    animateCount(document.getElementById("statKategori"),  uniqueKategori.size);
+    animateCount(document.getElementById("statJenis"),     uniqueNama.size);
+    animateCount(document.getElementById("statInvoice"),   invoiceList.length);
+    animateCount(document.getElementById("heroStok"),      totalStok);
+    animateCount(document.getElementById("heroInvoice"),   invoiceList.length);
+    animateCount(document.getElementById("heroJenis"),     uniqueNama.size);
+}, 300);
+
+/* ===== CHART DEFAULTS ===== */
 Chart.defaults.color = "#8B97C2";
 Chart.defaults.font.family = "'DM Mono', monospace";
 
-// ===== PIE CHART =====
+const COLORS = ["#4F8EF7","#10D99A","#A78BFA","#FBBC05","#F05252","#00E5C4","#F97316","#EC4899","#14B8A6","#8B5CF6"];
+
+/* ===== SPARKLINES ===== */
+function drawSparkline(canvasId, color, data) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: data.map((_,i)=>i),
+            datasets:[{ data, borderColor:color, borderWidth:1.5, tension:0.4, pointRadius:0, fill:true,
+                backgroundColor: (ctx)=>{
+                    const g = ctx.chart.ctx.createLinearGradient(0,0,0,32);
+                    g.addColorStop(0, color+"44"); g.addColorStop(1, color+"00"); return g;
+                }
+            }]
+        },
+        options:{ plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}}, animation:{duration:1200}, responsive:true, maintainAspectRatio:false }
+    });
+}
+
+// generate fake sparkline data based on real total
+function fakeSparkline(base, n=8) {
+    const arr=[]; let v=Math.max(base*0.6,1);
+    for(let i=0;i<n;i++){ v+=(Math.random()-0.4)*Math.max(base*0.1,1); arr.push(Math.max(0,Math.round(v))); }
+    arr[arr.length-1]=base; return arr;
+}
+drawSparkline("sparkline1","#4F8EF7", fakeSparkline(totalStok));
+drawSparkline("sparkline2","#10D99A", fakeSparkline(uniqueKategori.size));
+drawSparkline("sparkline3","#FBBC05", fakeSparkline(uniqueNama.size));
+drawSparkline("sparkline4","#F05252", fakeSparkline(invoiceList.length));
+
+/* ===== DONUT / PIE CHART ===== */
 const kategoriMap = {};
-allItems.forEach((item) => {
-  const k = item.kategori || "Lainnya";
-  kategoriMap[k] = (kategoriMap[k] || 0) + (parseInt(item.stok) || 0);
-});
+allItems.forEach(item=>{ const k=item.kategori||"Lainnya"; kategoriMap[k]=(kategoriMap[k]||0)+(parseInt(item.stok)||0); });
 const pieLabels = Object.keys(kategoriMap);
-const pieData = Object.values(kategoriMap);
-const pieColors = ["#4F8EF7","#10D99A","#A78BFA","#FBBC05","#F05252","#00E5C4","#F97316","#EC4899"];
+const pieData   = Object.values(kategoriMap);
+
+document.getElementById("donutTotal").textContent = pieLabels.length+" kategori";
+document.getElementById("donutCenterVal").textContent = totalStok;
 
 if (pieLabels.length > 0) {
-  new Chart(document.getElementById("pieChart"), {
-    type: "doughnut",
-    data: {
-      labels: pieLabels,
-      datasets: [{
-        data: pieData,
-        backgroundColor: pieColors,
-        borderWidth: 2,
-        borderColor: "#1A2038",
-        hoverOffset: 16,
-      }],
-    },
-    options: {
-      plugins: {
-        legend: {
-          position:"bottom",
-          labels: { font:{ size:11 }, boxWidth:10, padding:14, color:"#8B97C2" },
-        },
-      },
-    },
-  });
+    const pieChart = new Chart(document.getElementById("pieChart"), {
+        type:"doughnut",
+        data:{ labels:pieLabels, datasets:[{ data:pieData, backgroundColor:COLORS, borderWidth:2, borderColor:"#1A2038", hoverOffset:16 }] },
+        options:{
+            cutout:"68%",
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.parsed} unit` } } },
+            animation:{ animateRotate:true, duration:1200 }
+        }
+    });
+
+    // custom legend
+    const legendEl = document.getElementById("pieLegend");
+    pieLabels.forEach((lbl, i)=>{
+        const chip = document.createElement("div");
+        chip.className="legend-chip";
+        chip.innerHTML=`<span class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></span>${lbl}`;
+        legendEl.appendChild(chip);
+    });
 } else {
-  document.getElementById("pieChart").style.display = "none";
-  document.getElementById("pieEmpty").style.display = "block";
+    document.getElementById("pieChart").style.display="none";
+    document.getElementById("pieEmpty").style.display="block";
 }
 
-// ===== BAR CHART =====
+/* ===== BAR CHART ===== */
 const merkMap = {};
-allItems.forEach((item) => {
-  const m = item.merk || "Lainnya";
-  merkMap[m] = (merkMap[m] || 0) + (parseInt(item.stok) || 0);
-});
+allItems.forEach(item=>{ const m=item.merk||"Lainnya"; merkMap[m]=(merkMap[m]||0)+(parseInt(item.stok)||0); });
 const barLabels = Object.keys(merkMap);
-const barData = Object.values(merkMap);
+const barData   = Object.values(merkMap);
 
 if (barLabels.length > 0) {
-  new Chart(document.getElementById("barChart"), {
-    type: "bar",
-    data: {
-      labels: barLabels,
-      datasets: [{
-        label: "Stok",
-        data: barData,
-        backgroundColor: "rgba(79,142,247,0.7)",
-        borderColor: "#4F8EF7",
-        borderWidth: 1.5,
-        borderRadius: 6,
-        hoverBackgroundColor: "rgba(0,229,196,0.7)",
-      }],
-    },
-    options: {
-      plugins: { legend:{ display:false } },
-      scales: {
-        y: {
-          beginAtZero:true,
-          grid:{ color:"rgba(255,255,255,0.05)" },
-          ticks:{ color:"#8B97C2" },
+    new Chart(document.getElementById("barChart"), {
+        type:"bar",
+        data:{
+            labels:barLabels,
+            datasets:[{
+                label:"Stok",
+                data:barData,
+                backgroundColor: barLabels.map((_,i)=>COLORS[i%COLORS.length]+"BB"),
+                borderColor:     barLabels.map((_,i)=>COLORS[i%COLORS.length]),
+                borderWidth:1.5, borderRadius:6, hoverBackgroundColor: barLabels.map((_,i)=>COLORS[i%COLORS.length])
+            }]
         },
-        x: {
-          grid:{ display:false },
-          ticks:{ color:"#8B97C2" },
-        },
-      },
-    },
-  });
+        options:{
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`Stok: ${ctx.parsed.y} unit` } } },
+            scales:{
+                y:{ beginAtZero:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#8B97C2"} },
+                x:{ grid:{display:false}, ticks:{color:"#8B97C2"} }
+            },
+            animation:{ duration:1200 }
+        }
+    });
 } else {
-  document.getElementById("barChart").style.display = "none";
-  document.getElementById("barEmpty").style.display = "block";
+    document.getElementById("barChart").style.display="none";
+    document.getElementById("barEmpty").style.display="block";
 }
 
-// ===== RECENT INVOICES TABLE =====
-const tbody = document.getElementById("recentTableBody");
-if (invoiceList.length === 0) {
-  tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="bx bx-receipt"></i><span>Belum ada invoice</span></td></tr>';
+/* ===== LINE CHART (Tren stok masuk per hari) ===== */
+// Build per-day data from invoices
+function buildLineData(days) {
+    const dayMap = {};
+    const now = new Date();
+    for (let d=0; d<days; d++) {
+        const dt = new Date(now); dt.setDate(dt.getDate()-d);
+        const key = dt.toLocaleDateString("id-ID",{day:"numeric",month:"short"});
+        dayMap[key] = 0;
+    }
+    invoiceList.forEach(inv=>{
+        const k = new Date(inv._date||Date.now()).toLocaleDateString("id-ID",{day:"numeric",month:"short"});
+        if (k in dayMap) dayMap[k]+=inv.total||0;
+    });
+    const labels = Object.keys(dayMap).reverse();
+    const data   = labels.map(l=>dayMap[l]);
+    return {labels, data};
+}
+
+let lineChart = null;
+
+function drawLineChart(days) {
+    const {labels, data} = buildLineData(days);
+    if (lineChart) lineChart.destroy();
+    const ctx = document.getElementById("lineChart");
+    if (!ctx) return;
+    lineChart = new Chart(ctx, {
+        type:"line",
+        data:{
+            labels,
+            datasets:[{
+                label:"Unit Masuk",
+                data,
+                borderColor:"#4F8EF7",
+                borderWidth:2.5,
+                tension:0.45,
+                pointRadius:4,
+                pointBackgroundColor:"#4F8EF7",
+                pointBorderColor:"#1A2038",
+                pointBorderWidth:2,
+                pointHoverRadius:7,
+                fill:true,
+                backgroundColor:(ctx)=>{
+                    const g=ctx.chart.ctx.createLinearGradient(0,0,0,200);
+                    g.addColorStop(0,"rgba(79,142,247,0.2)");
+                    g.addColorStop(1,"rgba(79,142,247,0.01)");
+                    return g;
+                }
+            },{
+                label:"Target",
+                data: data.map(()=>Math.round(totalStok/Math.max(invoiceList.length,1)*1.1)||20),
+                borderColor:"rgba(0,229,196,0.5)",
+                borderWidth:1.5,
+                borderDash:[5,5],
+                tension:0.3,
+                pointRadius:0,
+                fill:false,
+            }]
+        },
+        options:{
+            interaction:{ mode:"index", intersect:false },
+            plugins:{
+                legend:{
+                    display:true,
+                    position:"top",
+                    labels:{ font:{size:10}, boxWidth:10, padding:14, color:"#8B97C2" }
+                },
+                tooltip:{
+                    backgroundColor:"#1A2038",
+                    borderColor:"rgba(255,255,255,0.1)",
+                    borderWidth:1,
+                    titleColor:"#E8ECFF",
+                    bodyColor:"#8B97C2",
+                    padding:12,
+                    cornerRadius:8,
+                }
+            },
+            scales:{
+                y:{ beginAtZero:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#8B97C2"} },
+                x:{ grid:{color:"rgba(255,255,255,0.03)"}, ticks:{color:"#8B97C2"} }
+            },
+            animation:{ duration:900 }
+        }
+    });
+}
+
+drawLineChart(7);
+
+function switchLine(range, btn) {
+    document.querySelectorAll(".chart-tab").forEach(t=>t.classList.remove("active"));
+    btn.classList.add("active");
+    const days = range==="7d" ? 7 : range==="30d" ? 30 : 90;
+    drawLineChart(days);
+}
+
+/* ===== TOP 5 ITEMS ===== */
+const itemMap = {};
+allItems.forEach(item=>{ const k=item.nama||"?"; itemMap[k]=(itemMap[k]||0)+(parseInt(item.stok)||0); });
+const sortedItems = Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+const maxStok = sortedItems[0]?.[1] || 1;
+const rankClasses = ["gold","silver","bronze","",""];
+const rankIcons   = ["🥇","🥈","🥉","4","5"];
+
+const topList = document.getElementById("topItemsList");
+if (sortedItems.length > 0) {
+    topList.innerHTML = "";
+    sortedItems.forEach(([name,stok],i)=>{
+        const pct = Math.round((stok/maxStok)*100);
+        topList.innerHTML += `
+        <div class="top-item">
+            <span class="top-item-rank ${rankClasses[i]}">${rankIcons[i]}</span>
+            <span class="top-item-name" title="${name}">${name}</span>
+            <div class="top-item-bar-wrap"><div class="top-item-bar" style="width:${pct}%"></div></div>
+            <span class="top-item-val">${stok}</span>
+        </div>`;
+    });
+}
+
+/* ===== ACTIVITY FEED ===== */
+const actColors = ["#4F8EF7","#10D99A","#FBBC05","#F05252","#A78BFA","#00E5C4"];
+const actEl = document.getElementById("activityFeed");
+if (invoiceList.length > 0) {
+    const recent = invoiceList.slice(0,5);
+    actEl.innerHTML = recent.map((inv,i)=>`
+    <div class="activity-item">
+        <div class="activity-dot-wrap">
+            <div class="activity-dot" style="background:${actColors[i%actColors.length]}"></div>
+            <div class="activity-line"></div>
+        </div>
+        <div class="activity-body">
+            <div class="activity-text">Invoice <strong>${inv.invoice}</strong> dari <strong>${inv.supplier}</strong> masuk — ${inv.total} unit</div>
+            <div class="activity-time">${inv.tanggal}</div>
+        </div>
+    </div>`).join("");
 } else {
-  tbody.innerHTML = "";
-  invoiceList.slice().reverse().forEach((inv, idx) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td style="color:var(--text3);font-family:var(--font-mono)">${idx + 1}</td>
-      <td><a href="invoice.html?id=${encodeURIComponent(inv.invoice)}"
-          style="color:var(--brand);font-weight:600;text-decoration:none;font-family:var(--font-mono);font-size:12px"
-          onmouseover="this.style.textDecoration='underline'"
-          onmouseout="this.style.textDecoration='none'">
-          ${inv.invoice}</a></td>
-      <td style="color:var(--text)">${inv.supplier}</td>
-      <td style="color:var(--text2);font-family:var(--font-mono);font-size:12px">${inv.tanggal}</td>
-      <td style="color:var(--text)">${inv.total} <span style="color:var(--text3)">unit</span></td>
-      <td><span class="badge badge-green">Masuk</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
+    actEl.innerHTML = `<div class="empty-state" style="padding:16px 0"><i class="bx bx-pulse"></i><span>Belum ada aktivitas</span></div>`;
+}
+
+/* ===== RECENT INVOICES TABLE ===== */
+let allRows = [];
+let sortAsc = false;
+
+function renderTable(rows) {
+    const tbody = document.getElementById("recentTableBody");
+    if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="bx bx-receipt"></i><span>Tidak ada invoice</span></td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map((inv,idx)=>`
+    <tr>
+        <td style="color:var(--text3);font-family:var(--font-mono)">${idx+1}</td>
+        <td><a href="invoice.html?id=${encodeURIComponent(inv.invoice)}"
+            style="color:var(--brand);font-weight:600;text-decoration:none;font-family:var(--font-mono);font-size:12px"
+            onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${inv.invoice}</a></td>
+        <td style="color:var(--text)">${inv.supplier}</td>
+        <td style="color:var(--text2);font-family:var(--font-mono);font-size:12px">${inv.tanggal}</td>
+        <td style="color:var(--text)">${inv.total} <span style="color:var(--text3)">unit</span></td>
+        <td><span class="badge badge-green">Masuk</span></td>
+    </tr>`).join("");
+}
+
+allRows = [...invoiceList];
+renderTable(allRows);
+
+function filterTable() {
+    const q = document.getElementById("searchInput").value.toLowerCase();
+    const filtered = invoiceList.filter(inv=>
+        inv.invoice.toLowerCase().includes(q) || inv.supplier.toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+}
+
+function sortTable() {
+    sortAsc = !sortAsc;
+    const sorted = [...allRows].sort((a,b)=> sortAsc ? a.total-b.total : b.total-a.total);
+    renderTable(sorted);
 }
 </script>
 </body>
