@@ -6,21 +6,28 @@ if (!localStorage.getItem("isLoggedIn")) window.location.href = "login.html";
 // ===== USER INFO =====
 const loggedUser = localStorage.getItem("loggedUser") || "Admin";
 document.getElementById("sidebarUsername").textContent = loggedUser;
-document.getElementById("sidebarAvatar").textContent = loggedUser.charAt(0).toUpperCase();
+document.getElementById("sidebarAvatar").textContent = loggedUser
+  .charAt(0)
+  .toUpperCase();
 
 // ===== SIDEBAR =====
-const sidebar   = document.getElementById("sidebar");
-const sOverlay  = document.getElementById("sidebarOverlay");
+const sidebar = document.getElementById("sidebar");
+const sOverlay = document.getElementById("sidebarOverlay");
 document.getElementById("hamburger").addEventListener("click", () => {
-  sidebar.classList.add("open"); sOverlay.classList.add("active");
+  sidebar.classList.add("open");
+  sOverlay.classList.add("active");
 });
 document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
 sOverlay.addEventListener("click", closeSidebar);
-function closeSidebar() { sidebar.classList.remove("open"); sOverlay.classList.remove("active"); }
+function closeSidebar() {
+  sidebar.classList.remove("open");
+  sOverlay.classList.remove("active");
+}
 
 // ===== LOGOUT =====
 document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("isLoggedIn"); localStorage.removeItem("loggedUser");
+  localStorage.removeItem("isLoggedIn");
+  localStorage.removeItem("loggedUser");
   window.location.href = "login.html";
 });
 
@@ -33,19 +40,23 @@ const STOCKOUT_KEY = "stockOuts_v2";
 // ===== CUSTOM RANGE STATE ===================================
 // ============================================================
 let customRangeActive = false;
-let customRangeFrom   = null;
-let customRangeTo     = null;
+let customRangeFrom = null;
+let customRangeTo = null;
 
-const filterPeriode      = document.getElementById("filterPeriode");
-const customRangePanel   = document.getElementById("customRangePanel");
-const customFromEl       = document.getElementById("customFrom");
-const customToEl         = document.getElementById("customTo");
-const btnApplyRange      = document.getElementById("btnApplyRange");
-const rangeBadge         = document.getElementById("rangeBadge");
-const rangeBadgeText     = document.getElementById("rangeBadgeText");
+const filterPeriode = document.getElementById("filterPeriode");
+const customRangePanel = document.getElementById("customRangePanel");
+const customFromEl = document.getElementById("customFrom");
+const customToEl = document.getElementById("customTo");
+const btnApplyRange = document.getElementById("btnApplyRange");
+const rangeBadge = document.getElementById("rangeBadge");
+const rangeBadgeText = document.getElementById("rangeBadgeText");
 
 function fmtShort(d) {
-  return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 filterPeriode.addEventListener("change", () => {
@@ -53,8 +64,10 @@ filterPeriode.addEventListener("change", () => {
     customRangePanel.classList.add("visible");
     if (!customFromEl.value) {
       const now = new Date();
-      customFromEl.value = new Date(now.getFullYear(), 0, 1).toISOString().split("T")[0];
-      customToEl.value   = now.toISOString().split("T")[0];
+      customFromEl.value = new Date(now.getFullYear(), 0, 1)
+        .toISOString()
+        .split("T")[0];
+      customToEl.value = now.toISOString().split("T")[0];
     }
   } else {
     customRangePanel.classList.remove("visible");
@@ -65,11 +78,19 @@ filterPeriode.addEventListener("change", () => {
 });
 
 btnApplyRange.addEventListener("click", () => {
-  if (!customFromEl.value || !customToEl.value) { alert("Pilih tanggal dari dan sampai."); return; }
+  if (!customFromEl.value || !customToEl.value) {
+    alert("Pilih tanggal dari dan sampai.");
+    return;
+  }
   const f = new Date(customFromEl.value + "T00:00:00");
-  const t = new Date(customToEl.value   + "T23:59:59");
-  if (f > t) { alert("Tanggal 'Dari' tidak boleh lebih besar dari 'Sampai'."); return; }
-  customRangeFrom = f; customRangeTo = t; customRangeActive = true;
+  const t = new Date(customToEl.value + "T23:59:59");
+  if (f > t) {
+    alert("Tanggal 'Dari' tidak boleh lebih besar dari 'Sampai'.");
+    return;
+  }
+  customRangeFrom = f;
+  customRangeTo = t;
+  customRangeActive = true;
   rangeBadgeText.textContent = fmtShort(f) + " – " + fmtShort(t);
   rangeBadge.classList.add("visible");
   customRangePanel.classList.remove("visible");
@@ -77,7 +98,9 @@ btnApplyRange.addEventListener("click", () => {
 });
 
 rangeBadge.addEventListener("click", () => {
-  customRangeActive = false; customRangeFrom = null; customRangeTo = null;
+  customRangeActive = false;
+  customRangeFrom = null;
+  customRangeTo = null;
   rangeBadge.classList.remove("visible");
   filterPeriode.value = "all";
   renderAll();
@@ -87,24 +110,53 @@ rangeBadge.addEventListener("click", () => {
 // ===== DATE RANGE HELPER ====================================
 // ============================================================
 function getDateRange(filter) {
-  const now   = new Date();
+  const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   switch (filter) {
-    case "today":     return { from: today, to: new Date() };
-    case "7d":        return { from: new Date(today - 6 * 864e5), to: new Date() };
-    case "thismonth": return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: new Date() };
-    case "30d":       return { from: new Date(today - 29 * 864e5), to: new Date() };
-    case "lastmonth": return { from: new Date(now.getFullYear(), now.getMonth() - 1, 1), to: new Date(now.getFullYear(), now.getMonth(), 0) };
-    case "3m":        return { from: new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()), to: new Date() };
-    case "6m":        return { from: new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()), to: new Date() };
-    case "ytd":       return { from: new Date(now.getFullYear(), 0, 1), to: new Date() };
-    case "1y":        return { from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), to: new Date() };
-    case "lastyear":  return { from: new Date(now.getFullYear() - 1, 0, 1), to: new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59) };
+    case "today":
+      return { from: today, to: new Date() };
+    case "7d":
+      return { from: new Date(today - 6 * 864e5), to: new Date() };
+    case "thismonth":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth(), 1),
+        to: new Date(),
+      };
+    case "30d":
+      return { from: new Date(today - 29 * 864e5), to: new Date() };
+    case "lastmonth":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+        to: new Date(now.getFullYear(), now.getMonth(), 0),
+      };
+    case "3m":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()),
+        to: new Date(),
+      };
+    case "6m":
+      return {
+        from: new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()),
+        to: new Date(),
+      };
+    case "ytd":
+      return { from: new Date(now.getFullYear(), 0, 1), to: new Date() };
+    case "1y":
+      return {
+        from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()),
+        to: new Date(),
+      };
+    case "lastyear":
+      return {
+        from: new Date(now.getFullYear() - 1, 0, 1),
+        to: new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59),
+      };
     case "custom":
       if (customRangeActive && customRangeFrom && customRangeTo)
         return { from: customRangeFrom, to: customRangeTo };
       return null;
-    default: return null;
+    default:
+      return null;
   }
 }
 
@@ -115,11 +167,18 @@ function inRange(dateStr, range) {
 }
 
 const PERIODE_LABELS = {
-  all: "All Time", today: "Hari Ini", "7d": "7 Hari Terakhir",
-  thismonth: "Bulan Ini", "30d": "30 Hari Terakhir",
-  lastmonth: "Bulan Kemarin", "3m": "3 Bulan Terakhir",
-  "6m": "6 Bulan Terakhir", ytd: "YTD (Tahun Ini)",
-  "1y": "12 Bulan Terakhir", lastyear: "Tahun Lalu", custom: "Custom Range",
+  all: "All Time",
+  today: "Hari Ini",
+  "7d": "7 Hari Terakhir",
+  thismonth: "Bulan Ini",
+  "30d": "30 Hari Terakhir",
+  lastmonth: "Bulan Kemarin",
+  "3m": "3 Bulan Terakhir",
+  "6m": "6 Bulan Terakhir",
+  ytd: "YTD (Tahun Ini)",
+  "1y": "12 Bulan Terakhir",
+  lastyear: "Tahun Lalu",
+  custom: "Custom Range",
 };
 
 // ============================================================
@@ -132,7 +191,20 @@ function fmtRp(n) {
 function fmtDate(s) {
   if (!s) return "—";
   const [y, m, d] = s.split("-");
-  const bln = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const bln = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agu",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ];
   return `${parseInt(d)} ${bln[parseInt(m) - 1]} ${y}`;
 }
 function fmtPct(n) {
@@ -144,14 +216,19 @@ function fmtPct(n) {
 // ===== DATA LOADERS =========================================
 // ============================================================
 function loadInvoices() {
-  try { return Object.values(JSON.parse(localStorage.getItem("invoices") || "{}")); }
-  catch { return []; }
+  try {
+    return Object.values(JSON.parse(localStorage.getItem("invoices") || "{}"));
+  } catch {
+    return [];
+  }
 }
 
-// Fixed Key: Memastikan pemanggilan data stock out konsisten dengan parameter penyimpanan
 function loadStockOuts() {
-  try { return JSON.parse(localStorage.getItem(STOCKOUT_KEY) || "[]"); }
-  catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(STOCKOUT_KEY) || "[]");
+  } catch {
+    return [];
+  }
 }
 
 function getPaymentIcon(paymentId) {
@@ -163,15 +240,28 @@ function getPaymentIcon(paymentId) {
 // ============================================================
 // ===== CHART INSTANCES ======================================
 // ============================================================
-let chartRevenue  = null;
+let chartRevenue = null;
 let chartKategori = null;
-let chartMasuk    = null;
-let chartKeluar   = null;
+let chartMasuk = null;
+let chartKeluar = null;
 let chartLineRevenue = null;
 
 function destroyCharts() {
-  [chartRevenue, chartKategori, chartMasuk, chartKeluar, chartLineRevenue].forEach(c => { if (c) c.destroy(); });
-  chartRevenue = chartKategori = chartMasuk = chartKeluar = chartLineRevenue = null;
+  [
+    chartRevenue,
+    chartKategori,
+    chartMasuk,
+    chartKeluar,
+    chartLineRevenue,
+  ].forEach((c) => {
+    if (c) c.destroy();
+  });
+  chartRevenue =
+    chartKategori =
+    chartMasuk =
+    chartKeluar =
+    chartLineRevenue =
+      null;
 }
 
 // ============================================================
@@ -180,138 +270,183 @@ function destroyCharts() {
 function getMonthLabel(dateStr) {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
-  const bln = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const bln = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agu",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ];
   return bln[d.getMonth()] + " " + d.getFullYear();
 }
 
-function buildMonthBuckets(items, dateKey, qtyKey) {
-  const map = {};
-  items.forEach(item => {
-    const label = getMonthLabel(item[dateKey]);
-    if (!map[label]) map[label] = 0;
-    map[label] += parseInt(item[qtyKey]) || 0;
+// ============================================================
+// ===== MAIN DATA COMPUTATION ================================
+// ============================================================
+// Store computed data globally for PDF/Print use
+let _computedData = null;
+
+function computeData(range) {
+  const allInvoices = loadInvoices();
+  const allStockOuts = loadStockOuts();
+
+  const filteredInvoices = allInvoices.filter((inv) =>
+    inRange(inv.tanggal, range),
+  );
+  const filteredStockOuts = allStockOuts.filter((so) =>
+    inRange(so.tanggal, range),
+  );
+
+  let qtyMasuk = 0;
+  filteredInvoices.forEach((inv) => {
+    (inv.items || []).forEach((item) => {
+      qtyMasuk += parseInt(item.stok) || 0;
+    });
   });
-  return map;
+
+  let qtyKeluar = 0;
+  let totalRevenue = 0;
+  let totalHPP = 0;
+
+  const prodMap = {};
+  const keluarMonthMap = {};
+  const kategoriMap = {};
+  const customerSet = new Set();
+
+  filteredStockOuts.forEach((so) => {
+    const label = getMonthLabel(so.tanggal);
+    if (!keluarMonthMap[label]) keluarMonthMap[label] = 0;
+    if (so.penerima) customerSet.add(so.penerima.toLowerCase());
+
+    (so.items || []).forEach((item) => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
+      const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
+      const hpp = parseFloat(item.hargaHPP || 0);
+      const rev = jual * qty;
+      const hppTot = hpp * qty;
+
+      qtyKeluar += qty;
+      totalRevenue += rev;
+      totalHPP += hppTot;
+      keluarMonthMap[label] += qty;
+
+      const kat = item.kategori || "Lainnya";
+      if (!kategoriMap[kat]) kategoriMap[kat] = { revenue: 0, qty: 0 };
+      kategoriMap[kat].revenue += rev;
+      kategoriMap[kat].qty += qty;
+
+      const key = item.nama || "—";
+      if (!prodMap[key]) {
+        prodMap[key] = {
+          nama: key,
+          kategori: item.kategori || "—",
+          qty: 0,
+          revenue: 0,
+          hpp: 0,
+        };
+      }
+      prodMap[key].qty += qty;
+      prodMap[key].revenue += rev;
+      prodMap[key].hpp += hppTot;
+    });
+  });
+
+  const totalProfit = totalRevenue - totalHPP;
+  const marginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+  let stokSisa = 0;
+  allInvoices.forEach((inv) => {
+    (inv.items || []).forEach((item) => {
+      stokSisa += parseInt(item.stok) || 0;
+    });
+  });
+
+  return {
+    filteredInvoices,
+    filteredStockOuts,
+    qtyMasuk,
+    qtyKeluar,
+    totalRevenue,
+    totalHPP,
+    totalProfit,
+    marginPct,
+    stokSisa,
+    customerSet,
+    prodMap,
+    keluarMonthMap,
+    kategoriMap,
+  };
 }
 
 // ============================================================
 // ===== MAIN RENDER ==========================================
 // ============================================================
 function renderAll() {
-  const range   = getDateRange(filterPeriode.value);
+  const range = getDateRange(filterPeriode.value);
   const periodTxt = customRangeActive
-    ? (rangeBadgeText.textContent || "Custom Range")
-    : (PERIODE_LABELS[filterPeriode.value] || "All Time");
+    ? rangeBadgeText.textContent || "Custom Range"
+    : PERIODE_LABELS[filterPeriode.value] || "All Time";
   document.getElementById("periodText").textContent = periodTxt;
 
-  // --- Raw data ---
-  const allInvoices   = loadInvoices();
-  const allStockOuts  = loadStockOuts();
+  const d = computeData(range);
+  _computedData = { ...d, periodTxt, range };
 
-  // --- Filter by date ---
-  const filteredInvoices   = allInvoices.filter(inv => inRange(inv.tanggal, range));
-  const filteredStockOuts  = allStockOuts.filter(so  => inRange(so.tanggal, range));
+  const {
+    filteredInvoices,
+    filteredStockOuts,
+    qtyMasuk,
+    qtyKeluar,
+    totalRevenue,
+    totalHPP,
+    totalProfit,
+    marginPct,
+    stokSisa,
+    customerSet,
+    prodMap,
+    keluarMonthMap,
+    kategoriMap,
+  } = d;
 
-  // --- Compute metrics ---
-  // Barang masuk
-  let qtyMasuk = 0;
-  filteredInvoices.forEach(inv => {
-    (inv.items || []).forEach(item => { qtyMasuk += parseInt(item.stok) || 0; });
-  });
-
-  // Stock out aggregates
-  let qtyKeluar   = 0;
-  let totalRevenue = 0;
-  let totalHPP    = 0;
-
-  // Product map for top products
-  const prodMap = {};
-  // Month bucket for keluar chart
-  const keluarMonthMap = {};
-  // Kategori map for pie chart
-  const kategoriMap = {};
-  // Customer set
-  const customerSet = new Set();
-
-  filteredStockOuts.forEach(so => {
-    const label = getMonthLabel(so.tanggal);
-    if (!keluarMonthMap[label]) keluarMonthMap[label] = 0;
-    if (so.penerima) customerSet.add(so.penerima.toLowerCase());
-
-    (so.items || []).forEach(item => {
-      const qty   = parseInt(item.jumlahKeluar) || 0;
-      const jual  = parseFloat(item.hargaJual || item.hargaHPP || 0);
-      const hpp   = parseFloat(item.hargaHPP  || 0);
-      const rev   = jual * qty;
-      const hppTot = hpp * qty;
-
-      qtyKeluar    += qty;
-      totalRevenue += rev;
-      totalHPP     += hppTot;
-
-      keluarMonthMap[label] += qty;
-
-      // kategori
-      const kat = item.kategori || "Lainnya";
-      if (!kategoriMap[kat]) kategoriMap[kat] = { revenue: 0, qty: 0 };
-      kategoriMap[kat].revenue += rev;
-      kategoriMap[kat].qty     += qty;
-
-      // produk
-      const key = item.nama || "—";
-      if (!prodMap[key]) {
-        prodMap[key] = { nama: key, kategori: item.kategori || "—", qty: 0, revenue: 0, hpp: 0 };
-      }
-      prodMap[key].qty     += qty;
-      prodMap[key].revenue += rev;
-      prodMap[key].hpp     += hppTot;
-    });
-  });
-
-  const totalProfit = totalRevenue - totalHPP;
-  const marginPct   = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-
-  // Stok sisa (all time dari invoices)
-  let stokSisa = 0;
-  allInvoices.forEach(inv => {
-    (inv.items || []).forEach(item => { stokSisa += parseInt(item.stok) || 0; });
-  });
-
-  // ============================================================
-  // ===== RENDER KPI ===========================================
-  // ============================================================
+  // ===== KPI =====
   document.getElementById("kpiRevenue").textContent = fmtRp(totalRevenue);
-  document.getElementById("kpiRevenueSub").textContent = `dari ${filteredStockOuts.length} transaksi`;
+  document.getElementById("kpiRevenueSub").textContent =
+    `dari ${filteredStockOuts.length} transaksi`;
   document.getElementById("kpiHPP").textContent = fmtRp(totalHPP);
   document.getElementById("kpiHPPSub").textContent = "harga pokok penjualan";
   document.getElementById("kpiProfit").textContent = fmtRp(totalProfit);
-  document.getElementById("kpiProfitSub").textContent = totalRevenue > 0 ? "dari total penjualan" : "belum ada penjualan";
+  document.getElementById("kpiProfitSub").textContent =
+    totalRevenue > 0 ? "dari total penjualan" : "belum ada penjualan";
   document.getElementById("kpiMargin").textContent = fmtPct(marginPct);
   document.getElementById("kpiMarginSub").textContent = "persentase keuntungan";
 
-  // Color profit
   const profitEl = document.getElementById("kpiProfit");
   profitEl.style.color = totalProfit >= 0 ? "rgb(16,44,168)" : "#cc2222";
 
-  // ============================================================
-  // ===== RENDER INVENTORY SUMMARY =============================
-  // ============================================================
-  document.getElementById("invMasukQty").textContent   = qtyMasuk + " pcs";
-  document.getElementById("invMasukInv").textContent   = "dari " + filteredInvoices.length + " invoice";
-  document.getElementById("invKeluarQty").textContent  = qtyKeluar + " pcs";
-  document.getElementById("invKeluarInv").textContent  = "dari " + filteredStockOuts.length + " transaksi";
-  document.getElementById("invTransaksi").textContent  = filteredStockOuts.length;
+  // ===== INVENTORY SUMMARY =====
+  document.getElementById("invMasukQty").textContent = qtyMasuk + " pcs";
+  document.getElementById("invMasukInv").textContent =
+    "dari " + filteredInvoices.length + " invoice";
+  document.getElementById("invKeluarQty").textContent = qtyKeluar + " pcs";
+  document.getElementById("invKeluarInv").textContent =
+    "dari " + filteredStockOuts.length + " transaksi";
+  document.getElementById("invTransaksi").textContent =
+    filteredStockOuts.length;
   document.getElementById("invTransaksiSub").textContent = "invoice keluar";
-  document.getElementById("invPenjualan").textContent  = fmtRp(totalRevenue);
+  document.getElementById("invPenjualan").textContent = fmtRp(totalRevenue);
   document.getElementById("invPenjualanSub").textContent = "nilai stock out";
-  document.getElementById("invStokSisa").textContent   = stokSisa + " pcs";
-  document.getElementById("invStokSub").textContent    = "di gudang saat ini";
-  document.getElementById("invCustomer").textContent   = customerSet.size;
+  document.getElementById("invStokSisa").textContent = stokSisa + " pcs";
+  document.getElementById("invStokSub").textContent = "di gudang saat ini";
+  document.getElementById("invCustomer").textContent = customerSet.size;
   document.getElementById("invCustomerSub").textContent = "pelanggan unik";
 
-  // ============================================================
-  // ===== RENDER CHARTS ========================================
-  // ============================================================
+  // ===== CHARTS =====
   destroyCharts();
   renderChartRevenue(filteredStockOuts);
   renderChartKategori(kategoriMap);
@@ -319,9 +454,7 @@ function renderAll() {
   renderChartKeluar(keluarMonthMap);
   renderChartLineRevenue(filteredStockOuts);
 
-  // ============================================================
-  // ===== RENDER TABLES ========================================
-  // ============================================================
+  // ===== TABLES =====
   renderTableTopProduk(prodMap);
   renderTableTransaksi(filteredStockOuts);
   renderTableBarangMasuk(filteredInvoices);
@@ -332,29 +465,31 @@ function renderAll() {
 // ============================================================
 function renderChartRevenue(stockOuts) {
   const monthMap = {};
-
-  stockOuts.forEach(so => {
+  stockOuts.forEach((so) => {
     const label = getMonthLabel(so.tanggal);
     if (!monthMap[label]) monthMap[label] = { revenue: 0, hpp: 0 };
-    (so.items || []).forEach(item => {
-      const qty  = parseInt(item.jumlahKeluar) || 0;
+    (so.items || []).forEach((item) => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
       const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
-      const hpp  = parseFloat(item.hargaHPP  || 0);
+      const hpp = parseFloat(item.hargaHPP || 0);
       monthMap[label].revenue += jual * qty;
-      monthMap[label].hpp     += hpp  * qty;
+      monthMap[label].hpp += hpp * qty;
     });
   });
 
-  const labels  = Object.keys(monthMap);
-  const revenues = labels.map(l => monthMap[l].revenue);
-  const hpps     = labels.map(l => monthMap[l].hpp);
-  const profits  = labels.map((l, i) => revenues[i] - hpps[i]);
+  const labels = Object.keys(monthMap);
+  const revenues = labels.map((l) => monthMap[l].revenue);
+  const hpps = labels.map((l) => monthMap[l].hpp);
+  const profits = labels.map((l, i) => revenues[i] - hpps[i]);
 
   const empty = labels.length === 0;
   document.getElementById("emptyRevenue").classList.toggle("hidden", !empty);
 
   const ctx = document.getElementById("chartRevenue");
-  if (empty) { ctx.style.display = "none"; return; }
+  if (empty) {
+    ctx.style.display = "none";
+    return;
+  }
   ctx.style.display = "";
 
   chartRevenue = new Chart(ctx, {
@@ -362,155 +497,226 @@ function renderChartRevenue(stockOuts) {
     data: {
       labels,
       datasets: [
-        { label: "Revenue", data: revenues, backgroundColor: "rgba(16,185,129,0.7)", borderColor: "#10B981", borderWidth: 1.5, borderRadius: 4 },
-        { label: "HPP",     data: hpps,    backgroundColor: "rgba(245,158,11,0.7)",  borderColor: "#F59E0B", borderWidth: 1.5, borderRadius: 4 },
-        { label: "Profit",  data: profits, backgroundColor: "rgba(59,130,246,0.7)",  borderColor: "#3B82F6", borderWidth: 1.5, borderRadius: 4, type: "line", tension: 0.3, pointRadius: 4, fill: false },
+        {
+          label: "Revenue",
+          data: revenues,
+          backgroundColor: "rgba(16,185,129,0.7)",
+          borderColor: "#10B981",
+          borderWidth: 1.5,
+          borderRadius: 4,
+        },
+        {
+          label: "HPP",
+          data: hpps,
+          backgroundColor: "rgba(245,158,11,0.7)",
+          borderColor: "#F59E0B",
+          borderWidth: 1.5,
+          borderRadius: 4,
+        },
+        {
+          label: "Profit",
+          data: profits,
+          backgroundColor: "rgba(59,130,246,0.7)",
+          borderColor: "#3B82F6",
+          borderWidth: 1.5,
+          borderRadius: 4,
+          type: "line",
+          tension: 0.3,
+          pointRadius: 4,
+          fill: false,
+        },
       ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: "top", labels: { font: { family: "Poppins", size: 11 } } } },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: { font: { family: "Poppins", size: 11 } },
+        },
+      },
       scales: {
         x: { ticks: { font: { family: "Poppins", size: 10 } } },
-        y: { beginAtZero: true, ticks: { font: { family: "Poppins", size: 10 }, callback: v => "Rp " + (v / 1000000).toFixed(1) + "jt" } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { family: "Poppins", size: 10 },
+            callback: (v) => "Rp " + (v / 1000000).toFixed(1) + "jt",
+          },
+        },
       },
     },
   });
 }
 
-// ============================================================
-// ===== CHART: PENJUALAN PER KATEGORI (Doughnut) =============
-// ============================================================
 function renderChartKategori(kategoriMap) {
   const labels = Object.keys(kategoriMap);
-  const data   = labels.map(k => kategoriMap[k].revenue);
-  const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6","#EC4899","#14B8A6","#F97316","#6366F1","#84CC16"];
+  const data = labels.map((k) => kategoriMap[k].revenue);
+  const colors = [
+    "#10B981",
+    "#3B82F6",
+    "#F59E0B",
+    "#EF4444",
+    "#8B5CF6",
+    "#EC4899",
+    "#14B8A6",
+    "#F97316",
+    "#6366F1",
+    "#84CC16",
+  ];
 
   const empty = labels.length === 0;
   document.getElementById("emptyKategori").classList.toggle("hidden", !empty);
   const ctx = document.getElementById("chartKategori");
-  if (empty) { ctx.style.display = "none"; return; }
+  if (empty) {
+    ctx.style.display = "none";
+    return;
+  }
   ctx.style.display = "";
 
   chartKategori = new Chart(ctx, {
     type: "doughnut",
     data: {
       labels,
-      datasets: [{
-        data,
-        backgroundColor: colors.slice(0, labels.length),
-        borderColor: "#111", borderWidth: 1.5, hoverOffset: 12,
-      }],
+      datasets: [
+        {
+          data,
+          backgroundColor: colors.slice(0, labels.length),
+          borderColor: "#111",
+          borderWidth: 1.5,
+          hoverOffset: 12,
+        },
+      ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { position: "bottom", labels: { font: { family: "Poppins", size: 11 }, boxWidth: 12 } },
-        tooltip: { callbacks: { label: ctx => " " + ctx.label + ": " + fmtRp(ctx.parsed) } },
+        legend: {
+          position: "bottom",
+          labels: { font: { family: "Poppins", size: 11 }, boxWidth: 12 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => " " + ctx.label + ": " + fmtRp(ctx.parsed),
+          },
+        },
       },
     },
   });
 }
 
-// ============================================================
-// ===== CHART: BARANG MASUK per bulan ========================
-// ============================================================
 function renderChartMasuk(invoices) {
   const monthMap = {};
-  invoices.forEach(inv => {
+  invoices.forEach((inv) => {
     const label = getMonthLabel(inv.tanggal);
     if (!monthMap[label]) monthMap[label] = 0;
-    (inv.items || []).forEach(item => { monthMap[label] += parseInt(item.stok) || 0; });
+    (inv.items || []).forEach((item) => {
+      monthMap[label] += parseInt(item.stok) || 0;
+    });
   });
 
   const labels = Object.keys(monthMap);
-  const data   = labels.map(l => monthMap[l]);
+  const data = labels.map((l) => monthMap[l]);
 
   const empty = labels.length === 0;
   document.getElementById("emptyMasuk").classList.toggle("hidden", !empty);
   const ctx = document.getElementById("chartMasuk");
-  if (empty) { ctx.style.display = "none"; return; }
+  if (empty) {
+    ctx.style.display = "none";
+    return;
+  }
   ctx.style.display = "";
 
   chartMasuk = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
-      datasets: [{
-        label: "Qty Masuk",
-        data,
-        backgroundColor: "rgba(16,44,168,0.6)",
-        borderColor: "rgb(16,44,168)",
-        borderWidth: 1.5, borderRadius: 5,
-      }],
+      datasets: [
+        {
+          label: "Qty Masuk",
+          data,
+          backgroundColor: "rgba(16,44,168,0.6)",
+          borderColor: "rgb(16,44,168)",
+          borderWidth: 1.5,
+          borderRadius: 5,
+        },
+      ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { font: { family: "Poppins", size: 10 } } },
-        y: { beginAtZero: true, ticks: { font: { family: "Poppins", size: 10 } } },
+        y: {
+          beginAtZero: true,
+          ticks: { font: { family: "Poppins", size: 10 } },
+        },
       },
     },
   });
 }
 
-// ============================================================
-// ===== CHART: BARANG KELUAR per bulan =======================
-// ============================================================
 function renderChartKeluar(keluarMonthMap) {
   const labels = Object.keys(keluarMonthMap);
-  const data   = labels.map(l => keluarMonthMap[l]);
+  const data = labels.map((l) => keluarMonthMap[l]);
 
   const empty = labels.length === 0;
   document.getElementById("emptyKeluar").classList.toggle("hidden", !empty);
   const ctx = document.getElementById("chartKeluar");
-  if (empty) { ctx.style.display = "none"; return; }
+  if (empty) {
+    ctx.style.display = "none";
+    return;
+  }
   ctx.style.display = "";
 
   chartKeluar = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
-      datasets: [{
-        label: "Qty Keluar",
-        data,
-        backgroundColor: "rgba(239,68,68,0.65)",
-        borderColor: "#EF4444",
-        borderWidth: 1.5, borderRadius: 5,
-      }],
+      datasets: [
+        {
+          label: "Qty Keluar",
+          data,
+          backgroundColor: "rgba(239,68,68,0.65)",
+          borderColor: "#EF4444",
+          borderWidth: 1.5,
+          borderRadius: 5,
+        },
+      ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { font: { family: "Poppins", size: 10 } } },
-        y: { beginAtZero: true, ticks: { font: { family: "Poppins", size: 10 } } },
+        y: {
+          beginAtZero: true,
+          ticks: { font: { family: "Poppins", size: 10 } },
+        },
       },
     },
   });
 }
 
-// ============================================================
-// ===== CHART: LINE REVENUE HARIAN ===========================
-// ============================================================
 function renderChartLineRevenue(stockOuts) {
   const dailyMap = {};
-
-  stockOuts.forEach(so => {
+  stockOuts.forEach((so) => {
     const tanggal = so.tanggal;
     if (!dailyMap[tanggal]) dailyMap[tanggal] = 0;
-    
-    (so.items || []).forEach(item => {
-      const qty  = parseInt(item.jumlahKeluar) || 0;
+    (so.items || []).forEach((item) => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
       const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
       dailyMap[tanggal] += jual * qty;
     });
   });
 
   const sortedDates = Object.keys(dailyMap).sort();
-  const labels = sortedDates.map(d => fmtDate(d));
-  const revenues = sortedDates.map(d => dailyMap[d]);
+  const labels = sortedDates.map((d) => fmtDate(d));
+  const revenues = sortedDates.map((d) => dailyMap[d]);
 
   const movingAvg = [];
   const windowSize = 7;
@@ -522,10 +728,15 @@ function renderChartLineRevenue(stockOuts) {
   }
 
   const empty = labels.length === 0;
-  document.getElementById("emptyLineRevenue").classList.toggle("hidden", !empty);
+  document
+    .getElementById("emptyLineRevenue")
+    .classList.toggle("hidden", !empty);
 
   const ctx = document.getElementById("chartLineRevenue");
-  if (empty) { ctx.style.display = "none"; return; }
+  if (empty) {
+    ctx.style.display = "none";
+    return;
+  }
   ctx.style.display = "";
 
   chartLineRevenue = new Chart(ctx, {
@@ -562,21 +773,52 @@ function renderChartLineRevenue(stockOuts) {
       ],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { position: "top", labels: { font: { family: "Poppins", size: 11 }, usePointStyle: true, padding: 15 } },
+        legend: {
+          position: "top",
+          labels: {
+            font: { family: "Poppins", size: 11 },
+            usePointStyle: true,
+            padding: 15,
+          },
+        },
         tooltip: {
           backgroundColor: "rgba(0,0,0,0.8)",
           titleFont: { family: "Poppins", size: 12, weight: "600" },
           bodyFont: { family: "Poppins", size: 11 },
-          padding: 12, cornerRadius: 8,
-          callbacks: { label: ctx => (ctx.dataset.label || '') + ': ' + fmtRp(ctx.parsed.y) }
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: (ctx) =>
+              (ctx.dataset.label || "") + ": " + fmtRp(ctx.parsed.y),
+          },
         },
       },
       scales: {
-        x: { ticks: { font: { family: "Poppins", size: 10 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { font: { family: "Poppins", size: 10 }, callback: v => v >= 1e6 ? "Rp " + (v / 1e6).toFixed(1) + "jt" : v >= 1e3 ? "Rp " + (v / 1e3).toFixed(0) + "rb" : "Rp " + v }, grid: { color: "rgba(0,0,0,0.05)" } },
+        x: {
+          ticks: {
+            font: { family: "Poppins", size: 10 },
+            maxRotation: 45,
+            minRotation: 45,
+          },
+          grid: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { family: "Poppins", size: 10 },
+            callback: (v) =>
+              v >= 1e6
+                ? "Rp " + (v / 1e6).toFixed(1) + "jt"
+                : v >= 1e3
+                  ? "Rp " + (v / 1e3).toFixed(0) + "rb"
+                  : "Rp " + v,
+          },
+          grid: { color: "rgba(0,0,0,0.05)" },
+        },
       },
     },
   });
@@ -587,7 +829,9 @@ function renderChartLineRevenue(stockOuts) {
 // ============================================================
 function renderTableTopProduk(prodMap) {
   const tbody = document.getElementById("tableTopProduk");
-  const sorted = Object.values(prodMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+  const sorted = Object.values(prodMap)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 10);
 
   if (!sorted.length) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="8">Belum ada data penjualan pada periode ini</td></tr>`;
@@ -608,7 +852,7 @@ function renderTableTopProduk(prodMap) {
       <td class="harga-cell">${fmtRp(p.revenue)}</td>
       <td style="color:#856404;font-weight:600">${fmtRp(p.hpp)}</td>
       <td class="${profitClass}">${fmtRp(profit)}</td>
-      <td><span class="badge ${margin >= 0 ? 'badge-green' : 'badge-orange'}">${fmtPct(margin)}</span></td>
+      <td><span class="badge ${margin >= 0 ? "badge-green" : "badge-orange"}">${fmtPct(margin)}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -627,13 +871,15 @@ function renderTableTransaksi(stockOuts) {
 
   tbody.innerHTML = "";
   [...stockOuts].reverse().forEach((so, idx) => {
-    let revenue = 0, hpp = 0, totalQty = 0;
-    (so.items || []).forEach(item => {
-      const qty  = parseInt(item.jumlahKeluar) || 0;
+    let revenue = 0,
+      hpp = 0,
+      totalQty = 0;
+    (so.items || []).forEach((item) => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
       const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
       const hppU = parseFloat(item.hargaHPP || 0);
-      revenue  += jual * qty;
-      hpp      += hppU * qty;
+      revenue += jual * qty;
+      hpp += hppU * qty;
       totalQty += qty;
     });
     const profit = revenue - hpp;
@@ -669,9 +915,17 @@ function renderTableBarangMasuk(invoices) {
 
   tbody.innerHTML = "";
   [...invoices].reverse().forEach((inv, idx) => {
-    const totalQty = (inv.items || []).reduce((s, i) => s + (parseInt(i.stok) || 0), 0);
-    const jenisSet = new Set((inv.items || []).map(i => i.nama?.toLowerCase()).filter(Boolean));
-    const nilaiHPP = (inv.items || []).reduce((s, i) => s + (parseFloat(i.hargaHPP || 0) * (parseInt(i.stok) || 0)), 0);
+    const totalQty = (inv.items || []).reduce(
+      (s, i) => s + (parseInt(i.stok) || 0),
+      0,
+    );
+    const jenisSet = new Set(
+      (inv.items || []).map((i) => i.nama?.toLowerCase()).filter(Boolean),
+    );
+    const nilaiHPP = (inv.items || []).reduce(
+      (s, i) => s + parseFloat(i.hargaHPP || 0) * (parseInt(i.stok) || 0),
+      0,
+    );
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -688,588 +942,1105 @@ function renderTableBarangMasuk(invoices) {
 }
 
 // ============================================================
-// ===== EXPORT EXCEL =========================================
+// ===== BUILD PRINT / PDF HTML ===============================
 // ============================================================
+function buildPrintHTML(periodTxt, data) {
+  const {
+    filteredInvoices,
+    filteredStockOuts,
+    qtyMasuk,
+    qtyKeluar,
+    totalRevenue,
+    totalHPP,
+    totalProfit,
+    marginPct,
+    stokSisa,
+    customerSet,
+    prodMap,
+    kategoriMap,
+  } = data;
 
-document.getElementById("btnExportExcel").addEventListener("click", exportExcel);
-
-function exportExcel() {
-  const range  = getDateRange(filterPeriode.value);
-  const period = document.getElementById("periodText").textContent;
   const printedAt = new Date().toLocaleString("id-ID", {
-    day: "2-digit", month: "long", year: "numeric",
-    hour: "2-digit", minute: "2-digit"
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
-  // ── RAW DATA ──────────────────────────────────────────────
-  const allInvoices = loadInvoices().filter(inv => inRange(inv.tanggal, range));
-  const allSOs      = loadStockOuts().filter(so  => inRange(so.tanggal, range));
+  // ─── Top produk rows ───
+  const sortedProds = Object.values(prodMap)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 10);
+  const topProdRows =
+    sortedProds
+      .map((p, i) => {
+        const profit = p.revenue - p.hpp;
+        const margin = p.revenue > 0 ? (profit / p.revenue) * 100 : 0;
+        return `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td style="font-weight:600">${p.nama}</td>
+      <td>${p.kategori}</td>
+      <td style="text-align:right">${p.qty} pcs</td>
+      <td style="text-align:right;color:#0a6640;font-weight:700">${fmtRp(p.revenue)}</td>
+      <td style="text-align:right;color:#856404">${fmtRp(p.hpp)}</td>
+      <td style="text-align:right;font-weight:700;color:${profit >= 0 ? "#0a6640" : "#cc2222"}">${fmtRp(profit)}</td>
+      <td style="text-align:center">${fmtPct(margin)}</td>
+    </tr>`;
+      })
+      .join("") ||
+    `<tr><td colspan="8" style="text-align:center;color:#aaa;font-style:italic">Belum ada data</td></tr>`;
 
-  // ── HITUNG RINGKASAN ─────────────────────────────────────
-  let totalRevenue = 0, totalHPP = 0, qtyMasuk = 0, qtyKeluar = 0;
+  // ─── Transaksi rows ───
+  const transaksiRows =
+    [...filteredStockOuts]
+      .reverse()
+      .slice(0, 30)
+      .map((so, i) => {
+        let revenue = 0,
+          hpp = 0,
+          totalQty = 0;
+        (so.items || []).forEach((item) => {
+          const qty = parseInt(item.jumlahKeluar) || 0;
+          const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
+          const hppU = parseFloat(item.hargaHPP || 0);
+          revenue += jual * qty;
+          hpp += hppU * qty;
+          totalQty += qty;
+        });
+        const profit = revenue - hpp;
+        return `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td style="font-weight:700;color:#102ca8">${so.invoice}</td>
+      <td>${fmtDate(so.tanggal)}</td>
+      <td>${so.penerima || "—"}</td>
+      <td>${so.paymentNama || "—"}</td>
+      <td style="text-align:right">${totalQty} pcs</td>
+      <td style="text-align:right;color:#0a6640;font-weight:600">${fmtRp(revenue)}</td>
+      <td style="text-align:right;font-weight:700;color:${profit >= 0 ? "#0a6640" : "#cc2222"}">${fmtRp(profit)}</td>
+    </tr>`;
+      })
+      .join("") ||
+    `<tr><td colspan="8" style="text-align:center;color:#aaa;font-style:italic">Belum ada data</td></tr>`;
+
+  // ─── Barang masuk rows ───
+  const masukRows =
+    [...filteredInvoices]
+      .reverse()
+      .slice(0, 30)
+      .map((inv, i) => {
+        const totalQty = (inv.items || []).reduce(
+          (s, it) => s + (parseInt(it.stok) || 0),
+          0,
+        );
+        const jenis = new Set(
+          (inv.items || []).map((it) => it.nama).filter(Boolean),
+        ).size;
+        const nilai = (inv.items || []).reduce(
+          (s, it) =>
+            s + parseFloat(it.hargaHPP || 0) * (parseInt(it.stok) || 0),
+          0,
+        );
+        return `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td style="font-weight:700;color:#102ca8">${inv.invoice}</td>
+      <td>${fmtDate(inv.tanggal)}</td>
+      <td>${inv.supplier || "—"}</td>
+      <td style="text-align:right">${totalQty} pcs</td>
+      <td style="text-align:center">${jenis} jenis</td>
+      <td style="text-align:right;color:#0a6640;font-weight:600">${fmtRp(nilai)}</td>
+    </tr>`;
+      })
+      .join("") ||
+    `<tr><td colspan="7" style="text-align:center;color:#aaa;font-style:italic">Belum ada data</td></tr>`;
+
+  // ─── Kategori distribution ───
+  const kategoriRows =
+    Object.entries(kategoriMap)
+      .sort((a, b) => b[1].revenue - a[1].revenue)
+      .map(([kat, d]) => {
+        const kontrib =
+          totalRevenue > 0
+            ? ((d.revenue / totalRevenue) * 100).toFixed(1)
+            : "0.0";
+        return `<tr>
+        <td style="font-weight:600">${kat}</td>
+        <td style="text-align:right;color:#0a6640;font-weight:700">${fmtRp(d.revenue)}</td>
+        <td style="text-align:right">${d.qty} pcs</td>
+        <td style="text-align:center">${kontrib}%</td>
+      </tr>`;
+      })
+      .join("") ||
+    `<tr><td colspan="4" style="text-align:center;color:#aaa;font-style:italic">Belum ada data</td></tr>`;
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan INVENZ — ${periodTxt}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 0;
+  }
+
+  /* ─── COVER PAGE ─── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0a0e2e 0%, #102ca8 50%, #1e40af 100%);
+    color: white;
+    text-align: center;
+    padding: 60px 40px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    top: -150px; right: -150px;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(0,229,196,0.08);
+    bottom: -80px; left: -80px;
+  }
+
+  .cover-logo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .cover-title {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+
+  .cover-title span {
+    background: linear-gradient(135deg, #00e5c4, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cover-subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 50px;
+    font-weight: 400;
+  }
+
+  .cover-period-box {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 24px 48px;
+    margin-bottom: 50px;
+  }
+
+  .cover-period-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+  }
+
+  .cover-period-val {
+    font-size: 22px;
+    font-weight: 700;
+    color: #00e5c4;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .cover-meta-item { text-align: center; }
+  .cover-meta-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 4px;
+  }
+  .cover-meta-val { font-weight: 600; color: rgba(255,255,255,0.85); }
+
+  .cover-footer {
+    position: absolute;
+    bottom: 30px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 1px;
+  }
+
+  /* ─── PAGE LAYOUT ─── */
+  .page {
+    padding: 24px 28px;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: avoid; }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #f8f9ff;
+    border-radius: 8px;
+    border-left: 4px solid #102ca8;
+    margin-bottom: 20px;
+  }
+
+  .page-header-left { }
+  .page-header-brand {
+    font-size: 14px;
+    font-weight: 800;
+    color: #102ca8;
+    letter-spacing: 2px;
+  }
+  .page-header-period {
+    font-size: 10px;
+    color: #888;
+    margin-top: 2px;
+  }
+  .page-header-right {
+    text-align: right;
+    font-size: 10px;
+    color: #aaa;
+  }
+
+  /* ─── SECTION TITLE ─── */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #102ca8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e5e7ef;
+  }
+
+  /* ─── KPI GRID ─── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .kpi-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid #e5e7ef;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .kpi-revenue::before { background: linear-gradient(90deg, #10B981, #34d399); }
+  .kpi-hpp::before     { background: linear-gradient(90deg, #F59E0B, #fbbf24); }
+  .kpi-profit::before  { background: linear-gradient(90deg, #3B82F6, #60a5fa); }
+  .kpi-margin::before  { background: linear-gradient(90deg, #8B5CF6, #a78bfa); }
+
+  .kpi-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a2e;
+    line-height: 1.1;
+  }
+
+  .kpi-revenue .kpi-value { color: #0a6640; }
+  .kpi-hpp .kpi-value     { color: #856404; }
+  .kpi-profit .kpi-value  { color: #1e3a8a; }
+  .kpi-margin .kpi-value  { color: #5b21b6; }
+
+  .kpi-sub {
+    font-size: 9px;
+    color: #aaa;
+    margin-top: 3px;
+  }
+
+  /* ─── INVENTORY GRID ─── */
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .inv-card {
+    border: 1px solid #e5e7ef;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .inv-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .inv-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+
+  .inv-sub { font-size: 9px; color: #aaa; }
+
+  /* ─── TABLES ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+    margin-bottom: 12px;
+  }
+
+  thead tr {
+    background: #102ca8;
+    color: white;
+  }
+
+  thead th {
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) { background: #f0f4ff; }
+  tbody tr:nth-child(odd)  { background: #ffffff; }
+
+  tbody td {
+    padding: 7px 10px;
+    border-bottom: 0.5px solid #e5e7ef;
+    color: #333;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .tfoot-row td {
+    padding: 9px 10px;
+    background: #1e3a8a !important;
+    color: white !important;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* ─── PRINT CONTROLS ─── */
+  .print-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 9999;
+  }
+
+  .btn-print-pdf {
+    padding: 12px 22px;
+    background: #102ca8;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    box-shadow: 0 4px 14px rgba(16,44,168,0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-print-pdf:hover { background: #1e40af; transform: translateY(-1px); }
+
+  .btn-close-pdf {
+    padding: 12px 18px;
+    background: #eee;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+  }
+  .btn-close-pdf:hover { background: #ddd; }
+
+  /* ─── DISTRIBUTION TABLE ─── */
+  .dist-table td:first-child { font-weight: 600; }
+
+  /* ─── PRINT MEDIA ─── */
+  @media print {
+    .print-controls { display: none !important; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .kpi-card::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tbody tr:nth-child(even) { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tfoot-row td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    @page {
+      margin: 15mm 12mm;
+      size: A4;
+    }
+    body { font-size: 9.5px; }
+    .cover { min-height: auto; padding: 40px; }
+    .cover-title { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Print Controls (hidden on print) -->
+<div class="print-controls">
+  <button class="btn-print-pdf" onclick="window.print()">
+    🖨️ Simpan sebagai PDF / Print
+  </button>
+  <button class="btn-close-pdf" onclick="window.close()">✕ Tutup</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     COVER PAGE
+══════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">INVENZ — Sistem Manajemen Inventori</div>
+  <div class="cover-title">
+    Laporan<br><span>Keuangan & Inventori</span>
+  </div>
+  <div class="cover-subtitle">Analisis performa penjualan, inventori, dan keuangan bisnis</div>
+
+  <div class="cover-period-box">
+    <div class="cover-period-label">Periode Laporan</div>
+    <div class="cover-period-val">${periodTxt}</div>
+  </div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Dicetak oleh</div>
+      <div class="cover-meta-val">${loggedUser}</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Tanggal & Waktu</div>
+      <div class="cover-meta-val">${printedAt}</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Total Transaksi</div>
+      <div class="cover-meta-val">${filteredStockOuts.length} transaksi</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Invoice Masuk</div>
+      <div class="cover-meta-val">${filteredInvoices.length} invoice</div>
+    </div>
+  </div>
+
+  <div class="cover-footer">INVENZ &bull; Laporan ini dibuat secara otomatis</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — KPI & RINGKASAN
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-brand">INVENZ</div>
+      <div class="page-header-period">Periode: ${periodTxt}</div>
+    </div>
+    <div class="page-header-right">
+      Dicetak: ${printedAt}<br>
+      Oleh: ${loggedUser}
+    </div>
+  </div>
+
+  <div class="section-title">Neraca Keuangan</div>
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-revenue">
+      <div class="kpi-label">Revenue / Pendapatan</div>
+      <div class="kpi-value">${fmtRp(totalRevenue)}</div>
+      <div class="kpi-sub">dari ${filteredStockOuts.length} transaksi</div>
+    </div>
+    <div class="kpi-card kpi-hpp">
+      <div class="kpi-label">Total HPP / Modal</div>
+      <div class="kpi-value">${fmtRp(totalHPP)}</div>
+      <div class="kpi-sub">harga pokok penjualan</div>
+    </div>
+    <div class="kpi-card kpi-profit">
+      <div class="kpi-label">Profit / Keuntungan</div>
+      <div class="kpi-value" style="color:${totalProfit >= 0 ? "#0a6640" : "#cc2222"}">${fmtRp(totalProfit)}</div>
+      <div class="kpi-sub">${totalRevenue > 0 ? "dari total penjualan" : "belum ada penjualan"}</div>
+    </div>
+    <div class="kpi-card kpi-margin">
+      <div class="kpi-label">Profit Margin</div>
+      <div class="kpi-value">${fmtPct(marginPct)}</div>
+      <div class="kpi-sub">persentase keuntungan</div>
+    </div>
+  </div>
+
+  <div class="section-title">Ringkasan Inventori & Transaksi</div>
+  <div class="inv-grid">
+    <div class="inv-card">
+      <div class="inv-label">Total Barang Masuk</div>
+      <div class="inv-value">${qtyMasuk} pcs</div>
+      <div class="inv-sub">dari ${filteredInvoices.length} invoice</div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-label">Total Barang Keluar</div>
+      <div class="inv-value">${qtyKeluar} pcs</div>
+      <div class="inv-sub">dari ${filteredStockOuts.length} transaksi</div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-label">Total Transaksi Keluar</div>
+      <div class="inv-value">${filteredStockOuts.length}</div>
+      <div class="inv-sub">invoice keluar</div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-label">Total Nilai Penjualan</div>
+      <div class="inv-value" style="color:#0a6640">${fmtRp(totalRevenue)}</div>
+      <div class="inv-sub">nilai stock out</div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-label">Stok Tersisa</div>
+      <div class="inv-value">${stokSisa} pcs</div>
+      <div class="inv-sub">di gudang saat ini</div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-label">Total Customer</div>
+      <div class="inv-value">${customerSet.size}</div>
+      <div class="inv-sub">pelanggan unik</div>
+    </div>
+  </div>
+
+  <div class="section-title">Distribusi per Kategori</div>
+  <table class="dist-table">
+    <thead>
+      <tr>
+        <th>Kategori</th>
+        <th style="text-align:right">Revenue</th>
+        <th style="text-align:right">Total Qty</th>
+        <th style="text-align:center">Kontribusi</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${kategoriRows}
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — TOP PRODUK TERLARIS
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-brand">INVENZ</div>
+      <div class="page-header-period">Periode: ${periodTxt}</div>
+    </div>
+    <div class="page-header-right">Dicetak: ${printedAt}</div>
+  </div>
+
+  <div class="section-title">Top 10 Produk Terlaris</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28px">#</th>
+        <th>Nama Produk</th>
+        <th>Kategori</th>
+        <th style="text-align:right">Qty</th>
+        <th style="text-align:right">Revenue</th>
+        <th style="text-align:right">HPP</th>
+        <th style="text-align:right">Profit</th>
+        <th style="text-align:center">Margin</th>
+      </tr>
+    </thead>
+    <tbody>${topProdRows}</tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 3 — RIWAYAT TRANSAKSI STOCK OUT
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-brand">INVENZ</div>
+      <div class="page-header-period">Periode: ${periodTxt}</div>
+    </div>
+    <div class="page-header-right">Dicetak: ${printedAt}</div>
+  </div>
+
+  <div class="section-title">Riwayat Transaksi Stock Out ${filteredStockOuts.length > 30 ? "(30 terbaru dari " + filteredStockOuts.length + " total)" : ""}</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28px">#</th>
+        <th>Invoice</th>
+        <th>Tanggal</th>
+        <th>Customer</th>
+        <th>Metode Bayar</th>
+        <th style="text-align:right">Total Item</th>
+        <th style="text-align:right">Revenue</th>
+        <th style="text-align:right">Profit</th>
+      </tr>
+    </thead>
+    <tbody>${transaksiRows}</tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 4 — RIWAYAT BARANG MASUK
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-brand">INVENZ</div>
+      <div class="page-header-period">Periode: ${periodTxt}</div>
+    </div>
+    <div class="page-header-right">Dicetak: ${printedAt}</div>
+  </div>
+
+  <div class="section-title">Riwayat Barang Masuk ${filteredInvoices.length > 30 ? "(30 terbaru dari " + filteredInvoices.length + " total)" : ""}</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28px">#</th>
+        <th>Invoice</th>
+        <th>Tanggal</th>
+        <th>Supplier</th>
+        <th style="text-align:right">Total Qty</th>
+        <th style="text-align:center">Jenis Barang</th>
+        <th style="text-align:right">Nilai HPP</th>
+      </tr>
+    </thead>
+    <tbody>${masukRows}</tbody>
+  </table>
+</div>
+
+</body>
+</html>`;
+}
+
+// ============================================================
+// ===== EXPORT PDF (BUKA WINDOW BARU) ========================
+// ============================================================
+document.getElementById("btnExportPDF").addEventListener("click", () => {
+  if (!_computedData) {
+    alert("Data laporan belum termuat. Harap tunggu sebentar lalu coba lagi.");
+    return;
+  }
+
+  const { periodTxt } = _computedData;
+  const html = buildPrintHTML(periodTxt, _computedData);
+
+  // Buka window baru dengan HTML laporan
+  const win = window.open(
+    "",
+    "_blank",
+    "width=900,height=700,scrollbars=yes,resizable=yes",
+  );
+  if (!win) {
+    alert(
+      "Popup diblokir oleh browser. Mohon izinkan popup untuk situs ini dan coba lagi.",
+    );
+    return;
+  }
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+});
+
+// ============================================================
+// ===== PRINT (Buka window khusus, rapi) =====================
+// ============================================================
+document.getElementById("btnPrint").addEventListener("click", () => {
+  if (!_computedData) {
+    alert("Data laporan belum termuat. Harap tunggu sebentar lalu coba lagi.");
+    return;
+  }
+
+  const { periodTxt } = _computedData;
+  const html = buildPrintHTML(periodTxt, _computedData);
+
+  const win = window.open(
+    "",
+    "_blank",
+    "width=900,height=700,scrollbars=yes,resizable=yes",
+  );
+  if (!win) {
+    alert(
+      "Popup diblokir oleh browser. Mohon izinkan popup untuk situs ini dan coba lagi.",
+    );
+    return;
+  }
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+
+  // Auto-trigger print setelah halaman sepenuhnya dimuat
+  win.onload = () => {
+    setTimeout(() => win.print(), 600);
+  };
+});
+
+// ============================================================
+// ===== EXPORT EXCEL =========================================
+// ============================================================
+document
+  .getElementById("btnExportExcel")
+  .addEventListener("click", exportExcel);
+
+function exportExcel() {
+  if (typeof XLSX === "undefined") {
+    alert("Library SheetJS belum dimuat. Harap refresh halaman dan coba lagi.");
+    return;
+  }
+
+  const range = getDateRange(filterPeriode.value);
+  const period = document.getElementById("periodText").textContent;
+  const printedAt = new Date().toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const allInvoices = loadInvoices().filter((inv) =>
+    inRange(inv.tanggal, range),
+  );
+  const allSOs = loadStockOuts().filter((so) => inRange(so.tanggal, range));
+
+  let totalRevenue = 0,
+    totalHPP = 0,
+    qtyMasuk = 0,
+    qtyKeluar = 0;
   const prodMap = {};
   const kategoriMap = {};
   const customerSet = new Set();
 
-  allInvoices.forEach(inv =>
-    (inv.items || []).forEach(i => { qtyMasuk += parseInt(i.stok) || 0; })
+  allInvoices.forEach((inv) =>
+    (inv.items || []).forEach((i) => {
+      qtyMasuk += parseInt(i.stok) || 0;
+    }),
   );
 
-  allSOs.forEach(so => {
+  allSOs.forEach((so) => {
     if (so.penerima) customerSet.add(so.penerima.toLowerCase());
-    (so.items || []).forEach(item => {
-      const qty  = parseInt(item.jumlahKeluar) || 0;
+    (so.items || []).forEach((item) => {
+      const qty = parseInt(item.jumlahKeluar) || 0;
       const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
-      const hpp  = parseFloat(item.hargaHPP || 0);
-      const rev  = jual * qty;
+      const hpp = parseFloat(item.hargaHPP || 0);
+      const rev = jual * qty;
       const hppT = hpp * qty;
       totalRevenue += rev;
-      totalHPP     += hppT;
-      qtyKeluar    += qty;
+      totalHPP += hppT;
+      qtyKeluar += qty;
 
       const kat = item.kategori || "Lainnya";
       if (!kategoriMap[kat]) kategoriMap[kat] = { revenue: 0, qty: 0 };
       kategoriMap[kat].revenue += rev;
-      kategoriMap[kat].qty     += qty;
+      kategoriMap[kat].qty += qty;
 
       const key = item.nama || "—";
-      if (!prodMap[key]) prodMap[key] = { nama: key, kategori: item.kategori || "—", qty: 0, revenue: 0, hpp: 0 };
-      prodMap[key].qty     += qty;
+      if (!prodMap[key])
+        prodMap[key] = {
+          nama: key,
+          kategori: item.kategori || "—",
+          qty: 0,
+          revenue: 0,
+          hpp: 0,
+        };
+      prodMap[key].qty += qty;
       prodMap[key].revenue += rev;
-      prodMap[key].hpp     += hppT;
+      prodMap[key].hpp += hppT;
     });
   });
 
   const totalProfit = totalRevenue - totalHPP;
-  const marginPct   = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+  const marginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   const wb = XLSX.utils.book_new();
 
-  // ════════════════════════════════════════════════════════
-  // SHEET 1 — RINGKASAN / COVER
-  // ════════════════════════════════════════════════════════
-  const ws1 = XLSX.utils.aoa_to_sheet([]);
-
-  const s1Data = [
-    /* 1  */ ["LAPORAN KEUANGAN & INVENTORI"],
-    /* 2  */ ["INVENZ — Sistem Manajemen Inventori"],
-    /* 3  */ [],
-    /* 4  */ ["Periode Laporan", period],
-    /* 5  */ ["Dicetak oleh",    loggedUser],
-    /* 6  */ ["Tanggal cetak",   printedAt],
-    /* 7  */ [],
-    /* 8  */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
-    /* 9  */ ["NERACA KEUANGAN"],
-    /* 10 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
-    /* 11 */ ["Keterangan", "Nilai (Rp)", "Catatan"],
-    /* 12 */ ["Revenue / Pendapatan Kotor", totalRevenue, "Total penjualan pada periode ini"],
-    /* 13 */ ["Total HPP / Harga Pokok Penjualan", totalHPP, "Modal yang dikeluarkan"],
-    /* 14 */ ["Profit / Laba Bersih", totalProfit, totalProfit >= 0 ? "Positif ✔" : "Negatif ✘"],
-    /* 15 */ ["Profit Margin (%)", marginPct / 100, "Persentase keuntungan dari revenue"],
-    /* 16 */ [],
-    /* 17 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
-    /* 18 */ ["RINGKASAN INVENTORI & TRANSAKSI"],
-    /* 19 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
-    /* 20 */ ["Keterangan", "Nilai", "Satuan"],
-    /* 21 */ ["Total Barang Masuk",  qtyMasuk,          "pcs"],
-    /* 22 */ ["Total Invoice Masuk", allInvoices.length, "invoice"],
-    /* 23 */ ["Total Barang Keluar", qtyKeluar,          "pcs"],
-    /* 24 */ ["Total Transaksi Keluar", allSOs.length,   "transaksi"],
-    /* 25 */ ["Total Customer Unik",  customerSet.size,  "pelanggan"],
-    /* 26 */ [],
-    /* 27 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
-    /* 28 */ ["DISTRIBUSI PER KATEGORI"],
-    /* 29 */ ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
-    /* 30 */ ["Kategori", "Total Revenue (Rp)", "Total Qty", "Kontribusi (%)"],
+  // ── SHEET 1: RINGKASAN ──
+  const ws1Data = [
+    ["LAPORAN KEUANGAN & INVENTORI — INVENZ"],
+    [],
+    ["Periode", period],
+    ["Dicetak oleh", loggedUser],
+    ["Tanggal cetak", printedAt],
+    [],
+    ["NERACA KEUANGAN"],
+    ["Keterangan", "Nilai (Rp)"],
+    ["Revenue / Pendapatan", totalRevenue],
+    ["Total HPP / Modal", totalHPP],
+    ["Profit / Keuntungan", totalProfit],
+    ["Profit Margin (%)", marginPct / 100],
+    [],
+    ["RINGKASAN INVENTORI"],
+    ["Keterangan", "Nilai"],
+    ["Total Barang Masuk", qtyMasuk],
+    ["Total Invoice Masuk", allInvoices.length],
+    ["Total Barang Keluar", qtyKeluar],
+    ["Total Transaksi Keluar", allSOs.length],
+    ["Total Customer Unik", customerSet.size],
+    [],
+    ["DISTRIBUSI PER KATEGORI"],
+    ["Kategori", "Revenue (Rp)", "Qty", "Kontribusi (%)"],
+    ...Object.entries(kategoriMap)
+      .sort((a, b) => b[1].revenue - a[1].revenue)
+      .map(([kat, d]) => [
+        kat,
+        d.revenue,
+        d.qty,
+        totalRevenue > 0 ? d.revenue / totalRevenue : 0,
+      ]),
   ];
+  const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+  ws1["!cols"] = [{ wch: 36 }, { wch: 22 }, { wch: 20 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan");
 
-  // Tambahkan baris kategori
-  Object.entries(kategoriMap)
-    .sort((a, b) => b[1].revenue - a[1].revenue)
-    .forEach(([kat, data]) => {
-      const kontribusi = totalRevenue > 0 ? data.revenue / totalRevenue : 0;
-      s1Data.push([kat, data.revenue, data.qty, kontribusi]);
-    });
-
-  XLSX.utils.sheet_add_aoa(ws1, s1Data, { origin: "A1" });
-
-  // ── COLUMN WIDTHS ─────────────────────────────────────
-  ws1["!cols"] = [{ wch: 38 }, { wch: 22 }, { wch: 30 }, { wch: 20 }];
-
-  // ── MERGES ───────────────────────────────────────────
-  ws1["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Judul utama
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Sub-judul
-    { s: { r: 7, c: 0 }, e: { r: 7, c: 3 } },
-    { s: { r: 8, c: 0 }, e: { r: 8, c: 3 } },
-    { s: { r: 9, c: 0 }, e: { r: 9, c: 3 } },
-    { s: { r: 16, c: 0 }, e: { r: 16, c: 3 } },
-    { s: { r: 17, c: 0 }, e: { r: 17, c: 3 } },
-    { s: { r: 18, c: 0 }, e: { r: 18, c: 3 } },
-    { s: { r: 26, c: 0 }, e: { r: 26, c: 3 } },
-    { s: { r: 27, c: 0 }, e: { r: 27, c: 3 } },
-    { s: { r: 28, c: 0 }, e: { r: 28, c: 3 } },
-  ];
-
-  // ── CELL STYLES ──────────────────────────────────────
-  // Judul utama
-  applyExcelStyle(ws1, "A1", {
-    font: { name: "Arial", bold: true, sz: 16, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "102CA8" } },
-    alignment: { horizontal: "center", vertical: "center" },
-  });
-  // Sub-judul
-  applyExcelStyle(ws1, "A2", {
-    font: { name: "Arial", bold: true, sz: 11, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "1E3FB8" } },
-    alignment: { horizontal: "center", vertical: "center" },
-  });
-  // Meta info labels (baris 4–6 col A)
-  ["A4","A5","A6"].forEach(cell => applyExcelStyle(ws1, cell, {
-    font: { name: "Arial", bold: true, sz: 10 },
-    fill: { fgColor: { rgb: "EEF2FF" } },
-  }));
-  ["B4","B5","B6"].forEach(cell => applyExcelStyle(ws1, cell, {
-    font: { name: "Arial", sz: 10 },
-    fill: { fgColor: { rgb: "EEF2FF" } },
-  }));
-
-  // Section headers
-  ["A9","A18","A28"].forEach(cell => applyExcelStyle(ws1, cell, {
-    font: { name: "Arial", bold: true, sz: 11, color: { rgb: "102CA8" } },
-    alignment: { horizontal: "center" },
-  }));
-
-  // Tabel Neraca — header baris 11
-  ["A11","B11","C11"].forEach(cell => applyExcelStyle(ws1, cell, {
-    font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "102CA8" } },
-    alignment: { horizontal: "center" },
-    border: { bottom: { style: "medium", color: { rgb: "000000" } } },
-  }));
-
-  // Baris data neraca (12–15)
-  for (let r = 11; r <= 14; r++) {
-    const addr = String.fromCharCode(65) + (r + 1);  // A12..A15
-    applyExcelStyle(ws1, `A${r+1}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: r % 2 === 1 ? "F0F4FF" : "FFFFFF" } } });
-    applyExcelStyle(ws1, `B${r+1}`, { font: { name: "Arial", sz: 10, bold: true }, fill: { fgColor: { rgb: r % 2 === 1 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
-    applyExcelStyle(ws1, `C${r+1}`, { font: { name: "Arial", sz: 10, italic: true, color: { rgb: "666666" } }, fill: { fgColor: { rgb: r % 2 === 1 ? "F0F4FF" : "FFFFFF" } } });
-  }
-  // Margin row (baris 15) — format persen
-  applyExcelStyle(ws1, "B15", { font: { name: "Arial", sz: 10, bold: true }, alignment: { horizontal: "right" }, numFmt: '0.00%' });
-
-  // Profit baris — warna sesuai nilai
-  if (totalProfit >= 0) {
-    applyExcelStyle(ws1, "A14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "0A6640" } } });
-    applyExcelStyle(ws1, "B14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "0A6640" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
-  } else {
-    applyExcelStyle(ws1, "A14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "CC2222" } } });
-    applyExcelStyle(ws1, "B14", { font: { name: "Arial", bold: true, sz: 10, color: { rgb: "CC2222" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
-  }
-
-  // Tabel Inventori — header baris 20
-  ["A20","B20","C20"].forEach(cell => applyExcelStyle(ws1, cell, {
-    font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "102CA8" } },
-    alignment: { horizontal: "center" },
-  }));
-  for (let r = 20; r <= 24; r++) {
-    applyExcelStyle(ws1, `A${r+1}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: r % 2 === 0 ? "F0F4FF" : "FFFFFF" } } });
-    applyExcelStyle(ws1, `B${r+1}`, { font: { name: "Arial", bold: true, sz: 10 }, fill: { fgColor: { rgb: r % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
-    applyExcelStyle(ws1, `C${r+1}`, { font: { name: "Arial", sz: 10, color: { rgb: "888888" } }, fill: { fgColor: { rgb: r % 2 === 0 ? "F0F4FF" : "FFFFFF" } } });
-  }
-
-  // Kategori header — baris 30
-  ["A30","B30","C30","D30"].forEach(cell => applyExcelStyle(ws1, cell, {
-    font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "102CA8" } },
-    alignment: { horizontal: "center" },
-  }));
-  const katStartRow = 31;
-  Object.entries(kategoriMap).forEach(([_, __], idx) => {
-    const r = katStartRow + idx;
-    applyExcelStyle(ws1, `A${r}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } } });
-    applyExcelStyle(ws1, `B${r}`, { font: { name: "Arial", bold: true, sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '#,##0' });
-    applyExcelStyle(ws1, `C${r}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" } });
-    applyExcelStyle(ws1, `D${r}`, { font: { name: "Arial", sz: 10 }, fill: { fgColor: { rgb: idx % 2 === 0 ? "F0F4FF" : "FFFFFF" } }, alignment: { horizontal: "right" }, numFmt: '0.00%' });
-  });
-
-  ws1["!rowheights"] = [{ hpt: 28 }, { hpt: 18 }]; // Baris 1 & 2 lebih tinggi
-  XLSX.utils.book_append_sheet(wb, ws1, "📊 Ringkasan");
-
-
-  // ════════════════════════════════════════════════════════
-  // SHEET 2 — TRANSAKSI STOCK OUT
-  // ════════════════════════════════════════════════════════
-  const ws2 = XLSX.utils.aoa_to_sheet([]);
-
-  const so_header = ["#", "No. Invoice", "Tanggal", "Customer / Penerima", "Metode Pembayaran", "Total Item (pcs)", "Revenue (Rp)", "HPP (Rp)", "Profit (Rp)", "Margin (%)"];
-  const so_rows = [
+  // ── SHEET 2: TRANSAKSI STOCK OUT ──
+  const ws2Data = [
     [`TRANSAKSI STOCK OUT — ${period}`],
     [],
-    so_header,
+    [
+      "#",
+      "Invoice",
+      "Tanggal",
+      "Customer",
+      "Metode Bayar",
+      "Total Item",
+      "Revenue (Rp)",
+      "HPP (Rp)",
+      "Profit (Rp)",
+    ],
   ];
-
-  let so_totalRev = 0, so_totalHPP = 0, so_totalQty = 0;
-
+  let so_totalRev = 0,
+    so_totalHPP = 0,
+    so_totalQty = 0;
   allSOs.forEach((so, i) => {
-    let rev = 0, h = 0, qty = 0;
-    (so.items || []).forEach(item => {
+    let rev = 0,
+      h = 0,
+      qty = 0;
+    (so.items || []).forEach((item) => {
       const q = parseInt(item.jumlahKeluar) || 0;
       rev += parseFloat(item.hargaJual || item.hargaHPP || 0) * q;
-      h   += parseFloat(item.hargaHPP || 0) * q;
+      h += parseFloat(item.hargaHPP || 0) * q;
       qty += q;
     });
     const profit = rev - h;
-    const margin = rev > 0 ? profit / rev : 0;
-    so_totalRev += rev; so_totalHPP += h; so_totalQty += qty;
-    so_rows.push([i + 1, so.invoice, so.tanggal, so.penerima || "—", so.paymentNama || "—", qty, rev, h, profit, margin]);
+    so_totalRev += rev;
+    so_totalHPP += h;
+    so_totalQty += qty;
+    ws2Data.push([
+      i + 1,
+      so.invoice,
+      so.tanggal,
+      so.penerima || "—",
+      so.paymentNama || "—",
+      qty,
+      rev,
+      h,
+      profit,
+    ]);
   });
-
-  // Baris total
-  so_rows.push([]);
-  so_rows.push(["TOTAL", "", "", "", "", so_totalQty, so_totalRev, so_totalHPP, so_totalRev - so_totalHPP, so_totalRev > 0 ? (so_totalRev - so_totalHPP) / so_totalRev : 0]);
-
-  XLSX.utils.sheet_add_aoa(ws2, so_rows, { origin: "A1" });
-  ws2["!cols"] = [
-    { wch: 5 }, { wch: 22 }, { wch: 14 }, { wch: 26 }, { wch: 20 },
-    { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 13 }
-  ];
-  ws2["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }];
-
-  // Style sheet 2
-  applyExcelStyle(ws2, "A1", {
-    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "102CA8" } },
-    alignment: { horizontal: "center", vertical: "center" },
-  });
-
-  so_header.forEach((_, ci) => {
-    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
-    applyExcelStyle(ws2, cell, {
-      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "1E3FB8" } },
-      alignment: { horizontal: "center" },
-      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
-    });
-  });
-
-  for (let ri = 3; ri < 3 + allSOs.length; ri++) {
-    const isEven = (ri - 3) % 2 === 0;
-    const bg = isEven ? "F0F4FF" : "FFFFFF";
-    for (let ci = 0; ci < 10; ci++) {
-      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (!ws2[cell]) continue;
-      const numFmt = ci === 6 || ci === 7 || ci === 8 ? '#,##0' : ci === 9 ? '0.00%' : null;
-      applyExcelStyle(ws2, cell, {
-        font: { name: "Arial", sz: 10, bold: ci === 6 || ci === 9, color: ci === 8 ? { rgb: ws2[cell].v >= 0 ? "0A6640" : "CC2222" } : undefined },
-        fill: { fgColor: { rgb: bg } },
-        alignment: { horizontal: ci >= 5 ? "right" : ci === 0 ? "center" : "left" },
-        numFmt,
-      });
-    }
-  }
-
-  // Style baris TOTAL
-  const totalRowIdx = 3 + allSOs.length + 1;
-  for (let ci = 0; ci < 10; ci++) {
-    const cell = XLSX.utils.encode_cell({ r: totalRowIdx, c: ci });
-    if (!ws2[cell]) continue;
-    const numFmt = ci === 6 || ci === 7 || ci === 8 ? '#,##0' : ci === 9 ? '0.00%' : null;
-    applyExcelStyle(ws2, cell, {
-      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "102CA8" } },
-      alignment: { horizontal: ci >= 5 ? "right" : "center" },
-      numFmt,
-      border: { top: { style: "medium", color: { rgb: "000000" } } },
-    });
-  }
-
-  XLSX.utils.book_append_sheet(wb, ws2, "📦 Transaksi Stock Out");
-
-
-  // ════════════════════════════════════════════════════════
-  // SHEET 3 — BARANG MASUK
-  // ════════════════════════════════════════════════════════
-  const ws3 = XLSX.utils.aoa_to_sheet([]);
-
-  const inv_header = ["#", "No. Invoice", "Tanggal", "Supplier", "Total Qty (pcs)", "Jenis Barang", "Nilai HPP (Rp)"];
-  const inv_rows = [
-    [`RIWAYAT BARANG MASUK — ${period}`],
+  ws2Data.push(
     [],
-    inv_header,
+    [
+      "TOTAL",
+      "",
+      "",
+      "",
+      "",
+      so_totalQty,
+      so_totalRev,
+      so_totalHPP,
+      so_totalRev - so_totalHPP,
+    ],
+  );
+  const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+  ws2["!cols"] = [
+    { wch: 5 },
+    { wch: 22 },
+    { wch: 14 },
+    { wch: 26 },
+    { wch: 18 },
+    { wch: 12 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
   ];
+  XLSX.utils.book_append_sheet(wb, ws2, "Stock Out");
 
-  let inv_totalQty = 0, inv_totalNilai = 0;
-
+  // ── SHEET 3: BARANG MASUK ──
+  const ws3Data = [
+    [`BARANG MASUK — ${period}`],
+    [],
+    [
+      "#",
+      "Invoice",
+      "Tanggal",
+      "Supplier",
+      "Total Qty",
+      "Jenis Barang",
+      "Nilai HPP (Rp)",
+    ],
+  ];
+  let inv_totalQty = 0,
+    inv_totalNilai = 0;
   allInvoices.forEach((inv, i) => {
-    const qty   = (inv.items || []).reduce((s, it) => s + (parseInt(it.stok) || 0), 0);
-    const jenis = new Set((inv.items || []).map(it => it.nama).filter(Boolean)).size;
-    const nilai = (inv.items || []).reduce((s, it) => s + (parseFloat(it.hargaHPP || 0) * (parseInt(it.stok) || 0)), 0);
-    inv_totalQty   += qty;
+    const qty = (inv.items || []).reduce(
+      (s, it) => s + (parseInt(it.stok) || 0),
+      0,
+    );
+    const jenis = new Set(
+      (inv.items || []).map((it) => it.nama).filter(Boolean),
+    ).size;
+    const nilai = (inv.items || []).reduce(
+      (s, it) => s + parseFloat(it.hargaHPP || 0) * (parseInt(it.stok) || 0),
+      0,
+    );
+    inv_totalQty += qty;
     inv_totalNilai += nilai;
-    inv_rows.push([i + 1, inv.invoice, inv.tanggal, inv.supplier || "—", qty, jenis, nilai]);
+    ws3Data.push([
+      i + 1,
+      inv.invoice,
+      inv.tanggal,
+      inv.supplier || "—",
+      qty,
+      jenis,
+      nilai,
+    ]);
   });
+  ws3Data.push([], ["TOTAL", "", "", "", inv_totalQty, "", inv_totalNilai]);
+  const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
+  ws3["!cols"] = [
+    { wch: 5 },
+    { wch: 22 },
+    { wch: 14 },
+    { wch: 26 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 20 },
+  ];
+  XLSX.utils.book_append_sheet(wb, ws3, "Barang Masuk");
 
-  inv_rows.push([]);
-  inv_rows.push(["TOTAL", "", "", "", inv_totalQty, "", inv_totalNilai]);
-
-  XLSX.utils.sheet_add_aoa(ws3, inv_rows, { origin: "A1" });
-  ws3["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 14 }, { wch: 26 }, { wch: 16 }, { wch: 14 }, { wch: 20 }];
-  ws3["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }];
-
-  applyExcelStyle(ws3, "A1", {
-    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "0A6640" } },
-    alignment: { horizontal: "center" },
-  });
-
-  inv_header.forEach((_, ci) => {
-    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
-    applyExcelStyle(ws3, cell, {
-      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "16A34A" } },
-      alignment: { horizontal: "center" },
-      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
-    });
-  });
-
-  for (let ri = 3; ri < 3 + allInvoices.length; ri++) {
-    const bg = (ri - 3) % 2 === 0 ? "F0FFF4" : "FFFFFF";
-    for (let ci = 0; ci < 7; ci++) {
-      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (!ws3[cell]) continue;
-      applyExcelStyle(ws3, cell, {
-        font: { name: "Arial", sz: 10, bold: ci === 6 },
-        fill: { fgColor: { rgb: bg } },
-        alignment: { horizontal: ci >= 4 ? "right" : ci === 0 ? "center" : "left" },
-        numFmt: ci === 6 ? '#,##0' : null,
-      });
-    }
-  }
-
-  const inv_totalRowIdx = 3 + allInvoices.length + 1;
-  for (let ci = 0; ci < 7; ci++) {
-    const cell = XLSX.utils.encode_cell({ r: inv_totalRowIdx, c: ci });
-    if (!ws3[cell]) continue;
-    applyExcelStyle(ws3, cell, {
-      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "0A6640" } },
-      alignment: { horizontal: ci >= 4 ? "right" : "center" },
-      numFmt: ci === 6 ? '#,##0' : null,
-      border: { top: { style: "medium", color: { rgb: "000000" } } },
-    });
-  }
-
-  XLSX.utils.book_append_sheet(wb, ws3, "🚚 Barang Masuk");
-
-
-  // ════════════════════════════════════════════════════════
-  // SHEET 4 — TOP 10 PRODUK TERLARIS
-  // ════════════════════════════════════════════════════════
-  const ws4 = XLSX.utils.aoa_to_sheet([]);
-
-  const top_header = ["#", "Nama Produk", "Kategori", "Qty Terjual (pcs)", "Revenue (Rp)", "HPP (Rp)", "Profit (Rp)", "Margin (%)"];
-  const top_rows = [
+  // ── SHEET 4: TOP PRODUK ──
+  const ws4Data = [
     [`TOP 10 PRODUK TERLARIS — ${period}`],
     [],
-    top_header,
+    [
+      "#",
+      "Nama Produk",
+      "Kategori",
+      "Qty Terjual",
+      "Revenue (Rp)",
+      "HPP (Rp)",
+      "Profit (Rp)",
+      "Margin (%)",
+    ],
   ];
-
-  const sortedProds = Object.values(prodMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
-  sortedProds.forEach((p, i) => {
-    const profit = p.revenue - p.hpp;
-    const margin = p.revenue > 0 ? profit / p.revenue : 0;
-    top_rows.push([i + 1, p.nama, p.kategori, p.qty, p.revenue, p.hpp, profit, margin]);
-  });
-
-  XLSX.utils.sheet_add_aoa(ws4, top_rows, { origin: "A1" });
-  ws4["!cols"] = [{ wch: 5 }, { wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 13 }];
-  ws4["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
-
-  applyExcelStyle(ws4, "A1", {
-    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "5B21B6" } },
-    alignment: { horizontal: "center" },
-  });
-
-  top_header.forEach((_, ci) => {
-    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
-    applyExcelStyle(ws4, cell, {
-      font: { name: "Arial", bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "7C3AED" } },
-      alignment: { horizontal: "center" },
-      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
-    });
-  });
-
-  sortedProds.forEach((p, idx) => {
-    const ri = 3 + idx;
-    const bg = idx % 2 === 0 ? "F5F3FF" : "FFFFFF";
-    const profit = p.revenue - p.hpp;
-    for (let ci = 0; ci < 8; ci++) {
-      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (!ws4[cell]) continue;
-      const numFmt = ci === 4 || ci === 5 || ci === 6 ? '#,##0' : ci === 7 ? '0.00%' : null;
-      applyExcelStyle(ws4, cell, {
-        font: {
-          name: "Arial", sz: 10, bold: ci === 1 || ci === 6,
-          color: ci === 6 ? { rgb: profit >= 0 ? "0A6640" : "CC2222" } : undefined,
-        },
-        fill: { fgColor: { rgb: bg } },
-        alignment: { horizontal: ci >= 3 ? "right" : ci === 0 ? "center" : "left" },
-        numFmt,
-      });
-    }
-    // Nomor urut dengan rank medal effect (Top 3)
-    if (idx < 3) {
-      const colors = ["FFD700", "C0C0C0", "CD7F32"]; // Emas, Perak, Perunggu
-      applyExcelStyle(ws4, `A${ri + 1}`, {
-        font: { name: "Arial", bold: true, sz: 11, color: { rgb: colors[idx] } },
-        fill: { fgColor: { rgb: bg } },
-        alignment: { horizontal: "center" },
-      });
-    }
-  });
-
-  XLSX.utils.book_append_sheet(wb, ws4, "🏆 Top 10 Produk");
-
-
-  // ════════════════════════════════════════════════════════
-  // SHEET 5 — DETAIL ITEM PER TRANSAKSI
-  // ════════════════════════════════════════════════════════
-  const ws5 = XLSX.utils.aoa_to_sheet([]);
-
-  const detail_header = ["#", "No. Invoice", "Tanggal", "Customer", "Nama Produk", "Kategori", "Qty (pcs)", "Harga Jual (Rp)", "HPP/Unit (Rp)", "Subtotal Revenue (Rp)", "Subtotal HPP (Rp)", "Subtotal Profit (Rp)"];
-  const detail_rows = [
-    [`DETAIL ITEM TRANSAKSI — ${period}`],
-    [],
-    detail_header,
-  ];
-
-  let rowCount = 0;
-  allSOs.forEach(so => {
-    (so.items || []).forEach(item => {
-      const qty  = parseInt(item.jumlahKeluar) || 0;
-      const jual = parseFloat(item.hargaJual || item.hargaHPP || 0);
-      const hpp  = parseFloat(item.hargaHPP || 0);
-      rowCount++;
-      detail_rows.push([
-        rowCount, so.invoice, so.tanggal, so.penerima || "—",
-        item.nama || "—", item.kategori || "—",
-        qty, jual, hpp,
-        jual * qty, hpp * qty, (jual - hpp) * qty,
+  Object.values(prodMap)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 10)
+    .forEach((p, i) => {
+      const profit = p.revenue - p.hpp;
+      const margin = p.revenue > 0 ? profit / p.revenue : 0;
+      ws4Data.push([
+        i + 1,
+        p.nama,
+        p.kategori,
+        p.qty,
+        p.revenue,
+        p.hpp,
+        profit,
+        margin,
       ]);
     });
-  });
-
-  XLSX.utils.sheet_add_aoa(ws5, detail_rows, { origin: "A1" });
-  ws5["!cols"] = [
-    { wch: 5 }, { wch: 20 }, { wch: 14 }, { wch: 22 }, { wch: 25 }, { wch: 15 },
-    { wch: 12 }, { wch: 18 }, { wch: 16 }, { wch: 20 }, { wch: 18 }, { wch: 18 }
+  const ws4 = XLSX.utils.aoa_to_sheet(ws4Data);
+  ws4["!cols"] = [
+    { wch: 5 },
+    { wch: 28 },
+    { wch: 18 },
+    { wch: 14 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 12 },
   ];
-  ws5["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }];
+  XLSX.utils.book_append_sheet(wb, ws4, "Top Produk");
 
-  applyExcelStyle(ws5, "A1", {
-    font: { name: "Arial", bold: true, sz: 13, color: { rgb: "FFFFFF" } },
-    fill: { fgColor: { rgb: "856404" } },
-    alignment: { horizontal: "center" },
-  });
-
-  detail_header.forEach((_, ci) => {
-    const cell = XLSX.utils.encode_cell({ r: 2, c: ci });
-    applyExcelStyle(ws5, cell, {
-      font: { name: "Arial", bold: true, sz: 9, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "B45309" } },
-      alignment: { horizontal: "center", wrapText: true },
-      border: { bottom: { style: "medium", color: { rgb: "000000" } } },
-    });
-  });
-
-  for (let ri = 3; ri < 3 + rowCount; ri++) {
-    const bg = (ri - 3) % 2 === 0 ? "FFFBEB" : "FFFFFF";
-    for (let ci = 0; ci < 12; ci++) {
-      const cell = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (!ws5[cell]) continue;
-      const numFmt = [7, 8, 9, 10, 11].includes(ci) ? '#,##0' : null;
-      applyExcelStyle(ws5, cell, {
-        font: { name: "Arial", sz: 9, bold: [9, 11].includes(ci) },
-        fill: { fgColor: { rgb: bg } },
-        alignment: { horizontal: ci >= 6 ? "right" : ci === 0 ? "center" : "left" },
-        numFmt,
-      });
-    }
-  }
-
-  XLSX.utils.book_append_sheet(wb, ws5, "📋 Detail Item");
-
-
-  // ════════════════════════════════════════════════════════
-  // SAVE FILE
-  // ════════════════════════════════════════════════════════
+  // ── DOWNLOAD ──
   const safePeriod = period.replace(/[\/\\?%*:|"<>]/g, "_").replace(/ /g, "_");
-  XLSX.writeFile(wb, `Laporan_Invenz_${safePeriod}.xlsx`, {
-    bookType: "xlsx",
-    compression: true,
-  });
-}
-
-
-// ============================================================
-// ===== HELPER: APPLY CELL STYLE (SheetJS cell-level) ========
-// ============================================================
-// SheetJS Community Edition tidak mendukung styling secara native.
-// Fungsi ini meng-inject properti `s` ke cell object agar style
-// terbaca oleh file xlsx yang dibuka di Excel / LibreOffice Calc.
-// Catatan: Untuk fungsionalitas styling penuh, pertimbangkan upgrade
-// ke SheetJS Pro atau gunakan exceljs sebagai alternatif.
-
-function applyExcelStyle(ws, cellAddr, style) {
-  if (!ws[cellAddr]) {
-    // Buat cell kosong jika belum ada agar style bisa diterapkan
-    ws[cellAddr] = { t: "z", v: undefined };
-  }
-  // Gabungkan style yang sudah ada dengan style baru
-  ws[cellAddr].s = Object.assign(ws[cellAddr].s || {}, {
-    font:      style.font      || {},
-    fill:      style.fill      ? { patternType: "solid", ...style.fill } : undefined,
-    alignment: style.alignment || {},
-    border:    style.border    || {},
-    numFmt:    style.numFmt    || undefined,
-  });
-  // Bersihkan undefined keys
-  Object.keys(ws[cellAddr].s).forEach(k => {
-    if (ws[cellAddr].s[k] === undefined) delete ws[cellAddr].s[k];
-  });
+  XLSX.writeFile(wb, `Laporan_Invenz_${safePeriod}.xlsx`);
 }
 
 // ============================================================
-// ===== REVISI FITUR PRINT (MEMPERBAIKI PAGE KOSONG) =========
+// ===== INITIAL RENDER =======================================
 // ============================================================
-document.getElementById("btnPrint").addEventListener("click", () => {
-  const reportContent = document.getElementById("reportContent");
-  const printArea = document.getElementById("printArea");
-
-  if (!reportContent || !printArea) {
-    alert("Elemen laporan tidak ditemukan.");
-    return;
-  }
-
-  // 1. Salin seluruh markup HTML dari kontainer laporan ke area cetak
-  printArea.innerHTML = reportContent.innerHTML;
-
-  // 2. Hilangkan filter-bar di dalam area print agar tidak ikut tercetak di kertas
-  const innerFilter = printArea.querySelector("#filterBar");
-  if (innerFilter) innerFilter.remove();
-
-  // 3. Eksekusi perintah cetak browser
-  window.print();
-
-  // 4. Bersihkan kembali area cetak setelah selesai agar menghemat memory halaman
-  printArea.innerHTML = "";
-});
-
-// ===== INITIAL START =====
 document.addEventListener("DOMContentLoaded", () => {
   renderAll();
 });
+if (document.readyState !== "loading") renderAll();
