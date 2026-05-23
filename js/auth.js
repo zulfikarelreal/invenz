@@ -1,7 +1,6 @@
-// ===== AUTH.JS — Multi-Role Guard =====
+// ===== AUTH.JS — Multi-Role Guard (v2) =====
+// 5 Roles: owner, admin, kepala_toko, kasir, gudang
 // Jalankan di SETIAP halaman sebagai script pertama.
-// Contoh pemakaian di atas tag </body>:
-//   <script src="js/auth.js"></script>
 
 (function () {
   // ── 1. Pastikan ada sesi aktif ──
@@ -12,7 +11,7 @@
 
   // ── 2. Ambil info user aktif ──
   const loggedUser = localStorage.getItem("loggedUser") || "Admin";
-  const loggedRole = localStorage.getItem("loggedRole") || "admin";
+  const loggedRole = localStorage.getItem("loggedRole") || "owner";
 
   // ── 3. Cek akun masih aktif di daftar users ──
   function getUsers() {
@@ -24,11 +23,11 @@
   }
 
   const users = getUsers();
-  // Selain akun bawaan "admin", cek aktif/nonaktif
   if (users.length > 0) {
-    const me = users.find((u) => u.username === loggedUser);
+    const me = users.find(
+      (u) => u.username.toLowerCase() === loggedUser.toLowerCase(),
+    );
     if (me && me.aktif === false) {
-      // Akun dinonaktifkan, paksa logout
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("loggedUser");
       localStorage.removeItem("loggedRole");
@@ -37,56 +36,81 @@
     }
   }
 
-  // ── 4. Expose helper global ──
+  // ── 4. Permission Matrix ──
+  //
+  // owner       : Pemilik — akses penuh absolut
+  // admin       : Administrator sistem — akses penuh (akun contoh, tidak untuk kerja harian)
+  // kepala_toko : Manajer toko — akses penuh operasional + laporan, tanpa user management
+  // kasir       : Staf penjualan — stock out, laporan, baca stok/linked data
+  // gudang      : Staf gudang — input barang masuk, kelola stok, baca linked data
+
+  const PERMISSIONS = {
+    owner: [
+      "dashboard",
+      "input_barang",
+      "global_stok",
+      "global_stok_read",
+      "stock_out",
+      "linked_data",
+      "linked_data_read",
+      "laporan",
+      "user_management",
+      "settings",
+    ],
+    admin: [
+      "dashboard",
+      "input_barang",
+      "global_stok",
+      "global_stok_read",
+      "stock_out",
+      "linked_data",
+      "linked_data_read",
+      "laporan",
+      "user_management",
+      "settings",
+    ],
+    kepala_toko: [
+      "dashboard",
+      "input_barang",
+      "global_stok",
+      "global_stok_read",
+      "stock_out",
+      "linked_data",
+      "linked_data_read",
+      "laporan",
+    ],
+    kasir: [
+      "dashboard",
+      "global_stok_read",
+      "stock_out",
+      "laporan",
+      "linked_data_read",
+    ],
+    gudang: [
+      "dashboard",
+      "input_barang",
+      "global_stok",
+      "global_stok_read",
+      "linked_data_read",
+    ],
+  };
+
+  // ── 5. Expose helper global ──
   window.INVENZ = window.INVENZ || {};
   window.INVENZ.user = loggedUser;
   window.INVENZ.role = loggedRole;
 
-  /**
-   * Cek apakah role aktif punya permission.
-   * @param {string} permission
-   * @returns {boolean}
-   */
   window.INVENZ.can = function (permission) {
-    const matrix = {
-      admin: [
-        "dashboard",
-        "input_barang",
-        "global_stok",
-        "stock_out",
-        "linked_data",
-        "laporan",
-        "user_management",
-        "settings",
-      ],
-      kasir: [
-        "dashboard",
-        "global_stok_read",
-        "stock_out",
-        "laporan",
-        "linked_data_read",
-      ],
-      gudang: ["dashboard", "input_barang", "global_stok", "linked_data_read"],
-    };
-    const perms = matrix[loggedRole] || [];
+    const perms = PERMISSIONS[loggedRole] || [];
     return perms.includes(permission);
   };
 
-  /**
-   * Redirect ke halaman tertentu jika tidak punya akses.
-   * @param {string} permission
-   * @param {string} [redirect="dashboard.html"]
-   */
   window.INVENZ.require = function (permission, redirect) {
     if (!window.INVENZ.can(permission)) {
       window.location.href = redirect || "dashboard.html";
     }
   };
 
-  /**
-   * Sembunyikan semua elemen dengan atribut data-require="<permission>"
-   * jika user tidak punya permission tersebut.
-   */
   window.INVENZ.applyVisibility = function () {
     document.querySelectorAll("[data-require]").forEach((el) => {
       const perm = el.getAttribute("data-require");
@@ -94,21 +118,48 @@
         el.style.display = "none";
       }
     });
-    // Juga isi semua elemen data-username / data-role
+
+    const ROLE_LABELS = {
+      owner: "Owner",
+      admin: "Administrator",
+      kepala_toko: "Kepala Toko",
+      kasir: "Kasir",
+      gudang: "Staf Gudang",
+    };
+
     document.querySelectorAll("[data-bind-user]").forEach((el) => {
       el.textContent = loggedUser;
     });
     document.querySelectorAll("[data-bind-role]").forEach((el) => {
-      const labels = {
-        admin: "Administrator",
-        kasir: "Kasir",
-        gudang: "Staf Gudang",
-      };
-      el.textContent = labels[loggedRole] || loggedRole;
+      el.textContent = ROLE_LABELS[loggedRole] || loggedRole;
     });
+
+    // Sembunyikan menu sidebar yang tidak punya akses
+    _applyMenuGuards();
   };
 
-  // Auto-apply setelah DOM siap
+  function _applyMenuGuards() {
+    const menuGuards = {
+      "inputBarang.html": "input_barang",
+      "globalStok.html": "global_stok_read",
+      "stockOut.html": "stock_out",
+      "linkedData.html": "linked_data_read",
+      "laporan.html": "laporan",
+      "userManagement.html": "user_management",
+    };
+
+    document.querySelectorAll(".sidebar-menu li a").forEach((link) => {
+      const href = link.getAttribute("href") || "";
+      const filename = href.split("/").pop().split("?")[0];
+      if (menuGuards[filename]) {
+        if (!window.INVENZ.can(menuGuards[filename])) {
+          const li = link.closest("li");
+          if (li) li.style.display = "none";
+        }
+      }
+    });
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener(
       "DOMContentLoaded",
@@ -118,7 +169,6 @@
     window.INVENZ.applyVisibility();
   }
 
-  // ── 5. Pasang logout global ──
   window.INVENZ.logout = function () {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("loggedUser");

@@ -8,11 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Login | Invenz</title>
     <style>
-        *, *::before, *::after { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --primary: #102ca8;
@@ -27,10 +23,7 @@
             --error: #ef4444;
         }
 
-        html, body { 
-            height: 100%; 
-            overflow: hidden;
-        }
+        html, body { height: 100%; overflow: hidden; }
 
         body {
             background: var(--dark);
@@ -44,695 +37,203 @@
 
         /* ===== ANIMATED BACKGROUND ===== */
         .animated-bg {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            overflow: hidden;
+            position: fixed; inset: 0; z-index: 0; overflow: hidden;
             background: linear-gradient(135deg, #0a0e1a 0%, #0f1420 50%, #0a0e1a 100%);
         }
-
         .animated-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
+            content: ''; position: absolute; inset: 0;
             background-image:
                 linear-gradient(rgba(16,44,168,0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(16,44,168,0.03) 1px, transparent 1px);
             background-size: 50px 50px;
             animation: gridMove 20s linear infinite;
         }
-
         @keyframes gridMove {
             0% { transform: translate(0, 0); }
             100% { transform: translate(50px, 50px); }
         }
+        .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; pointer-events: none; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(16,44,168,0.6) 0%, transparent 70%); top: -200px; left: -100px; animation: float1 15s ease-in-out infinite; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(0,255,209,0.4) 0%, transparent 70%); bottom: -150px; right: -80px; animation: float2 18s ease-in-out infinite; }
+        .orb-3 { width: 350px; height: 350px; background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%); top: 50%; right: 20%; animation: float3 20s ease-in-out infinite; }
+        @keyframes float1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(50px, -30px); } }
+        @keyframes float2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-40px, -50px); } }
+        @keyframes float3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -40px); } }
 
-        /* Floating orbs */
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.4;
-            pointer-events: none;
-        }
-
-        .orb-1 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(16,44,168,0.6) 0%, transparent 70%);
-            top: -200px; left: -100px;
-            animation: float1 15s ease-in-out infinite;
-        }
-
-        .orb-2 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(0,255,209,0.4) 0%, transparent 70%);
-            bottom: -150px; right: -80px;
-            animation: float2 18s ease-in-out infinite;
-        }
-
-        .orb-3 {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%);
-            top: 50%; right: 20%;
-            animation: float3 20s ease-in-out infinite;
-        }
-
-        @keyframes float1 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(50px, -30px) rotate(120deg); }
-            66% { transform: translate(-30px, 40px) rotate(240deg); }
-        }
-
-        @keyframes float2 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-40px, -50px) scale(1.1); }
-        }
-
-        @keyframes float3 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(30px, -40px) rotate(90deg); }
-            50% { transform: translate(-20px, 30px) rotate(180deg); }
-            75% { transform: translate(40px, 20px) rotate(270deg); }
-        }
-
-        /* Particles canvas */
-        #particlesCanvas {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
+        #particlesCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+        .mouse-glow { position: fixed; width: 400px; height: 400px; background: radial-gradient(circle, rgba(0,255,209,0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); transition: opacity 0.3s; z-index: 2; opacity: 0; }
 
         /* ===== BACK BUTTON ===== */
         .btn-back {
-            position: fixed;
-            top: 24px;
-            left: 24px;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; top: 24px; left: 24px; z-index: 100;
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 16px; background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text-muted); text-decoration: none;
+            font-size: 14px; font-weight: 500; transition: all 0.3s;
         }
-
-        .btn-back:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.15);
-            color: var(--text);
-            transform: translateX(-4px);
-        }
-
-        .btn-back i {
-            font-size: 18px;
-            transition: transform 0.3s;
-        }
-
-        .btn-back:hover i {
-            transform: translateX(-2px);
-        }
+        .btn-back:hover { background: rgba(255,255,255,0.1); color: var(--text); transform: translateX(-4px); }
+        .btn-back i { font-size: 18px; }
 
         /* ===== MAIN CONTAINER ===== */
         .login-container {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            width: 100%;
-            max-width: 1100px;
-            min-height: 600px;
+            position: relative; z-index: 10;
+            display: flex; width: 100%; max-width: 1100px; min-height: 600px;
             margin: 0 24px;
-            background: rgba(15,20,32,0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 
-                0 0 0 1px rgba(255,255,255,0.05),
-                0 20px 60px rgba(0,0,0,0.5),
-                inset 0 1px 0 rgba(255,255,255,0.1);
+            background: rgba(15,20,32,0.7); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 24px; overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
             animation: containerSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
-
-        @keyframes containerSlideUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes containerSlideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ===== LEFT PANEL ===== */
         .panel-left {
-            flex: 1.3;
-            padding: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            flex: 1.3; padding: 60px;
+            display: flex; flex-direction: column; justify-content: center;
             background: linear-gradient(135deg, rgba(16,44,168,0.15) 0%, rgba(0,255,209,0.05) 100%);
-            border-right: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .panel-left::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(16,44,168,0.2) 0%, transparent 70%);
-            filter: blur(80px);
-            animation: leftGlow 8s ease-in-out infinite alternate;
-        }
-
-        @keyframes leftGlow {
-            0% { transform: translate(0, 0); opacity: 0.3; }
-            100% { transform: translate(-30px, 30px); opacity: 0.6; }
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 60px;
+            border-right: 1px solid var(--border); position: relative; overflow: hidden;
             animation: fadeSlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
         }
+        @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeSlideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 60px; }
+        .brand-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(16,44,168,0.4); }
+        .brand-icon i { font-size: 22px; color: white; }
+        .brand-text { font-size: 24px; font-weight: 800; letter-spacing: 2px; color: white; }
 
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(16,44,168,0.4);
-            position: relative;
-            overflow: hidden;
-        }
+        .hero-title { font-size: clamp(32px, 4vw, 48px); font-weight: 800; line-height: 1.2; color: white; margin-bottom: 20px; }
+        .hero-title .gradient-text { background: linear-gradient(135deg, var(--accent), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-subtitle { font-size: 15px; line-height: 1.7; color: var(--text-muted); max-width: 420px; margin-bottom: 48px; }
 
-        .brand-icon::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.3));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .brand:hover .brand-icon::before {
-            opacity: 1;
-        }
-
-        .brand-icon i {
-            font-size: 22px;
-            color: white;
-            z-index: 1;
-        }
-
-        .brand-text {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: white;
-        }
-
-        .hero-title {
-            font-size: clamp(32px, 4vw, 48px);
-            font-weight: 800;
-            line-height: 1.2;
-            color: white;
-            margin-bottom: 20px;
-            animation: fadeSlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-        }
-
-        .hero-title .gradient-text {
-            background: linear-gradient(135deg, var(--accent), var(--primary-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: 15px;
-            line-height: 1.7;
-            color: var(--text-muted);
-            max-width: 420px;
-            margin-bottom: 48px;
-            animation: fadeSlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
-        }
-
-        .features {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 16px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            opacity: 0;
-            animation: fadeSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-            transition: all 0.3s;
-        }
-
+        .features { display: flex; flex-direction: column; gap: 16px; }
+        .feature-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; transition: all 0.3s; opacity: 0; animation: fadeSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .feature-item:nth-child(1) { animation-delay: 0.5s; }
         .feature-item:nth-child(2) { animation-delay: 0.6s; }
         .feature-item:nth-child(3) { animation-delay: 0.7s; }
-
-        @keyframes fadeSlideRight {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .feature-item:hover {
-            background: rgba(255,255,255,0.06);
-            border-color: rgba(16,44,168,0.3);
-            transform: translateX(4px);
-        }
-
-        .feature-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(16,44,168,0.2);
-            border: 1px solid rgba(16,44,168,0.3);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .feature-icon i {
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        .feature-text {
-            font-size: 14px;
-            color: rgba(232,238,255,0.7);
-            font-weight: 500;
-        }
+        @keyframes fadeSlideRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .feature-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(16,44,168,0.3); transform: translateX(4px); }
+        .feature-icon { width: 40px; height: 40px; background: rgba(16,44,168,0.2); border: 1px solid rgba(16,44,168,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .feature-icon i { font-size: 20px; color: var(--accent); }
+        .feature-text { font-size: 14px; color: rgba(232,238,255,0.7); font-weight: 500; }
 
         /* ===== RIGHT PANEL ===== */
         .panel-right {
-            flex: 1;
-            padding: 60px 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            flex: 1; padding: 60px 50px;
+            display: flex; flex-direction: column; justify-content: center;
             animation: fadeSlideLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
         }
+        @keyframes fadeSlideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
 
-        @keyframes fadeSlideLeft {
-            from { opacity: 0; transform: translateX(40px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 20px; font-size: 11px; color: var(--success); font-weight: 600; margin-bottom: 32px; }
+        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.8); } }
 
-        .login-header {
-            margin-bottom: 36px;
-        }
-
-        .login-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .login-subtitle {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        /* Status indicator */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: rgba(16,185,129,0.1);
-            border: 1px solid rgba(16,185,129,0.2);
-            border-radius: 20px;
-            font-size: 11px;
-            color: var(--success);
-            font-weight: 600;
-            margin-bottom: 32px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--success);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.8); }
-        }
+        .login-header { margin-bottom: 36px; }
+        .login-title { font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px; }
+        .login-subtitle { font-size: 14px; color: var(--text-muted); }
 
         /* ===== FORM ===== */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            letter-spacing: 0.3px;
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 16px;
-            font-size: 18px;
-            color: var(--text-muted);
-            pointer-events: none;
-            transition: all 0.3s;
-            z-index: 1;
-        }
-
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.3px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-icon { position: absolute; left: 16px; font-size: 18px; color: var(--text-muted); pointer-events: none; transition: all 0.3s; z-index: 1; }
         .form-input {
-            width: 100%;
-            padding: 14px 16px 14px 48px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%; padding: 14px 16px 14px 48px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text); font-size: 14px;
+            font-family: 'Poppins', sans-serif; outline: none; transition: all 0.3s;
         }
+        .form-input::placeholder { color: rgba(122,141,184,0.4); }
+        .form-input:focus { background: rgba(16,44,168,0.1); border-color: rgba(16,44,168,0.5); box-shadow: 0 0 0 3px rgba(16,44,168,0.15); }
+        .input-wrapper:has(.form-input:focus) .input-icon { color: var(--accent); transform: scale(1.1); }
 
-        .form-input::placeholder {
-            color: rgba(122,141,184,0.4);
-        }
-
-        .form-input:focus {
-            background: rgba(16,44,168,0.1);
-            border-color: rgba(16,44,168,0.5);
-            box-shadow: 0 0 0 3px rgba(16,44,168,0.15);
-        }
-
-        .input-wrapper:has(.form-input:focus) .input-icon {
-            color: var(--accent);
-            transform: scale(1.1);
-        }
-
-        .eye-toggle {
-            position: absolute;
-            right: 14px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 6px;
-            display: flex;
-            align-items: center;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .eye-toggle:hover {
-            background: rgba(255,255,255,0.05);
-            color: var(--text);
-        }
+        .eye-toggle { position: absolute; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 6px; display: flex; align-items: center; border-radius: 6px; transition: all 0.2s; }
+        .eye-toggle:hover { background: rgba(255,255,255,0.05); color: var(--text); }
 
         /* ===== ERROR MESSAGE ===== */
-        .error-message {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 14px;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 10px;
-            color: var(--error);
-            font-size: 13px;
-            margin-bottom: 20px;
-            animation: shakeError 0.4s ease;
-        }
-
-        .error-message.show {
-            display: flex;
-        }
-
-        @keyframes shakeError {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            50% { transform: translateX(8px); }
-            75% { transform: translateX(-4px); }
-        }
-
-        .error-message i {
-            font-size: 18px;
-            flex-shrink: 0;
-        }
+        .error-message { display: none; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; color: var(--error); font-size: 13px; margin-bottom: 20px; animation: shakeError 0.4s ease; }
+        .error-message.show { display: flex; }
+        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        .error-message i { font-size: 18px; flex-shrink: 0; }
 
         /* ===== LOGIN BUTTON ===== */
         .btn-login {
-            width: 100%;
-            padding: 15px;
+            width: 100%; padding: 15px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 24px rgba(16,44,168,0.4);
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
+            border: none; border-radius: 12px; color: white; font-size: 15px;
+            font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.3s; box-shadow: 0 8px 24px rgba(16,44,168,0.4);
+            position: relative; overflow: hidden; margin-bottom: 20px;
         }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(16,44,168,0.5); }
+        .btn-login:active { transform: translateY(0) scale(0.98); }
+        .btn-login.success { background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 8px 24px rgba(16,185,129,0.4); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        .btn-login::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(16,44,168,0.5);
-        }
-
-        .btn-login:hover::before {
-            opacity: 1;
-        }
-
-        .btn-login:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .btn-login.success {
-            background: linear-gradient(135deg, var(--success), #059669);
-            box-shadow: 0 8px 24px rgba(16,185,129,0.4);
-        }
-
-        .btn-login:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Loading animation */
-        .btn-loader {
-            display: flex;
-            gap: 4px;
-        }
-
-        .btn-loader span {
-            width: 6px;
-            height: 6px;
-            background: white;
-            border-radius: 50%;
-            animation: dotBounce 0.8s ease-in-out infinite;
-        }
-
+        .btn-loader { display: flex; gap: 4px; }
+        .btn-loader span { width: 6px; height: 6px; background: white; border-radius: 50%; animation: dotBounce 0.8s ease-in-out infinite; }
         .btn-loader span:nth-child(2) { animation-delay: 0.15s; }
         .btn-loader span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
 
-        @keyframes dotBounce {
-            0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
-            40% { transform: scale(1); opacity: 1; }
-        }
+        .login-hint { font-size: 12px; color: rgba(122,141,184,0.6); text-align: center; line-height: 1.6; }
 
-        /* ===== HINT TEXT ===== */
-        .login-hint {
-            font-size: 12px;
-            color: rgba(122,141,184,0.6);
-            text-align: center;
-            line-height: 1.6;
-        }
-
-        /* ===== MOUSE GLOW EFFECT ===== */
-        .mouse-glow {
-            position: fixed;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(0,255,209,0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.3s;
-            z-index: 2;
-            opacity: 0;
-        }
+        /* Role badge (setelah login sukses) */
+        .role-preview { display: none; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(0,255,209,0.06); border: 1px solid rgba(0,255,209,0.2); border-radius: 10px; font-size: 13px; color: var(--accent); margin-bottom: 16px; font-weight: 500; }
+        .role-preview.show { display: flex; }
+        .role-preview i { font-size: 18px; }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
-            html, body {
-                overflow-y: auto;
-                overflow-x: hidden;
-            }
-
-            .login-container {
-                flex-direction: column;
-                min-height: auto;
-                margin: 80px 20px 40px;
-            }
-
-            .panel-left {
-                border-right: none;
-                border-bottom: 1px solid var(--border);
-                padding: 40px 32px;
-            }
-
-            .panel-right {
-                padding: 40px 32px;
-            }
-
-            .features {
-                max-width: 100%;
-            }
-
-            .hero-subtitle {
-                max-width: 100%;
-            }
+            html, body { overflow-y: auto; overflow-x: hidden; }
+            .login-container { flex-direction: column; min-height: auto; margin: 80px 20px 40px; }
+            .panel-left { border-right: none; border-bottom: 1px solid var(--border); padding: 40px 32px; }
+            .panel-right { padding: 40px 32px; }
         }
-
         @media (max-width: 480px) {
-            .btn-back {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-
-            .brand {
-                margin-bottom: 40px;
-            }
-
-            .hero-title {
-                font-size: 28px;
-            }
-
-            .login-title {
-                font-size: 26px;
-            }
+            .btn-back { padding: 8px 12px; font-size: 13px; }
+            .hero-title { font-size: 28px; }
+            .login-title { font-size: 26px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Animated Background -->
     <div class="animated-bg">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
     </div>
-
     <canvas id="particlesCanvas"></canvas>
     <div class="mouse-glow" id="mouseGlow"></div>
 
-    <!-- Back Button -->
     <a href="index.html" class="btn-back">
         <i class="bx bx-arrow-back"></i>
         <span>Kembali</span>
     </a>
 
-    <!-- Main Container -->
     <div class="login-container">
-        
         <!-- Left Panel -->
         <div class="panel-left">
             <div class="brand">
-                <div class="brand-icon">
-                    <i class="bxf bx-bar-chart"></i>
-                </div>
+                <div class="brand-icon"><i class="bxf bx-bar-chart"></i></div>
                 <span class="brand-text">INVENZ</span>
             </div>
-
-            <h1 class="hero-title">
-                Kelola inventori<br>
-                dengan <span class="gradient-text">cerdas.</span>
-            </h1>
-
-            <p class="hero-subtitle">
-                Sistem manajemen inventori modern yang membantu Anda melacak stok,
-                mencatat transaksi, dan menganalisis performa bisnis dalam satu platform.
-            </p>
-
+            <h1 class="hero-title">Kelola inventori<br><span class="gradient-text">lebih cerdas.</span></h1>
+            <p class="hero-subtitle">Sistem manajemen inventori modern — lacak stok, catat transaksi, dan analisis performa bisnis dalam satu platform.</p>
             <div class="features">
                 <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="bx bx-package"></i>
-                    </div>
+                    <div class="feature-icon"><i class="bx bx-package"></i></div>
                     <span class="feature-text">Input barang masuk dengan invoice digital</span>
                 </div>
-
                 <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="bx bx-truck"></i>
-                    </div>
+                    <div class="feature-icon"><i class="bx bx-truck"></i></div>
                     <span class="feature-text">Pencatatan stock out otomatis & real-time</span>
                 </div>
-
                 <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="bx bx-bar-chart-alt-2"></i>
-                    </div>
+                    <div class="feature-icon"><i class="bx bx-bar-chart-alt-2"></i></div>
                     <span class="feature-text">Laporan analitik lengkap dengan grafik</span>
                 </div>
             </div>
@@ -746,9 +247,7 @@
             </div>
 
             <div class="login-header">
-                <h2 class="login-title">
-                    Selamat Datang 👋
-                </h2>
+                <h2 class="login-title">Selamat Datang 👋</h2>
                 <p class="login-subtitle">Masuk ke dashboard Invenz Anda</p>
             </div>
 
@@ -757,33 +256,24 @@
                 <span id="errorText">Username atau password salah</span>
             </div>
 
+            <div id="rolePreview" class="role-preview">
+                <i class="bx bx-shield-check"></i>
+                <span id="rolePreviewText"></span>
+            </div>
+
             <form id="loginForm" autocomplete="off">
                 <div class="form-group">
                     <label class="form-label">Username</label>
                     <div class="input-wrapper">
                         <i class="bx bx-user input-icon"></i>
-                        <input 
-                            type="text" 
-                            id="username" 
-                            class="form-input" 
-                            placeholder="Masukkan username"
-                            autocomplete="off"
-                            required
-                        >
+                        <input type="text" id="username" class="form-input" placeholder="Masukkan username" autocomplete="off" required>
                     </div>
                 </div>
-
                 <div class="form-group" style="margin-bottom: 28px;">
                     <label class="form-label">Password</label>
                     <div class="input-wrapper">
                         <i class="bxf bx-lock-keyhole input-icon"></i>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            class="form-input" 
-                            placeholder="Masukkan password"
-                            required
-                        >
+                        <input type="password" id="password" class="form-input" placeholder="Masukkan password" required>
                         <button type="button" class="eye-toggle" id="eyeToggle">
                             <i class="bx bx-show" id="eyeIcon"></i>
                         </button>
@@ -793,250 +283,206 @@
                 <button type="submit" class="btn-login" id="loginBtn">
                     <span id="btnText">Masuk ke Dashboard</span>
                     <div id="btnLoader" class="btn-loader" style="display: none;">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        <span></span><span></span><span></span>
                     </div>
                 </button>
             </form>
 
-            <p class="login-hint">
-                Gunakan kredensial yang telah diberikan oleh administrator sistem.
-            </p>
+            <p class="login-hint">Gunakan kredensial yang telah diberikan oleh administrator sistem.</p>
         </div>
-
     </div>
 
     <script>
-        // ===== AUTH USERS =====
-        const validUsers = [
-            { username: "admin",  password: "admin123"  },
-            { username: "invenz", password: "invenz123" }
+        // ===== VALID USERS (Built-in) =====
+        // Password harus di-hash sama dengan hashPassword() di userManagement.js
+        function hashPassword(pw) {
+            let h = 0;
+            for (let i = 0; i < pw.length; i++) {
+                h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+            }
+            return "h_" + Math.abs(h).toString(36);
+        }
+
+        const BUILTIN_USERS = [
+            { username: "owner",  password: "owner123",   role: "owner",       nama: "Owner INVENZ" },
+            { username: "admin",  password: "admin123",   role: "admin",       nama: "Administrator" },
+            { username: "invenz", password: "invenz123",  role: "admin",       nama: "Invenz Demo" },
         ];
 
-        // ===== PARTICLES ANIMATION =====
-        const canvas = document.getElementById('particlesCanvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let mouseX = 0, mouseY = 0;
+        const ROLE_LABELS = {
+            owner:       "Owner",
+            admin:       "Administrator",
+            kepala_toko: "Kepala Toko",
+            kasir:       "Kasir",
+            gudang:      "Staf Gudang",
+        };
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        // Cek custom users dari localStorage
+        function findUser(username, password) {
+            const uname = username.trim().toLowerCase();
+
+            // Cek built-in dulu
+            const builtin = BUILTIN_USERS.find(
+                u => u.username === uname && u.password === password
+            );
+            if (builtin) return { ...builtin, isBuiltin: true };
+
+            // Cek custom users dari localStorage
+            try {
+                const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
+                const ph = hashPassword(password);
+                const found = customUsers.find(
+                    u => u.username.toLowerCase() === uname
+                        && u.passwordHash === ph
+                        && u.aktif !== false
+                );
+                if (found) return found;
+            } catch (_) {}
+
+            return null;
         }
 
+        // Redirect kalau sudah login
+        if (localStorage.getItem("isLoggedIn") === "true") {
+            window.location.href = "dashboard.html";
+        }
+
+        // ===== PARTICLES ===== (ringan, minimal)
+        const canvas = document.getElementById("particlesCanvas");
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         function createParticles() {
             particles = [];
-            const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
-            
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5 + 0.5,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    opacity: Math.random() * 0.5 + 0.2
-                });
+            const count = Math.floor((canvas.width * canvas.height) / 20000);
+            for (let i = 0; i < count; i++) {
+                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.4, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, o: Math.random() * 0.4 + 0.15 });
             }
         }
-
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach((particle, i) => {
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-
-                if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-                if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-
-                // Draw particle
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(16, 44, 168, ${particle.opacity})`;
-                ctx.fill();
-
-                // Connect nearby particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(16,44,168,${p.o})`; ctx.fill();
                 for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particle.x - particles[j].x;
-                    const dy = particle.y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < 100) {
-                        ctx.beginPath();
-                        ctx.moveTo(particle.x, particle.y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(0, 255, 209, ${0.1 * (1 - distance / 100)})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-                    }
+                    const dx = p.x - particles[j].x, dy = p.y - particles[j].y, d = Math.sqrt(dx*dx+dy*dy);
+                    if (d < 90) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(0,255,209,${0.08*(1-d/90)})`; ctx.lineWidth = 0.4; ctx.stroke(); }
                 }
             });
-
             requestAnimationFrame(animateParticles);
         }
+        resizeCanvas(); createParticles(); animateParticles();
+        window.addEventListener("resize", () => { resizeCanvas(); createParticles(); });
 
-        resizeCanvas();
-        createParticles();
-        animateParticles();
-
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            createParticles();
-        });
-
-        // ===== MOUSE GLOW EFFECT =====
-        const mouseGlow = document.getElementById('mouseGlow');
+        // ===== MOUSE GLOW ===== 
+        const mouseGlow = document.getElementById("mouseGlow");
         let glowTimeout;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            
-            mouseGlow.style.left = e.clientX + 'px';
-            mouseGlow.style.top = e.clientY + 'px';
-            mouseGlow.style.opacity = '1';
-
-            clearTimeout(glowTimeout);
-            glowTimeout = setTimeout(() => {
-                mouseGlow.style.opacity = '0';
-            }, 200);
+        document.addEventListener("mousemove", (e) => {
+            mouseGlow.style.left = e.clientX + "px"; mouseGlow.style.top = e.clientY + "px"; mouseGlow.style.opacity = "1";
+            clearTimeout(glowTimeout); glowTimeout = setTimeout(() => { mouseGlow.style.opacity = "0"; }, 200);
         });
 
         // ===== PASSWORD TOGGLE =====
-        const eyeToggle = document.getElementById('eyeToggle');
-        const passwordInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('eyeIcon');
-
-        eyeToggle.addEventListener('click', () => {
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeIcon.className = 'bx bx-hide';
-            } else {
-                passwordInput.type = 'password';
-                eyeIcon.className = 'bx bx-show';
-            }
+        document.getElementById("eyeToggle").addEventListener("click", () => {
+            const pw = document.getElementById("password");
+            const icon = document.getElementById("eyeIcon");
+            if (pw.type === "password") { pw.type = "text"; icon.className = "bx bx-hide"; }
+            else { pw.type = "password"; icon.className = "bx bx-show"; }
         });
 
-        // ===== INPUT VALIDATION =====
-        const inputs = document.querySelectorAll('.form-input');
-        
-        inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                input.parentElement.style.transform = 'scale(1.01)';
-            });
-
-            input.addEventListener('blur', () => {
-                input.parentElement.style.transform = 'scale(1)';
-            });
-
-            // Clear error on input
-            input.addEventListener('input', () => {
-                document.getElementById('errorMessage').classList.remove('show');
-                input.style.borderColor = '';
+        // Clear error on input
+        document.querySelectorAll(".form-input").forEach(input => {
+            input.addEventListener("input", () => {
+                document.getElementById("errorMessage").classList.remove("show");
+                document.getElementById("rolePreview").classList.remove("show");
+                input.style.borderColor = "";
             });
         });
 
-        // ===== LOGIN FORM SUBMIT =====
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const btnText = document.getElementById('btnText');
-        const btnLoader = document.getElementById('btnLoader');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
+        // ===== LOGIN SUBMIT =====
+        const loginForm = document.getElementById("loginForm");
+        const loginBtn = document.getElementById("loginBtn");
+        const btnText = document.getElementById("btnText");
+        const btnLoader = document.getElementById("btnLoader");
+        const errorMessage = document.getElementById("errorMessage");
+        const errorText = document.getElementById("errorText");
+        const rolePreview = document.getElementById("rolePreview");
+        const rolePreviewText = document.getElementById("rolePreviewText");
 
-        loginForm.addEventListener('submit', async (e) => {
+        loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
 
-            // Hide error
-            errorMessage.classList.remove('show');
-
-            // Show loading
-            btnText.style.display = 'none';
-            btnLoader.style.display = 'flex';
+            errorMessage.classList.remove("show");
+            rolePreview.classList.remove("show");
+            btnText.style.display = "none";
+            btnLoader.style.display = "flex";
             loginBtn.disabled = true;
 
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(r => setTimeout(r, 900));
 
-            // Validate credentials
-            const user = validUsers.find(u => 
-                u.username === username && u.password === password
-            );
+            const user = findUser(username, password);
 
             if (user) {
-                // Success
-                localStorage.setItem('isLoggedIn', 'true');
-                const formattedUsername = username.charAt(0).toUpperCase() + username.slice(1);
-                localStorage.setItem('loggedUser', formattedUsername);
+                // Tampilkan role preview
+                const roleName = ROLE_LABELS[user.role] || user.role;
+                rolePreviewText.textContent = `Masuk sebagai ${roleName} · ${user.nama || username}`;
+                rolePreview.classList.add("show");
 
-                btnText.textContent = '✓ Login Berhasil!';
-                btnText.style.display = '';
-                btnLoader.style.display = 'none';
-                loginBtn.classList.add('success');
+                btnText.textContent = "✓ Login Berhasil!";
+                btnText.style.display = "";
+                btnLoader.style.display = "none";
+                loginBtn.classList.add("success");
 
-                // Redirect after animation
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 800);
+                // Simpan session
+                const displayName = user.nama
+                    ? user.nama.split(" ")[0]   // Ambil nama depan
+                    : username.charAt(0).toUpperCase() + username.slice(1);
 
+                localStorage.setItem("isLoggedIn", "true");
+                localStorage.setItem("loggedUser", displayName);
+                localStorage.setItem("loggedRole", user.role);
+
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
             } else {
-                // Error
-                btnText.style.display = '';
-                btnLoader.style.display = 'none';
+                btnText.style.display = "";
+                btnLoader.style.display = "none";
                 loginBtn.disabled = false;
 
-                errorText.textContent = 'Username atau password salah. Silakan coba lagi.';
-                errorMessage.classList.add('show');
+                // Cek apakah akun nonaktif
+                let inactiveMsg = false;
+                try {
+                    const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
+                    const uname = username.trim().toLowerCase();
+                    const found = customUsers.find(u => u.username.toLowerCase() === uname);
+                    if (found && found.aktif === false) inactiveMsg = true;
+                } catch (_) {}
 
-                // Shake inputs
-                inputs.forEach(input => {
-                    input.style.borderColor = 'rgba(239, 68, 68, 0.5)';
-                    input.style.animation = 'none';
-                    setTimeout(() => {
-                        input.style.animation = 'shakeError 0.4s ease';
-                    }, 10);
+                errorText.textContent = inactiveMsg
+                    ? "Akun ini telah dinonaktifkan. Hubungi administrator."
+                    : "Username atau password salah. Silakan coba lagi.";
+                errorMessage.classList.add("show");
+
+                document.querySelectorAll(".form-input").forEach(input => {
+                    input.style.borderColor = "rgba(239,68,68,0.5)";
+                    input.style.animation = "none";
+                    setTimeout(() => { input.style.animation = "shakeError 0.4s ease"; }, 10);
                 });
-
-                // Reset animation
                 setTimeout(() => {
-                    inputs.forEach(input => {
-                        input.style.animation = '';
-                        input.style.borderColor = '';
+                    document.querySelectorAll(".form-input").forEach(input => {
+                        input.style.animation = ""; input.style.borderColor = "";
                     });
                 }, 400);
             }
         });
 
-        // ===== PREVENT BACK BUTTON AFTER LOGIN =====
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'dashboard.html';
-        }
-
-        // ===== KEYBOARD SHORTCUTS =====
-        document.addEventListener('keydown', (e) => {
-            // Focus username on Ctrl + U
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                document.getElementById('username').focus();
-            }
-            
-            // Focus password on Ctrl + P
-            if (e.ctrlKey && e.key === 'p') {
-                e.preventDefault();
-                document.getElementById('password').focus();
-            }
-        });
-
-        // ===== AUTO-FOCUS FIRST INPUT =====
-        window.addEventListener('load', () => {
-            document.getElementById('username').focus();
-        });
+        window.addEventListener("load", () => { document.getElementById("username").focus(); });
     </script>
-
 </body>
 </html>
