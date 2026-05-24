@@ -199,6 +199,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="animated-bg">
@@ -430,26 +431,27 @@
             const user = findUser(username, password);
 
             if (user) {
+            if (user) {
                 // Tampilkan role preview
                 const roleName = ROLE_LABELS[user.role] || user.role;
                 rolePreviewText.textContent = `Masuk sebagai ${roleName} · ${user.nama || username}`;
                 rolePreview.classList.add("show");
-
+            
                 btnText.textContent = "✓ Login Berhasil!";
                 btnText.style.display = "";
                 btnLoader.style.display = "none";
                 loginBtn.classList.add("success");
-
-                // Simpan session
+            
+                // Simpan session — nama LENGKAP (bukan hanya nama depan)
                 const displayName = user.nama
-                    ? user.nama.split(" ")[0]   // Ambil nama depan
-                    : username.charAt(0).toUpperCase() + username.slice(1);
-
+                ? user.nama
+                : username.charAt(0).toUpperCase() + username.slice(1);
+            
                 localStorage.setItem("isLoggedIn", "true");
                 localStorage.setItem("loggedUser", displayName);
                 localStorage.setItem("loggedRole", user.role);
-
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
+            
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 900);}
             } else {
                 btnText.style.display = "";
                 btnLoader.style.display = "none";
