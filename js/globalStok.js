@@ -1,39 +1,86 @@
-// ===== AUTH CHECK =====
+"use strict";
+
+// ============================================================
+// ===== AUTH CHECK ===========================================
+// ============================================================
 if (!localStorage.getItem("isLoggedIn")) {
   window.location.href = "login.html";
 }
 
-// ===== USER INFO =====
-var loggedUser = localStorage.getItem("loggedUser") || "Admin";
+// ============================================================
+// ===== USER & ROLE SETUP ====================================
+// ============================================================
+const loggedUser = localStorage.getItem("loggedUser") || "Admin";
+const loggedRole = localStorage.getItem("loggedRole") || "owner";
+
+const ROLE_LABELS = {
+  owner: "Owner",
+  admin: "Administrator",
+  kepala_toko: "Kepala Toko",
+  kasir: "Kasir",
+  gudang: "Staf Gudang",
+};
+const ROLE_CLASSES = {
+  owner: "role-owner",
+  admin: "role-admin",
+  kepala_toko: "role-kepala",
+  kasir: "role-kasir",
+  gudang: "role-gudang",
+};
+
 document.getElementById("sidebarUsername").textContent = loggedUser;
 document.getElementById("sidebarAvatar").textContent = loggedUser
   .charAt(0)
   .toUpperCase();
+document.getElementById("navAvatar").textContent = loggedUser
+  .charAt(0)
+  .toUpperCase();
+document.getElementById("navAvatar").title = loggedUser;
 
-// ===== SIDEBAR =====
-var sidebar = document.getElementById("sidebar");
-var overlay = document.getElementById("sidebarOverlay");
+const roleLabel = ROLE_LABELS[loggedRole] || loggedRole;
+const roleClass = ROLE_CLASSES[loggedRole] || "role-admin";
+const sidebarRole = document.getElementById("sidebarRole");
+if (sidebarRole) {
+  sidebarRole.innerHTML = `<span class="role-badge ${roleClass}">${roleLabel}</span>`;
+}
+
+// Tampilkan menu admin hanya untuk owner & admin
+const menuUserMgmt = document.getElementById("menuUserMgmt");
+if (menuUserMgmt && (loggedRole === "owner" || loggedRole === "admin")) {
+  menuUserMgmt.style.display = "";
+}
+
+// ============================================================
+// ===== SIDEBAR TOGGLE =======================================
+// ============================================================
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+
 document.getElementById("hamburger").addEventListener("click", function () {
   sidebar.classList.add("open");
   overlay.classList.add("active");
 });
 document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
 overlay.addEventListener("click", closeSidebar);
+
 function closeSidebar() {
   sidebar.classList.remove("open");
   overlay.classList.remove("active");
 }
 
-// ===== LOGOUT =====
+// ============================================================
+// ===== LOGOUT ===============================================
+// ============================================================
 document.getElementById("logoutBtn").addEventListener("click", function () {
   localStorage.removeItem("isLoggedIn");
   localStorage.removeItem("loggedUser");
+  localStorage.removeItem("loggedRole");
   window.location.href = "login.html";
 });
 
-// ========================================================
-// ===== CUSTOM RANGE STATE ================================
-// ========================================================
+// ============================================================
+// ===== CUSTOM RANGE STATE ===================================
+// ============================================================
 var customRangeActive = false;
 var customRangeFrom = null;
 var customRangeTo = null;
@@ -101,9 +148,9 @@ rangeBadge.addEventListener("click", function () {
   applyFilterAndRender();
 });
 
-// ========================================================
-// ===== DATE RANGE HELPER =================================
-// ========================================================
+// ============================================================
+// ===== DATE RANGE HELPER ====================================
+// ============================================================
 function getDateRange(filter) {
   var now = new Date();
   var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -151,7 +198,7 @@ function getDateRange(filter) {
         return { from: customRangeFrom, to: customRangeTo };
       return null;
     default:
-      return null; // all time
+      return null;
   }
 }
 
@@ -161,22 +208,16 @@ function isInRange(tanggalStr, range) {
   return d >= range.from && d <= range.to;
 }
 
-// ========================================================
-// ===== STATE & LOAD DATA =================================
-// ========================================================
+// ============================================================
+// ===== DATA LOADING =========================================
+// ============================================================
 var allRows = [];
 
-/**
- * Membaca langsung dari localStorage key 'invoices'
- * (key yang dipakai inputBarang.js dan invoice.js)
- */
 function loadGlobalStok() {
   var invoices = {};
   try {
     invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  } catch (e) {
-    invoices = {};
-  }
+  } catch (e) {}
 
   allRows = [];
 
@@ -184,18 +225,18 @@ function loadGlobalStok() {
     if (!inv.items || inv.items.length === 0) return;
     inv.items.forEach(function (item) {
       allRows.push({
-        invoice: inv.invoice || "-",
+        invoice: inv.invoice || "—",
         tanggal: inv.tanggal || "",
-        supplier: inv.supplier || "-",
-        sku: item.sku || "-",
-        nama: item.nama || "-",
-        merk: item.merk || "-",
-        kategori: item.kategori || "-",
-        expired: item.expired || "-",
+        supplier: inv.supplier || "—",
+        sku: item.sku || "—",
+        nama: item.nama || "—",
+        merk: item.merk || "—",
+        kategori: item.kategori || "—",
+        expired: item.expired || "—",
         stok: item.stok || 0,
         hpp: item.hargaHPP || 0,
         jual: item.hargaJual || 0,
-        lokasi: item.lokasi || "-",
+        lokasi: item.lokasi || "—",
       });
     });
   });
@@ -203,9 +244,9 @@ function loadGlobalStok() {
   applyFilterAndRender();
 }
 
-// ========================================================
-// ===== FILTER + SEARCH + RENDER ==========================
-// ========================================================
+// ============================================================
+// ===== FILTER + SEARCH + RENDER =============================
+// ============================================================
 function applyFilterAndRender() {
   var filter = filterWaktuEl.value;
   var keyword = document
@@ -232,28 +273,50 @@ function applyFilterAndRender() {
     });
   }
 
+  updateSummary(filtered);
   renderRows(filtered);
 }
 
-// ========================================================
-// ===== RENDER ROWS =======================================
-// ========================================================
+// ============================================================
+// ===== UPDATE SUMMARY STRIP =================================
+// ============================================================
+function updateSummary(rows) {
+  var totalQty = rows.reduce(function (s, r) {
+    return s + (parseInt(r.stok) || 0);
+  }, 0);
+  var invoiceSet = new Set(
+    rows.map(function (r) {
+      return r.invoice;
+    }),
+  );
+  var kategoriSet = new Set(
+    rows.map(function (r) {
+      return r.kategori;
+    }),
+  );
+
+  document.getElementById("statTotalBarang").textContent = rows.length;
+  document.getElementById("statTotalQty").textContent = totalQty;
+  document.getElementById("statKategori").textContent = kategoriSet.size;
+  document.getElementById("statInvoice").textContent = invoiceSet.size;
+}
+
+// ============================================================
+// ===== RENDER ROWS ==========================================
+// ============================================================
 function renderRows(rows) {
   var tbody = document.getElementById("globalTableBody");
   tbody.innerHTML = "";
 
   if (rows.length === 0) {
     tbody.innerHTML =
-      '<tr class="empty-row"><td colspan="11">Tidak ada data yang cocok</td></tr>';
+      '<tr class="empty-row"><td colspan="11">Tidak ada data yang cocok dengan filter ini</td></tr>';
     return;
   }
 
   rows.forEach(function (r, idx) {
-    // ===== EXPIRED STATUS =====
     var expiredClass = "";
-    var expiredText = r.expired;
-
-    if (r.expired && r.expired !== "-") {
+    if (r.expired && r.expired !== "—" && r.expired !== "-") {
       var todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
       var expDate = new Date(r.expired);
@@ -267,7 +330,6 @@ function renderRows(rows) {
     }
 
     var tr = document.createElement("tr");
-
     tr.innerHTML =
       "<td>" +
       (idx + 1) +
@@ -277,12 +339,12 @@ function renderRows(rows) {
       '" class="invoice-link">' +
       r.invoice +
       "</a></td>" +
-      '<td><button class="sku-btn">' +
+      '<td><button class="sku-btn"><i class="bx bx-barcode" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>' +
       r.sku +
       "</button></td>" +
-      "<td>" +
+      "<td style='text-align:left;color:var(--text)'><strong>" +
       r.nama +
-      "</td>" +
+      "</strong></td>" +
       "<td>" +
       r.merk +
       "</td>" +
@@ -294,46 +356,44 @@ function renderRows(rows) {
         ? '<span class="expired-badge ' +
           expiredClass +
           '">' +
-          expiredText +
+          r.expired +
           "</span>"
-        : '<span style="color:#aaa">—</span>') +
+        : '<span style="color:var(--text3)">—</span>') +
       "</td>" +
-      "<td>" +
+      "<td><strong style='color:var(--text)'>" +
       r.stok +
-      "</td>" +
-      "<td>Rp " +
+      "</strong></td>" +
+      '<td style="color:var(--success);font-family:var(--font-mono);font-size:12px">Rp ' +
       Number(r.hpp).toLocaleString("id-ID") +
       "</td>" +
-      "<td>Rp " +
+      '<td style="color:var(--brand);font-family:var(--font-mono);font-size:12px">Rp ' +
       Number(r.jual).toLocaleString("id-ID") +
       "</td>" +
       "<td>" +
       r.lokasi +
       "</td>";
 
-    // Klik SKU → popup barcode
     tr.querySelector(".sku-btn").addEventListener("click", function () {
       showBarcodePopup(r);
     });
-
     tbody.appendChild(tr);
   });
 }
 
-// ========================================================
-// ===== FILTER & SEARCH EVENTS ============================
-// ========================================================
+// ============================================================
+// ===== FILTER & SEARCH EVENTS ===============================
+// ============================================================
 filterWaktuEl.addEventListener("change", function () {
   if (filterWaktuEl.value !== "custom") applyFilterAndRender();
 });
 
-document.getElementById("searchInput").addEventListener("input", function () {
-  applyFilterAndRender();
-});
+document
+  .getElementById("searchInput")
+  .addEventListener("input", applyFilterAndRender);
 
-// ========================================================
-// ===== BARCODE POPUP =====================================
-// ========================================================
+// ============================================================
+// ===== BARCODE POPUP ========================================
+// ============================================================
 var barcodeOverlay = document.getElementById("barcodeOverlay");
 var currentBarcodeItem = null;
 
@@ -375,7 +435,7 @@ barcodeOverlay.addEventListener("click", function (e) {
   }
 });
 
-// ===== DOWNLOAD PNG =====
+// ===== Download PNG =====
 document
   .getElementById("btnDownloadBarcode")
   .addEventListener("click", function () {
@@ -401,7 +461,7 @@ document
       btoa(unescape(encodeURIComponent(svgData)));
   });
 
-// ===== PRINT =====
+// ===== Print =====
 document
   .getElementById("btnPrintBarcode")
   .addEventListener("click", function () {
@@ -414,34 +474,32 @@ document
       "<!DOCTYPE html><html><head><title>Print Barcode — " +
         item.sku +
         "</title>" +
-        '<style>body{margin:0;padding:24px;font-family:"Poppins",sans-serif;display:flex;flex-direction:column;align-items:center;}' +
-        ".print-nama{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px;}" +
-        ".print-meta{font-size:12px;color:#555;text-align:center;margin-bottom:12px;}" +
-        "img{max-width:320px;}@media print{body{padding:8px;}}" +
-        "</style></head><body>" +
-        '<div class="print-nama">' +
+        '<style>body{margin:0;padding:24px;font-family:"DM Sans",sans-serif;display:flex;flex-direction:column;align-items:center}' +
+        ".n{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px}" +
+        ".m{font-size:12px;color:#555;text-align:center;margin-bottom:12px}" +
+        "img{max-width:320px}@media print{body{padding:8px}}</style></head><body>" +
+        '<div class="n">' +
         item.nama +
         "</div>" +
-        '<div class="print-meta">SKU: ' +
+        '<div class="m">SKU: ' +
         item.sku +
         "</div>" +
         '<img src="data:image/svg+xml;base64,' +
         btoa(unescape(encodeURIComponent(svgStr))) +
         '" />' +
-        "<script>window.onload=function(){window.print();window.close();}<\/script>" +
-        "</body></html>",
+        "<script>window.onload=function(){window.print();window.close();}<\/script></body></html>",
     );
     win.document.close();
   });
 
-// ========================================================
-// ===== AUTO-REFRESH saat tab/window kembali aktif ========
-// ========================================================
+// ============================================================
+// ===== AUTO-REFRESH SAAT TAB KEMBALI AKTIF ==================
+// ============================================================
 window.addEventListener("focus", function () {
   loadGlobalStok();
 });
 
-// ========================================================
-// ===== INIT ==============================================
-// ========================================================
+// ============================================================
+// ===== INIT =================================================
+// ============================================================
 loadGlobalStok();

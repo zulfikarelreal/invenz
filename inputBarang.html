@@ -11,6 +11,162 @@
     <title>Input Barang | Invenz</title>
 
     <style>
+        /* ===== SIDEBAR — match userManagement dark navy theme ===== */
+        .sidebar {
+            background: #111827 !important;
+            border-right: 1px solid rgba(0,229,229,0.12) !important;
+            box-shadow: none !important;
+        }
+
+        /* Header */
+        .sidebar-header {
+            background: rgba(0,229,229,0.06) !important;
+            border-bottom: 1px solid rgba(0,229,229,0.12) !important;
+            height: 52px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 18px !important;
+        }
+
+        /* Brand */
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+        .sidebar-brand-dot {
+            width: 28px; height: 28px;
+            border-radius: 7px;
+            background: #00e5e5;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800;
+            color: #0a0f1e;
+        }
+        .sidebar-brand-text {
+            font-weight: 800;
+            font-size: 15px;
+            color: #e8f4ff;
+            letter-spacing: 2px;
+        }
+
+        /* Close icon */
+        .sidebar .sidebar-close {
+            font-size: 22px !important;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        .sidebar .sidebar-close:hover { color: #e8f4ff; }
+
+        /* User block */
+        .sidebar-user {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 18px !important;
+            border-bottom: 1px solid rgba(0,229,229,0.12) !important;
+        }
+        .sidebar-avatar {
+            width: 38px !important; height: 38px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #00e5e5, #1e40af) !important;
+            display: flex !important; align-items: center !important; justify-content: center !important;
+            color: #0a0f1e !important;
+            font-weight: 800 !important; font-size: 16px !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .sidebar-username {
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            color: #e8f4ff !important;
+            display: block !important;
+        }
+        .sidebar-role {
+            font-size: 11px !important;
+            color: #00e5e5 !important;
+            margin-top: 1px !important;
+            display: block !important;
+        }
+
+        /* Section label */
+        .sidebar-section-label {
+            padding: 14px 18px 5px !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            letter-spacing: 2px !important;
+            color: #4a5568 !important;
+            text-transform: uppercase !important;
+        }
+
+        /* Menu items */
+        .sidebar-menu li a {
+            color: #94a3b8 !important;
+            border-left: 2px solid transparent !important;
+            border-radius: 8px !important;
+        }
+        .sidebar-menu li a:hover {
+            background: rgba(0,229,229,0.07) !important;
+            color: #e8f4ff !important;
+        }
+        .sidebar-menu li a.active {
+            background: rgba(0,229,229,0.1) !important;
+            border-left-color: #00e5e5 !important;
+            color: #00e5e5 !important;
+        }
+
+        /* Role badges */
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            border: 1px solid;
+        }
+        .role-owner   { background: rgba(251,191,36,.15); color: #fbbf24; border-color: rgba(251,191,36,.35); }
+        .role-admin   { background: rgba(0,229,229,.12);  color: #00e5e5; border-color: rgba(0,229,229,.3); }
+        .role-kepala  { background: rgba(139,92,246,.15); color: #a78bfa; border-color: rgba(139,92,246,.35); }
+        .role-kasir   { background: rgba(16,217,154,.12); color: #10d99a; border-color: rgba(16,217,154,.3); }
+        .role-gudang  { background: rgba(245,158,11,.12); color: #f59e0b; border-color: rgba(245,158,11,.3); }
+
+        /* Menu admin badge */
+        .menu-badge-admin {
+            margin-left: auto;
+            font-size: 9px; font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 20px;
+            background: #00e5e5;
+            color: #0a0f1e;
+        }
+
+        /* Footer */
+        .sidebar-footer {
+            margin-top: auto !important;
+            padding: 14px 10px !important;
+            border-top: 1px solid rgba(0,229,229,0.12) !important;
+        }
+        .btn-logout {
+            background: rgba(239,68,68,.12) !important;
+            color: #ef4444 !important;
+            border: 1px solid rgba(239,68,68,.25) !important;
+            box-shadow: none !important;
+        }
+        .btn-logout:hover {
+            background: #ef4444 !important;
+            color: #fff !important;
+            border-color: #ef4444 !important;
+            transform: none !important;
+        }
+
+        /* Sidebar overlay */
+        .sidebar-overlay {
+            background: rgba(0,0,0,.6) !important;
+            backdrop-filter: blur(4px) !important;
+        }
+
         /* ===== CUSTOM DROPDOWN DARK OVERRIDE ===== */
         .cd-input-row {
             background: #161B30;
@@ -53,35 +209,6 @@
         .summary-item:nth-child(5) .summary-val { color: #FBBC05; }
         .summary-item:last-child .summary-val { color: #10D99A; }
 
-        /* ===== ROLE BADGE on sidebar ===== */
-        .role-badge-wrap {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        .role-owner    { background: rgba(251,188,5,0.12); color: #FBBC05; }
-        .role-admin    { background: rgba(79,142,247,0.12); color: #4F8EF7; }
-        .role-kepala   { background: rgba(167,139,250,0.12); color: #A78BFA; }
-        .role-kasir    { background: rgba(16,217,154,0.12); color: #10D99A; }
-        .role-gudang   { background: rgba(251,188,5,0.12); color: #FBBC05; }
-
-        /* Sidebar section label */
-        .sidebar-section-label {
-            padding: 14px 18px 5px;
-            font-size: 9px;
-            font-weight: 500;
-            letter-spacing: 2px;
-            color: #4D5A80;
-            text-transform: uppercase;
-            font-family: 'DM Mono', monospace;
-        }
-
         /* ===== SUMMARY STRIP TOP ACCENT ===== */
         .summary-strip::before {
             content: '';
@@ -110,30 +237,50 @@
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Sidebar -->
+    <!-- ===== SIDEBAR — sesuai userManagement.html ===== -->
     <div class="sidebar" id="sidebar">
+
+        <!-- Header / Brand -->
         <div class="sidebar-header">
-            <span>INVENZ</span>
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-dot">I</div>
+                <span class="sidebar-brand-text">INVENZ</span>
+            </div>
             <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
         </div>
+
+        <!-- User Info -->
         <div class="sidebar-user">
             <div class="sidebar-avatar" id="sidebarAvatar">A</div>
             <div>
-                <div class="sidebar-username" id="sidebarUsername">Admin</div>
-                <div class="sidebar-role">Operator Inventori</div>
+                <span class="sidebar-username" id="sidebarUsername">Admin</span>
+                <span class="sidebar-role" id="sidebarRole">Administrator</span>
             </div>
         </div>
 
+        <!-- Navigasi -->
         <div class="sidebar-section-label">— Navigasi</div>
         <ul class="sidebar-menu">
             <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
             <li><a href="inputBarang.html" class="active"><i class="bx bx-package"></i> Input Barang</a></li>
-            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="globalStok.html"><i class="bx bx-list-ul"></i> Global Stok</a></li>
             <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
             <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
             <li><a href="laporan.html"><i class="bx bx-bar-chart-alt-2"></i> Laporan</a></li>
         </ul>
 
+        <!-- Admin -->
+        <div class="sidebar-section-label" id="adminSectionLabel" style="display:none">— Admin</div>
+        <ul class="sidebar-menu" id="adminMenu" style="display:none">
+            <li>
+                <a href="userManagement.html">
+                    <i class="bx bx-shield-alt-2"></i> Manajemen Akun
+                    <span class="menu-badge-admin">Admin</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Footer / Logout -->
         <div class="sidebar-footer">
             <button class="btn-logout" id="logoutBtn">
                 <i class="bx bx-log-out"></i> Logout
@@ -171,7 +318,6 @@
             </select>
         </div>
 
-        <!-- Custom date range panel -->
         <div class="custom-range-panel" id="customRangePanel">
             <label>Dari</label>
             <input type="date" id="customFrom">
@@ -181,7 +327,6 @@
             <button class="btn-apply-range" id="btnApplyRange">Terapkan</button>
         </div>
 
-        <!-- Badge custom range aktif -->
         <div class="range-badge" id="rangeBadge" title="Klik untuk hapus filter custom">
             <i class="bx bx-calendar"></i>
             <span id="rangeBadgeText">-</span>
@@ -195,7 +340,7 @@
         </button>
     </div>
 
-    <!-- Summary Strip — 4 stat -->
+    <!-- Summary Strip -->
     <div class="summary-strip" id="summaryStrip">
         <div class="summary-item">
             <span class="summary-label">Total Transaksi</span>
@@ -366,6 +511,32 @@
 
     <script src="js/auth.js"></script>
     <script src="js/customDropdown.js"></script>
+
+    <!-- ===== SIDEBAR ROLE & ADMIN MENU SETUP ===== -->
+    <script>
+    (function() {
+        const role = localStorage.getItem("loggedRole") || "owner";
+        const ROLE_LABELS = {
+            owner: "Owner", admin: "Administrator",
+            kepala_toko: "Kepala Toko", kasir: "Kasir", gudang: "Staf Gudang"
+        };
+        const ROLE_CLASSES = {
+            owner: "role-owner", admin: "role-admin",
+            kepala_toko: "role-kepala", kasir: "role-kasir", gudang: "role-gudang"
+        };
+        const roleEl = document.getElementById("sidebarRole");
+        if (roleEl) {
+            roleEl.innerHTML = `<span class="role-badge ${ROLE_CLASSES[role] || 'role-admin'}">${ROLE_LABELS[role] || role}</span>`;
+        }
+        if (role === "owner" || role === "admin") {
+            const sec = document.getElementById("adminSectionLabel");
+            const menu = document.getElementById("adminMenu");
+            if (sec) sec.style.display = "";
+            if (menu) menu.style.display = "";
+        }
+    })();
+    </script>
+
     <script src="js/inputBarang.js"></script>
 </body>
 </html>
