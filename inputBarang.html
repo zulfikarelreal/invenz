@@ -7,126 +7,110 @@
     <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <title>Input Barang | Invenz</title>
 
     <style>
-        /* ===== CUSTOM DATE RANGE PANEL ===== */
-        .custom-range-panel {
-            display: none;
+        /* ===== CUSTOM DROPDOWN DARK OVERRIDE ===== */
+        .cd-input-row {
+            background: #161B30;
+            border-color: rgba(255,255,255,0.12);
+        }
+        .cd-input {
+            background: transparent;
+            color: #E8ECFF;
+            font-size: 13px;
+        }
+        .cd-input::placeholder { color: #4D5A80; }
+        .cd-arrow { color: #8B97C2; }
+        .cd-wrapper.open .cd-input-row {
+            border-color: #4F8EF7;
+            background: #1F2644;
+        }
+        .cd-wrapper.open .cd-arrow { color: #4F8EF7; }
+        .cd-dropdown {
+            background: #1A2038;
+            border-color: #4F8EF7;
+            border-top: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .cd-search-box {
+            background: #111527;
+            border-bottom-color: rgba(255,255,255,0.07);
+        }
+        .cd-search { color: #E8ECFF; }
+        .cd-search::placeholder { color: #4D5A80; }
+        .cd-list li { color: #8B97C2; border-left-color: transparent; }
+        .cd-list li:hover { background: #1F2644; border-left-color: #4F8EF7; color: #4F8EF7; }
+        .cd-list li.selected { background: #242B4A; border-left-color: #4F8EF7; color: #4F8EF7; }
+        .cd-empty, .cd-no-result { color: #4D5A80; }
+        .cd-list::-webkit-scrollbar-track { background: #1A2038; }
+        .cd-list::-webkit-scrollbar-thumb { background: #242B4A; }
+
+        /* ===== STAT CARD HOVER ACCENT ===== */
+        .summary-item:first-child .summary-val { color: #4F8EF7; }
+        .summary-item:nth-child(3) .summary-val { color: #00E5C4; }
+        .summary-item:nth-child(5) .summary-val { color: #FBBC05; }
+        .summary-item:last-child .summary-val { color: #10D99A; }
+
+        /* ===== ROLE BADGE on sidebar ===== */
+        .role-badge-wrap {
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-            background: white;
-            border: 1px solid #111;
-            border-radius: 8px;
-            box-shadow: 2px 3px 0 0 #111;
-            padding: 6px 10px;
-        }
-        .custom-range-panel.visible { display: flex; }
-
-        .custom-range-panel label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #555;
-            white-space: nowrap;
-        }
-
-        .custom-range-panel input[type="date"] {
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #aaa;
-            font-size: 12px;
-            font-family: "Poppins", sans-serif;
-            background: rgb(229,229,229);
-            outline: none;
-            cursor: pointer;
-        }
-        .custom-range-panel input[type="date"]:focus {
-            border-color: rgb(16,44,168);
-            background: #e8f0ff;
-        }
-
-        .range-sep { font-size: 13px; color: #888; font-weight: 600; }
-
-        .btn-apply-range {
-            padding: 4px 12px;
-            font-size: 11px;
-            font-weight: 700;
-            background: rgb(16,44,168);
-            color: white;
-            border: 1px solid #111;
-            border-radius: 6px;
-            box-shadow: 2px 2px 0 0 #111;
-            cursor: pointer;
-            font-family: "Poppins", sans-serif;
-            transition: transform 0.1s;
-            white-space: nowrap;
-        }
-        .btn-apply-range:hover { transform: scale(0.93); }
-
-        /* Badge rentang aktif */
-        .range-badge {
-            display: none;
-            align-items: center;
-            gap: 5px;
-            background: #dce8ff;
-            border: 1px solid rgb(16,44,168);
+            gap: 4px;
+            padding: 2px 8px;
             border-radius: 20px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            color: rgb(16,44,168);
-            cursor: pointer;
-        }
-        .range-badge.visible { display: flex; }
-        .range-badge i { font-size: 13px !important; }
-
-        /* ===== SUMMARY STRIP — 4 kolom ===== */
-        .summary-strip {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            width: 90%;
-            background: white;
-            border: 1px solid #111;
-            border-radius: 10px;
-            box-shadow: 3px 4px 0 0 #111;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .summary-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px 12px;
-            gap: 2px;
-        }
-        .summary-label {
             font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             font-weight: 600;
-            color: #888;
-            text-align: center;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
-        .summary-val {
-            font-size: 18px;
-            font-weight: 800;
-            color: rgb(16,44,168);
+        .role-owner    { background: rgba(251,188,5,0.12); color: #FBBC05; }
+        .role-admin    { background: rgba(79,142,247,0.12); color: #4F8EF7; }
+        .role-kepala   { background: rgba(167,139,250,0.12); color: #A78BFA; }
+        .role-kasir    { background: rgba(16,217,154,0.12); color: #10D99A; }
+        .role-gudang   { background: rgba(251,188,5,0.12); color: #FBBC05; }
+
+        /* Sidebar section label */
+        .sidebar-section-label {
+            padding: 14px 18px 5px;
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #4D5A80;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
         }
-        .summary-divider {
-            width: 1px;
-            height: 40px;
-            background: #eee;
-            flex-shrink: 0;
+
+        /* ===== SUMMARY STRIP TOP ACCENT ===== */
+        .summary-strip::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4F8EF7, #00E5C4, #FBBC05, #10D99A);
+            border-radius: 12px 12px 0 0;
         }
+
+        /* ===== TABLE ROW NUMBER ===== */
+        td:first-child { color: #4D5A80; font-family: 'DM Mono', monospace; font-size: 11px; }
+
+        /* ===== ENTRANCE ANIMATIONS ===== */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .nav-controll { animation: fadeUp 0.4s ease both; }
+        .summary-strip { animation: fadeUp 0.4s 0.08s ease both; }
+        .container { animation: fadeUp 0.4s 0.14s ease both; }
     </style>
 </head>
 <body>
 
+    <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>INVENZ</span>
@@ -139,13 +123,17 @@
                 <div class="sidebar-role">Operator Inventori</div>
             </div>
         </div>
+
+        <div class="sidebar-section-label">— Navigasi</div>
         <ul class="sidebar-menu">
             <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
             <li><a href="inputBarang.html" class="active"><i class="bx bx-package"></i> Input Barang</a></li>
             <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
             <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
             <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+            <li><a href="laporan.html"><i class="bx bx-bar-chart-alt-2"></i> Laporan</a></li>
         </ul>
+
         <div class="sidebar-footer">
             <button class="btn-logout" id="logoutBtn">
                 <i class="bx bx-log-out"></i> Logout
@@ -153,6 +141,7 @@
         </div>
     </div>
 
+    <!-- Navbar -->
     <div class="navbar">
         <i class="bx bx-menu hamburger" id="hamburger"></i>
         <div class="title">
@@ -189,9 +178,7 @@
             <span class="range-sep">—</span>
             <label>Sampai</label>
             <input type="date" id="customTo">
-            <button class="btn-apply-range" id="btnApplyRange">
-                <i class="bx bx-check"></i> Terapkan
-            </button>
+            <button class="btn-apply-range" id="btnApplyRange">Terapkan</button>
         </div>
 
         <!-- Badge custom range aktif -->
@@ -202,6 +189,7 @@
         </div>
 
         <p class="hint-text">* klik invoice untuk menambah barang</p>
+
         <button class="inputbarang-btn" id="openModalBtn">
             <i class="bx bx-plus"></i> Input Invoice
         </button>
@@ -219,7 +207,6 @@
             <span class="summary-val" id="sumBarang">0</span>
         </div>
         <div class="summary-divider"></div>
-        <!-- ✅ BARU: Total Jenis Barang -->
         <div class="summary-item">
             <span class="summary-label">Jenis Barang</span>
             <span class="summary-val" id="sumJenis">0</span>
@@ -231,6 +218,7 @@
         </div>
     </div>
 
+    <!-- Table -->
     <div class="container">
         <table>
             <thead>
@@ -246,7 +234,7 @@
             </thead>
             <tbody id="tableBody">
                 <tr class="empty-row">
-                    <td colspan="7">Belum ada data — klik "Input Barang" untuk menambah</td>
+                    <td colspan="7">Belum ada data — klik "Input Invoice" untuk menambah</td>
                 </tr>
             </tbody>
         </table>
@@ -325,7 +313,7 @@
                     <div class="scan-result" id="scanResult" style="display:none">
                         <i class="bx bx-check-circle"></i>
                         <div>
-                            <span class="scan-result-label">Hasil Scan:</span>
+                            <span class="scan-result-label">Hasil Scan</span>
                             <span class="scan-result-val" id="scanResultVal">—</span>
                         </div>
                         <button class="btn-use-scan" id="btnUseScan">Gunakan</button>
