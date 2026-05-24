@@ -186,7 +186,7 @@ function renderTable(filterRole = "all", filterSearch = "") {
               <i class="bx bx-edit"></i>
             </button>
             <button class="btn-action btn-pass-user" onclick="openPassModal('${u.id}')" title="Ganti password">
-              <i class="bx bx-lock-alt"></i>
+              <i class="bx bx-key"></i>
             </button>
             ${
               canDelete
@@ -213,6 +213,10 @@ function updateStats(users) {
   if (el("statOwner"))
     el("statOwner").textContent = users.filter(
       (u) => u.role === "owner",
+    ).length;
+  if (el("statAdmin"))
+    el("statAdmin").textContent = users.filter(
+      (u) => u.role === "admin",
     ).length;
   if (el("statKepala"))
     el("statKepala").textContent = users.filter(
