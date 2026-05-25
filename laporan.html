@@ -4,30 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/laporan.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    <!-- SheetJS for Excel export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <title>Laporan | Invenz</title>
 </head>
 <body>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <span>INVENZ</span>
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-dot">I</div>
+                <span class="sidebar-brand-text">INVENZ</span>
+            </div>
             <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
         </div>
+
         <div class="sidebar-user">
             <div class="sidebar-avatar" id="sidebarAvatar">A</div>
             <div>
-                <div class="sidebar-username" id="sidebarUsername">Admin</div>
-                <div class="sidebar-role">Operator Inventori</div>
+                <span class="sidebar-username" id="sidebarUsername">Admin</span>
+                <span class="sidebar-role" id="sidebarRole">Administrator</span>
             </div>
         </div>
+
+        <div class="sidebar-section-label">— Navigasi</div>
         <ul class="sidebar-menu">
             <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
             <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
@@ -36,6 +43,17 @@
             <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
             <li><a href="laporan.html" class="active"><i class="bx bx-bar-chart-alt-2"></i> Laporan</a></li>
         </ul>
+
+        <div class="sidebar-section-label" id="adminSectionLabel" style="display:none">— Admin</div>
+        <ul class="sidebar-menu" id="adminMenu" style="display:none">
+            <li>
+                <a href="userManagement.html">
+                    <i class="bx bx-shield-alt-2"></i> Manajemen Akun
+                    <span class="menu-badge">Admin</span>
+                </a>
+            </li>
+        </ul>
+
         <div class="sidebar-footer">
             <button class="btn-logout" id="logoutBtn">
                 <i class="bx bx-log-out"></i> Logout
@@ -54,7 +72,6 @@
     </div>
 
     <!-- ===== MAIN ===== -->
-    <!-- Memberikan id 'reportContent' agar mempermudah JavaScript menyalin seluruh isi laporan ke print area -->
     <div class="main" id="reportContent">
 
         <!-- ===== FILTER BAR ===== -->
@@ -77,7 +94,6 @@
                 </select>
             </div>
 
-            <!-- Custom date range -->
             <div class="custom-range-panel" id="customRangePanel">
                 <label>Dari</label>
                 <input type="date" id="customFrom">
@@ -89,15 +105,13 @@
                 </button>
             </div>
 
-            <!-- Active range badge -->
             <div class="range-badge" id="rangeBadge" title="Klik untuk reset">
                 <i class="bx bx-calendar"></i>
                 <span id="rangeBadgeText"></span>
                 <i class="bx bx-x"></i>
             </div>
 
-            <!-- Export buttons -->
-            <div class="export-group">
+            <div class="export-group" id="exportGroup">
                 <button class="btn-export btn-excel" id="btnExportExcel" title="Export ke Excel">
                     <i class="bx bx-table"></i> Excel
                 </button>
@@ -110,13 +124,19 @@
             </div>
         </div>
 
+        <!-- Access warning untuk role kasir (read-only) -->
+        <div class="access-restricted hidden" id="accessBanner">
+            <i class="bx bx-info-circle"></i>
+            <span id="accessBannerText">Anda melihat laporan dalam mode read-only.</span>
+        </div>
+
         <!-- ===== PERIOD LABEL ===== -->
         <div class="period-label" id="periodLabel">
             <i class="bx bx-calendar-check"></i>
             <span id="periodText">Bulan Ini</span>
         </div>
 
-        <!-- ===== SECTION: NERACA KEUANGAN ===== -->
+        <!-- ===== NERACA KEUANGAN ===== -->
         <div class="section-title"><i class="bx bx-dollar-circle"></i> Neraca Keuangan</div>
         <div class="kpi-grid" id="kpiGrid">
             <div class="kpi-card kpi-revenue">
@@ -153,7 +173,7 @@
             </div>
         </div>
 
-        <!-- ===== SECTION: RINGKASAN INVENTORI ===== -->
+        <!-- ===== RINGKASAN INVENTORI ===== -->
         <div class="section-title"><i class="bx bx-package"></i> Ringkasan Inventori & Transaksi</div>
         <div class="inv-grid">
             <div class="inv-card inv-masuk">
@@ -206,16 +226,16 @@
             </div>
         </div>
 
-        <!-- ===== GRAFIK ROW 1 ===== -->
+        <!-- ===== GRAFIK PENJUALAN ===== -->
         <div class="section-title"><i class="bx bx-bar-chart"></i> Grafik Penjualan & Revenue</div>
         <div class="charts-row">
             <div class="chart-card chart-wide">
                 <div class="chart-header">
                     <h4><i class="bx bx-line-chart"></i> Grafik Revenue & HPP</h4>
                     <div class="chart-legend">
-                        <span class="legend-dot" style="background:#10B981"></span> Revenue
-                        <span class="legend-dot" style="background:#F59E0B"></span> HPP
-                        <span class="legend-dot" style="background:#3B82F6"></span> Profit
+                        <span class="legend-dot" style="background:#10D99A"></span> Revenue
+                        <span class="legend-dot" style="background:#FBBC05"></span> HPP
+                        <span class="legend-dot" style="background:#4F8EF7"></span> Profit
                     </div>
                 </div>
                 <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
@@ -234,7 +254,7 @@
             </div>
         </div>
 
-        <!-- ===== GRAFIK ROW 2 ===== -->
+        <!-- ===== GRAFIK MASUK KELUAR ===== -->
         <div class="section-title"><i class="bx bx-transfer"></i> Grafik Barang Masuk & Keluar</div>
         <div class="charts-row">
             <div class="chart-card">
@@ -257,14 +277,14 @@
             </div>
         </div>
 
-        <!-- ===== GRAFIK LINE REVENUE HARIAN ===== -->
+        <!-- ===== GRAFIK TREND REVENUE ===== -->
         <div class="section-title"><i class="bx bx-trending-up"></i> Trend Revenue Harian</div>
-        <div class="chart-card chart-wide">
+        <div class="chart-card chart-wide" style="margin-bottom: 6px;">
             <div class="chart-header">
                 <h4><i class="bx bx-line-chart-down"></i> Grafik Trend Revenue per Hari</h4>
                 <div class="chart-legend">
-                    <span class="legend-dot" style="background:#10B981"></span> Revenue Harian
-                    <span class="legend-dot" style="background:#3B82F6"></span> Moving Average (7 hari)
+                    <span class="legend-dot" style="background:#10D99A"></span> Revenue Harian
+                    <span class="legend-dot" style="background:#4F8EF7"></span> Moving Avg (7 hari)
                 </div>
             </div>
             <div class="chart-wrap"><canvas id="chartLineRevenue"></canvas></div>
@@ -295,7 +315,7 @@
             </table>
         </div>
 
-        <!-- ===== LAPORAN TRANSAKSI ===== -->
+        <!-- ===== RIWAYAT TRANSAKSI ===== -->
         <div class="section-title"><i class="bx bx-list-ul"></i> Riwayat Transaksi Stock Out</div>
         <div class="table-card">
             <table class="report-table">
@@ -318,7 +338,7 @@
             </table>
         </div>
 
-        <!-- ===== LAPORAN INVENTORI MASUK ===== -->
+        <!-- ===== BARANG MASUK ===== -->
         <div class="section-title"><i class="bx bx-package"></i> Riwayat Barang Masuk</div>
         <div class="table-card">
             <table class="report-table">
@@ -339,10 +359,97 @@
             </table>
         </div>
 
-    </div><!-- end .main -->
+    </div>
 
-    <!-- ===== PRINT AREA (Sekarang dinonaktifkan sebagai penampung mentah, CSS media print akan langsung fokus cetak kontainer utama) ===== -->
     <div id="printArea" class="print-area"></div>
+
+    <!-- ===== SIDEBAR & ROLE SETUP ===== -->
+    <script>
+    (function() {
+        const role = localStorage.getItem("loggedRole") || "owner";
+        const user = localStorage.getItem("loggedUser") || "Admin";
+
+        const ROLE_LABELS = {
+            owner: "Owner", admin: "Administrator",
+            kepala_toko: "Kepala Toko", kasir: "Kasir", gudang: "Staf Gudang"
+        };
+        const ROLE_CLASSES = {
+            owner: "role-owner", admin: "role-admin",
+            kepala_toko: "role-kepala", kasir: "role-kasir", gudang: "role-gudang"
+        };
+
+        const usernameEl = document.getElementById("sidebarUsername");
+        const avatarEl   = document.getElementById("sidebarAvatar");
+        const roleEl     = document.getElementById("sidebarRole");
+
+        if (usernameEl) usernameEl.textContent = user;
+        if (avatarEl)   avatarEl.textContent   = user.charAt(0).toUpperCase();
+        if (roleEl) {
+            roleEl.innerHTML = `<span class="role-badge ${ROLE_CLASSES[role] || 'role-admin'}">${ROLE_LABELS[role] || role}</span>`;
+        }
+
+        if (role === "owner" || role === "admin") {
+            const sec  = document.getElementById("adminSectionLabel");
+            const menu = document.getElementById("adminMenu");
+            if (sec)  sec.style.display  = "";
+            if (menu) menu.style.display = "";
+        }
+
+        const PERMISSIONS = {
+            owner:       ["laporan", "export"],
+            admin:       ["laporan", "export"],
+            kepala_toko: ["laporan", "export"],
+            kasir:       ["laporan"],
+            gudang:      []
+        };
+
+        const perms = PERMISSIONS[role] || [];
+
+        if (!perms.includes("laporan")) {
+            document.getElementById("reportContent").innerHTML = `
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;color:var(--text3);">
+                    <i class="bx bx-lock" style="font-size:52px;opacity:0.3;cursor:default"></i>
+                    <p style="font-size:14px;font-style:italic">Anda tidak memiliki akses ke halaman Laporan.</p>
+                    <a href="dashboard.html" style="color:var(--brand);font-size:13px;font-weight:600">← Kembali ke Dashboard</a>
+                </div>`;
+        } else if (!perms.includes("export")) {
+            const banner = document.getElementById("accessBanner");
+            if (banner) {
+                banner.classList.remove("hidden");
+                document.getElementById("accessBannerText").textContent =
+                    "Anda hanya dapat melihat laporan. Fitur ekspor (Excel, PDF, Print) tersedia untuk Owner, Admin, dan Kepala Toko.";
+            }
+            const exportGroup = document.getElementById("exportGroup");
+            if (exportGroup) exportGroup.style.display = "none";
+        }
+    })();
+    </script>
+
+    <!-- ===== SIDEBAR TOGGLE ===== -->
+    <script>
+    (function() {
+        const sidebar  = document.getElementById("sidebar");
+        const overlay  = document.getElementById("sidebarOverlay");
+        const hamburger= document.getElementById("hamburger");
+        const closeBtn = document.getElementById("sidebarClose");
+        const logoutBtn= document.getElementById("logoutBtn");
+
+        function openSidebar()  { sidebar.classList.add("open");    overlay.classList.add("active"); }
+        function closeSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+
+        if (hamburger) hamburger.addEventListener("click", openSidebar);
+        if (closeBtn)  closeBtn.addEventListener("click",  closeSidebar);
+        if (overlay)   overlay.addEventListener("click",   closeSidebar);
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", () => {
+                localStorage.removeItem("isLoggedIn");
+                localStorage.removeItem("loggedUser");
+                localStorage.removeItem("loggedRole");
+                window.location.href = "login.html";
+            });
+        }
+    })();
+    </script>
 
     <script src="js/auth.js"></script>
     <script src="js/laporan.js"></script>
