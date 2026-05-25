@@ -6,72 +6,52 @@
     <link rel="stylesheet" href="css/linkedData.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <title>Linked Data | Invenz</title>
-
-    <style>
-        /* Tombol Sync dari Invoice */
-        .btn-sync {
-            padding: 8px 14px;
-            background: #e8f0ff;
-            border: 1px solid #111;
-            border-radius: 8px;
-            box-shadow: 3px 4px 0 0 #111;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: transform 0.15s;
-            font-family: "Poppins", sans-serif;
-            color: rgb(16, 44, 168);
-        }
-        .btn-sync:hover { transform: scale(0.95); }
-        .btn-sync i { font-size: 16px; }
-
-        /* Info banner di tab barang */
-        .barang-info-banner {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            background: #e8f0ff;
-            border: 1px solid #c0d0f0;
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-bottom: 12px;
-            font-size: 12px;
-            color: rgb(16, 44, 168);
-            line-height: 1.6;
-        }
-        .barang-info-banner i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
-
-        /* Animasi sync notif sudah ada di linkedData.js */
-    </style>
 </head>
 <body>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <span>INVENZ</span>
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-dot">I</div>
+                <span class="sidebar-brand-text">INVENZ</span>
+            </div>
             <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
         </div>
+
         <div class="sidebar-user">
             <div class="sidebar-avatar" id="sidebarAvatar">A</div>
             <div>
-                <div class="sidebar-username" id="sidebarUsername">Admin</div>
-                <div class="sidebar-role">Operator Inventori</div>
+                <span class="sidebar-username" id="sidebarUsername">Admin</span>
+                <span class="sidebar-role" id="sidebarRole">Administrator</span>
             </div>
         </div>
+
+        <div class="sidebar-section-label">— Navigasi</div>
         <ul class="sidebar-menu">
             <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
             <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
             <li><a href="globalStok.html"><i class="bx bx-list-ul"></i> Global Stok</a></li>
             <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
             <li><a href="linkedData.html" class="active"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+            <li><a href="laporan.html"><i class="bx bx-file-report"></i> Laporan</a></li>
         </ul>
+
+        <div class="sidebar-section-label" id="adminSectionLabel" style="display:none">— Admin</div>
+        <ul class="sidebar-menu" id="adminMenu" style="display:none">
+            <li>
+                <a href="userManagement.html">
+                    <i class="bx bx-shield-alt-2"></i> Manajemen Akun
+                    <span class="menu-badge">Admin</span>
+                </a>
+            </li>
+        </ul>
+
         <div class="sidebar-footer">
             <button class="btn-logout" id="logoutBtn">
                 <i class="bx bx-log-out"></i> Logout
@@ -79,6 +59,7 @@
         </div>
     </div>
 
+    <!-- ===== NAVBAR ===== -->
     <div class="navbar">
         <i class="bx bx-menu hamburger" id="hamburger"></i>
         <div class="nav-title">
@@ -88,6 +69,7 @@
         <i class="bxf bx-user-circle"></i>
     </div>
 
+    <!-- ===== MAIN ===== -->
     <div class="main">
 
         <div class="tabs">
@@ -109,8 +91,10 @@
                     <button class="btn-add" id="btnAddKategori"><i class="bx bx-plus"></i> Tambah Kategori</button>
                 </div>
                 <div class="table-wrapper">
-                    <table><thead><tr><th>#</th><th>Nama Kategori</th><th>Actions</th></tr></thead>
-                    <tbody id="tableKategori"><tr class="empty-row"><td colspan="3">Belum ada data kategori</td></tr></tbody></table>
+                    <table>
+                        <thead><tr><th>#</th><th>Nama Kategori</th><th>Actions</th></tr></thead>
+                        <tbody id="tableKategori"><tr class="empty-row"><td colspan="3">Belum ada data kategori</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -121,8 +105,10 @@
                     <button class="btn-add" id="btnAddMerk"><i class="bx bx-plus"></i> Tambah Merk</button>
                 </div>
                 <div class="table-wrapper">
-                    <table><thead><tr><th>#</th><th>Nama Merk</th><th>Actions</th></tr></thead>
-                    <tbody id="tableMerk"><tr class="empty-row"><td colspan="3">Belum ada data merk</td></tr></tbody></table>
+                    <table>
+                        <thead><tr><th>#</th><th>Nama Merk</th><th>Actions</th></tr></thead>
+                        <tbody id="tableMerk"><tr class="empty-row"><td colspan="3">Belum ada data merk</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -133,12 +119,14 @@
                     <button class="btn-add" id="btnAddSupplier"><i class="bx bx-plus"></i> Tambah Supplier</button>
                 </div>
                 <div class="table-wrapper">
-                    <table><thead><tr><th>#</th><th>Nama Supplier</th><th>Kontak</th><th>Alamat</th><th>Keterangan</th><th>Actions</th></tr></thead>
-                    <tbody id="tableSupplier"><tr class="empty-row"><td colspan="6">Belum ada data supplier</td></tr></tbody></table>
+                    <table>
+                        <thead><tr><th>#</th><th>Nama Supplier</th><th>Kontak</th><th>Alamat</th><th>Keterangan</th><th>Actions</th></tr></thead>
+                        <tbody id="tableSupplier"><tr class="empty-row"><td colspan="6">Belum ada data supplier</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- BARANG — DIUPDATE: info banner + tombol sync -->
+            <!-- BARANG -->
             <div class="tab-content" data-content="barang">
                 <div class="barang-info-banner">
                     <i class="bx bx-info-circle"></i>
@@ -172,8 +160,10 @@
                     <button class="btn-add" id="btnAddLokasi"><i class="bx bx-plus"></i> Tambah Lokasi</button>
                 </div>
                 <div class="table-wrapper">
-                    <table><thead><tr><th>#</th><th>Nama Lokasi Inventori</th><th>Actions</th></tr></thead>
-                    <tbody id="tableLokasi"><tr class="empty-row"><td colspan="3">Belum ada data lokasi</td></tr></tbody></table>
+                    <table>
+                        <thead><tr><th>#</th><th>Nama Lokasi Inventori</th><th>Actions</th></tr></thead>
+                        <tbody id="tableLokasi"><tr class="empty-row"><td colspan="3">Belum ada data lokasi</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -212,7 +202,7 @@
         </div>
     </div>
 
-    <!-- MODAL UNIVERSAL -->
+    <!-- ===== MODAL UNIVERSAL ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <h3 id="modalTitle">Tambah Data</h3>
@@ -225,7 +215,7 @@
         </div>
     </div>
 
-    <!-- MODAL BARANG -->
+    <!-- ===== MODAL BARANG ===== -->
     <div class="modal-overlay" id="modalBarangOverlay">
         <div class="modal modal-barang">
             <div class="modal-top-bar">
@@ -294,7 +284,7 @@
         </div>
     </div>
 
-    <!-- MODAL PAYMENT -->
+    <!-- ===== MODAL PAYMENT ===== -->
     <div class="modal-overlay" id="modalPaymentOverlay">
         <div class="modal modal-payment">
             <div class="modal-top-bar">
@@ -307,7 +297,7 @@
                     <input type="text" id="fPaymentNama" placeholder="Contoh: Transfer Bank, Debit, dll." autocomplete="off">
                 </div>
                 <div class="form-row">
-                    <label>Keterangan <span class="opt">(opsional)</span></label>
+                    <label>Keterangan <span style="color:var(--text3);font-size:10px;text-transform:none;font-weight:400">(opsional)</span></label>
                     <input type="text" id="fPaymentKeterangan" placeholder="Contoh: BCA, Mandiri, GoPay, dll." autocomplete="off">
                 </div>
                 <div class="form-row">
@@ -329,7 +319,7 @@
         </div>
     </div>
 
-    <!-- MODAL BARCODE POPUP -->
+    <!-- ===== MODAL BARCODE POPUP ===== -->
     <div class="modal-overlay" id="barcodeOverlay">
         <div class="modal modal-barcode">
             <div class="modal-top-bar">
@@ -361,6 +351,39 @@
     </div>
 
     <script src="js/auth.js"></script>
+
+    <!-- ===== SIDEBAR ROLE SETUP ===== -->
+    <script>
+    (function() {
+        const role = localStorage.getItem("loggedRole") || "owner";
+        const user = localStorage.getItem("loggedUser") || "Admin";
+
+        const ROLE_LABELS = {
+            owner: "Owner", admin: "Administrator",
+            kepala_toko: "Kepala Toko", kasir: "Kasir", gudang: "Staf Gudang"
+        };
+        const ROLE_CLASSES = {
+            owner: "role-owner", admin: "role-admin",
+            kepala_toko: "role-kepala", kasir: "role-kasir", gudang: "role-gudang"
+        };
+
+        document.getElementById("sidebarUsername").textContent = user;
+        document.getElementById("sidebarAvatar").textContent = user.charAt(0).toUpperCase();
+
+        const roleEl = document.getElementById("sidebarRole");
+        if (roleEl) {
+            roleEl.innerHTML = `<span class="role-badge ${ROLE_CLASSES[role] || 'role-admin'}">${ROLE_LABELS[role] || role}</span>`;
+        }
+
+        if (role === "owner" || role === "admin") {
+            const sec  = document.getElementById("adminSectionLabel");
+            const menu = document.getElementById("adminMenu");
+            if (sec)  sec.style.display = "";
+            if (menu) menu.style.display = "";
+        }
+    })();
+    </script>
+
     <script src="js/linkedData.js"></script>
 </body>
 </html>
