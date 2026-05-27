@@ -169,6 +169,66 @@ if (barLabels.length > 0) {
   document.getElementById("barEmpty").style.display = "block";
 }
 
+// ================================================
+// ===== LINE CHART - TOTAL STOK TREND (BARU) =====
+// ================================================
+function createStockTrendChart() {
+    const ctx = document.getElementById("stockTrendChart");
+    if (!ctx) return;
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul"];
+    
+    // Data simulasi + total stok real di bulan terakhir
+    let stockData = [1240, 1380, 1520, 1490, 1670, 1820, totalStok];
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: months,
+            datasets: [{
+                label: "Total Stok",
+                data: stockData,
+                borderColor: "#0F3CC9",
+                backgroundColor: "rgba(15, 60, 201, 0.08)",
+                borderWidth: 3.5,
+                tension: 0.4,
+                pointBackgroundColor: "#fff",
+                pointBorderColor: "#0F3CC9",
+                pointBorderWidth: 2.5,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: "#0F3CC9",
+                    titleFont: { size: 13 },
+                    bodyFont: { size: 15, weight: "bold" },
+                    callbacks: { 
+                        label: (context) => context.raw + " unit" 
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: "rgba(0,0,0,0.06)" }
+                },
+                x: { 
+                    grid: { color: "rgba(0,0,0,0.06)" } 
+                }
+            }
+        }
+    });
+}
+
+// Panggil fungsi Line Chart
+createStockTrendChart();
+
 // ===== RECENT INVOICES TABLE =====
 const tbody = document.getElementById("recentTableBody");
 if (invoiceList.length === 0) {
