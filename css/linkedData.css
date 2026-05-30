@@ -316,7 +316,7 @@ body::before {
 
 .navbar i { font-size: 26px !important; cursor: pointer; color: var(--text2); }
 
-.hamburger {
+.hamburger, #hamburger {
     font-size: 20px !important;
     cursor: pointer;
     color: var(--text2);
@@ -330,7 +330,12 @@ body::before {
     border-radius: var(--radius-sm);
     transition: all var(--transition);
 }
-.hamburger:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
+.hamburger:hover, #hamburger:hover {
+    background: var(--surface2);
+    border-color: var(--border-md);
+    color: var(--text);
+    transform: none;
+}
 
 /* ===== MAIN ===== */
 .main {

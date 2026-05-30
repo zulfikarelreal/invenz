@@ -247,7 +247,7 @@ body::before {
 /* Sidebar Nav */
 .sidebar-nav { flex: 1; padding: 12px 10px; }
 
-.sidebar-nav-label {
+.sidebar-nav-label, .sidebar-section{
     display: block;
     padding: 10px 10px 5px;
     font-size: 9px;
