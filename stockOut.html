@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,884 +7,87 @@
     <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <title>Stock Out | Invenz</title>
-
-    <style>
-        /* ===== DARK BLUE THEME TOKENS ===== */
-        :root {
-            --bg-base:        #080e1c;
-            --bg-surface:     #0d1526;
-            --bg-card:        #111e35;
-            --bg-elevated:    #162340;
-            --bg-hover:       #1c2d4f;
-            --accent:         #3b82f6;
-            --accent-dim:     #1d4ed8;
-            --accent-glow:    rgba(59,130,246,0.18);
-            --accent-orange:  #f97316;
-            --border:         rgba(59,130,246,0.18);
-            --border-strong:  rgba(59,130,246,0.35);
-            --text-primary:   #e8efff;
-            --text-secondary: #7a94c1;
-            --text-muted:     #445577;
-            --radius-sm:      6px;
-            --radius-md:      10px;
-            --radius-lg:      14px;
-        }
-
-        /* ===== GLOBAL RESET ===== */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-base);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-
-        /* ===== SIDEBAR OVERLAY ===== */
-        .sidebar-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(5,10,25,0.72);
-            backdrop-filter: blur(4px);
-            z-index: 400;
-        }
-        .sidebar-overlay.active { display: block; }
-
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            position: fixed;
-            top: 0; left: -280px;
-            width: 260px; height: 100vh;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border);
-            z-index: 500;
-            transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
-            display: flex; flex-direction: column;
-        }
-        .sidebar.open { left: 0; }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 18px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .sidebar-header span {
-            font-family: 'Space Mono', monospace;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: var(--accent);
-        }
-        .sidebar-close {
-            font-size: 22px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .sidebar-close:hover { color: var(--text-primary); }
-
-        .sidebar-user {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 18px;
-            border-bottom: 1px solid var(--border);
-        }
-        .sidebar-avatar {
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-dim), var(--accent));
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 15px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-        .sidebar-username {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text-primary);
-        }
-        .sidebar-role {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 12px 10px;
-            flex: 1;
-        }
-        .sidebar-menu li a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.18s;
-            margin-bottom: 2px;
-        }
-        .sidebar-menu li a i { font-size: 18px; }
-        .sidebar-menu li a:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .sidebar-menu li a.active {
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--border-strong);
-        }
-
-        .sidebar-footer {
-            padding: 14px 16px;
-            border-top: 1px solid var(--border);
-        }
-        .btn-logout {
-            width: 100%;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 9px 0;
-            background: transparent;
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: var(--radius-md);
-            color: #f87171;
-            font-size: 13px; font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .btn-logout:hover {
-            background: rgba(239,68,68,0.1);
-            border-color: rgba(239,68,68,0.55);
-        }
-
-        /* ===== NAVBAR ===== */
-        .navbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 54px;
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 18px;
-            z-index: 300;
-            gap: 14px;
-        }
-        .hamburger {
-            font-size: 22px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .hamburger:hover { color: var(--accent); }
-
-        .navbar .title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-        }
-        .navbar .title i {
-            font-size: 20px;
-            color: var(--accent);
-        }
-        .navbar .title h6 {
-            font-family: 'Space Mono', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 2.5px;
-            color: var(--text-primary);
-        }
-        .navbar > i:last-child {
-            font-size: 24px;
-            color: var(--text-secondary);
-        }
-
-        /* ===== NAV CONTROL ===== */
-        .nav-controll {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            width: 92%;
-            max-width: 1200px;
-            margin: 70px auto 0;
-            padding: 5px 0;
-            gap: 8px;
-        }
-        .nav-left-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-
-        /* ===== FILTER WRAP ===== */
-        .filter-wrap {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 6px 12px;
-            transition: border-color 0.2s;
-        }
-        .filter-wrap:hover { border-color: var(--border-strong); }
-        .filter-icon { font-size: 16px !important; color: var(--accent); cursor: default; }
-        .filter-select {
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            border: none;
-            outline: none;
-            background: transparent;
-            cursor: pointer;
-            color: var(--text-primary);
-        }
-        .filter-select option {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-        }
-
-        /* ===== SEARCH BOX ===== */
-        .search-box-so {
-            padding: 7px 13px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            width: 210px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .search-box-so::placeholder { color: var(--text-muted); }
-        .search-box-so:focus {
-            border-color: var(--accent);
-            background: var(--bg-elevated);
-        }
-
-        /* ===== STOCK OUT BUTTON ===== */
-        .stockout-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.18s;
-            white-space: nowrap;
-        }
-        .stockout-btn:hover {
-            background: var(--accent-dim);
-            transform: translateY(-1px);
-        }
-        .stockout-btn:active { transform: translateY(0); }
-        .stockout-btn i { font-size: 16px; }
-
-        /* ===== CUSTOM RANGE PANEL ===== */
-        .custom-range-panel-so {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 14px;
-            width: 92%;
-            max-width: 1200px;
-            margin: 8px auto 0;
-        }
-        .custom-range-panel-so.visible { display: flex; }
-        .custom-range-panel-so label {
-            font-size: 11px; font-weight: 600;
-            color: var(--text-secondary); white-space: nowrap;
-        }
-        .custom-range-panel-so input[type="date"] {
-            padding: 5px 9px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-            outline: none; cursor: pointer;
-            color-scheme: dark;
-        }
-        .custom-range-panel-so input[type="date"]:focus {
-            border-color: var(--accent);
-        }
-        .range-sep-so { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .btn-apply-range-so {
-            padding: 5px 14px;
-            font-size: 11px; font-weight: 700;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-        .btn-apply-range-so:hover { background: var(--accent-dim); transform: scale(0.96); }
-
-        /* ===== RANGE BADGE ===== */
-        .range-badge-so {
-            display: none;
-            align-items: center;
-            gap: 5px;
-            background: var(--accent-glow);
-            border: 1px solid var(--border-strong);
-            border-radius: 20px;
-            padding: 4px 11px;
-            font-size: 11px; font-weight: 600;
-            color: var(--accent);
-            cursor: pointer; white-space: nowrap;
-        }
-        .range-badge-so.visible { display: flex; }
-        .range-badge-so i { font-size: 13px !important; }
-
-        /* ===== STATS STRIP ===== */
-        .stats-strip {
-            display: flex;
-            align-items: center;
-            width: 92%;
-            max-width: 1200px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            margin: 12px auto;
-            overflow: hidden;
-        }
-        .stats-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 13px 12px;
-            gap: 3px;
-            position: relative;
-        }
-        .stats-item::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 0; height: 2px;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.3s;
-        }
-        .stats-item:hover::after { width: 60%; }
-        .stats-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-align: center;
-        }
-        .stats-val {
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--accent);
-            font-family: 'Space Mono', monospace;
-        }
-        .stats-divider {
-            width: 1px;
-            height: 36px;
-            background: var(--border);
-            flex-shrink: 0;
-        }
-
-        /* ===== TABLE CONTAINER ===== */
-        .container {
-            width: 92%;
-            max-width: 1200px;
-            margin: 0 auto 30px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead tr {
-            background: var(--bg-elevated);
-            border-bottom: 1px solid var(--border-strong);
-        }
-
-        th {
-            padding: 11px 14px;
-            text-align: left;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.7px;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 11px 14px;
-            font-size: 12.5px;
-            color: var(--text-primary);
-            border-bottom: 1px solid rgba(59,130,246,0.07);
-            vertical-align: middle;
-        }
-
-        tbody tr {
-            transition: background 0.15s;
-        }
-        tbody tr:hover { background: var(--bg-hover); }
-        tbody tr:last-child td { border-bottom: none; }
-
-        .empty-row td {
-            text-align: center;
-            padding: 40px 0;
-            color: var(--text-muted);
-            font-size: 13px;
-            font-style: italic;
-        }
-
-        /* ===== MODAL OVERLAY ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(5,10,25,0.78);
-            backdrop-filter: blur(6px);
-            z-index: 600;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-
-        /* ===== MODAL ===== */
-        .modal {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-lg);
-            width: 92%;
-            max-width: 480px;
-            overflow: hidden;
-            animation: slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(22px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .modal-top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-elevated);
-        }
-        .modal-top-bar h3 {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .modal-top-bar h3 i { color: var(--accent); font-size: 18px; }
-        .modal-close-x {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px; height: 30px;
-            border-radius: var(--radius-sm);
-            transition: all 0.15s;
-        }
-        .modal-close-x:hover { background: var(--bg-hover); color: var(--text-primary); }
-
-        .modal-form {
-            padding: 18px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-        .form-row {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .form-row label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-        .req { color: #f87171; }
-        .opt { color: var(--text-muted); font-weight: 400; text-transform: none; font-size: 10px; }
-
-        .form-row input[type="text"],
-        .form-row input[type="date"],
-        .form-row input[type="tel"] {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s;
-            color-scheme: dark;
-        }
-        .form-row input:focus { border-color: var(--accent); }
-        .form-row input::placeholder { color: var(--text-muted); }
-
-        /* ===== INVOICE PREVIEW BOX ===== */
-        .invoice-preview-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-elevated);
-            border: 1px dashed var(--border-strong);
-            border-radius: var(--radius-sm);
-            padding: 9px 13px;
-        }
-        .invoice-preview-box i { color: var(--accent); font-size: 18px; }
-        .invoice-preview-box span:first-of-type {
-            font-family: 'Space Mono', monospace;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-            flex: 1;
-        }
-        .auto-badge {
-            font-size: 9px !important;
-            font-weight: 700;
-            padding: 2px 8px;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--border-strong);
-            border-radius: 20px;
-            letter-spacing: 0.5px;
-        }
-
-        /* ===== PHONE INPUT WRAP ===== */
-        .phone-input-wrap {
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            background: var(--bg-elevated);
-            transition: border-color 0.2s;
-        }
-        .phone-input-wrap:focus-within { border-color: var(--accent); }
-        .phone-prefix {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            background: var(--bg-hover);
-            border-right: 1px solid var(--border);
-            height: 36px;
-            color: var(--accent);
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-        .phone-input-wrap input[type="tel"] {
-            border: none !important;
-            border-radius: 0 !important;
-            background: transparent;
-            outline: none;
-            padding: 8px 12px;
-            width: 100%;
-            color: var(--text-primary);
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-        }
-        .phone-input-wrap input[type="tel"]::placeholder { color: var(--text-muted); }
-
-        .field-hint {
-            font-size: 11px;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* ===== PAYMENT OPTIONS ===== */
-        .payment-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .payment-option {
-            padding: 6px 14px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            background: var(--bg-elevated);
-            transition: all 0.18s;
-        }
-        .payment-option:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .payment-option.selected {
-            background: var(--accent-glow);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .payment-empty-hint {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        .payment-empty-hint a { color: var(--accent); }
-
-        /* ===== ERROR MSG ===== */
-        .error-msg {
-            font-size: 12px;
-            color: #f87171;
-            padding: 0 20px;
-            min-height: 18px;
-        }
-
-        /* ===== MODAL ACTIONS ===== */
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            padding: 14px 20px 18px;
-            justify-content: flex-end;
-            border-top: 1px solid var(--border);
-        }
-        .btn-batal {
-            padding: 8px 20px;
-            background: transparent;
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .btn-batal:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .btn-simpan {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 20px;
-            background: var(--accent);
-            border: none;
-            border-radius: var(--radius-sm);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .btn-simpan:hover { background: var(--accent-dim); }
-        .btn-simpan i { font-size: 15px; }
-
-        /* ===== CONFIRM MODAL ===== */
-        .modal-confirm {
-            text-align: center;
-            padding: 28px 24px 20px;
-            max-width: 360px;
-        }
-        .confirm-icon { font-size: 38px; margin-bottom: 10px; }
-        .modal-confirm h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-        .confirm-desc {
-            font-size: 12.5px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 4px;
-        }
-        .btn-hapus-confirm {
-            padding: 8px 20px;
-            background: #ef4444;
-            border: none;
-            border-radius: var(--radius-sm);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: background 0.18s;
-        }
-        .btn-hapus-confirm:hover { background: #dc2626; }
-
-        /* ===== CUSTOM DROPDOWN DARK ===== */
-        .cd-wrapper { position: relative; }
-        .cd-input-row {
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--bg-elevated);
-            transition: border-color 0.2s;
-            overflow: hidden;
-        }
-        .cd-input-row:focus-within { border-color: var(--accent); }
-        .cd-input {
-            flex: 1;
-            padding: 8px 12px;
-            background: transparent;
-            border: none;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            color: var(--text-primary);
-        }
-        .cd-input::placeholder { color: var(--text-muted); }
-        .cd-arrow { color: var(--text-muted); padding-right: 10px; font-size: 18px; cursor: pointer; }
-        .cd-dropdown {
-            position: absolute;
-            top: calc(100% + 4px); left: 0; right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-md);
-            z-index: 99;
-            display: none;
-            overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        }
-        .cd-dropdown.open { display: block; }
-        .cd-search-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
-        }
-        .cd-search-box i { color: var(--text-muted); font-size: 15px; }
-        .cd-search {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
-        }
-        .cd-search::placeholder { color: var(--text-muted); }
-        .cd-list {
-            list-style: none;
-            max-height: 160px;
-            overflow-y: auto;
-        }
-        .cd-list li {
-            padding: 8px 14px;
-            font-size: 12.5px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: background 0.13s;
-        }
-        .cd-list li:hover { background: var(--bg-hover); color: var(--text-primary); }
-        .cd-empty {
-            padding: 12px 14px;
-            font-size: 12px;
-            color: var(--text-muted);
-            display: none;
-        }
-
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: var(--bg-base); }
-        ::-webkit-scrollbar-thumb {
-            background: var(--bg-hover);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
-    </style>
 </head>
 <body>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <span>INVENZ</span>
-            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+<!-- ===== SIDEBAR OVERLAY ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon">I</div>
+            <span class="sidebar-brand-name">INVENZ</span>
         </div>
-        <div class="sidebar-user">
-            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
-            <div>
-                <div class="sidebar-username" id="sidebarUsername">Admin</div>
-                <div class="sidebar-role">Operator Inventori</div>
-            </div>
+        <button class="sidebar-close-btn" id="sidebarClose" aria-label="Tutup sidebar">
+            <i class="bx bx-x"></i>
+        </button>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+        <div class="sidebar-user-info">
+            <span class="sidebar-username" id="sidebarUsername">Admin</span>
+            <span class="sidebar-role">Operator Inventori</span>
         </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <span class="sidebar-nav-label">Navigasi</span>
         <ul class="sidebar-menu">
-            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
-            <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
-            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
-            <li><a href="stockOut.html" class="active"><i class="bx bx-truck"></i> Stock Out</a></li>
-            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+            <li><a href="dashboard.html"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
+            <li><a href="inputBarang.html"><i class="bx bx-package"></i><span>Input Barang</span></a></li>
+            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i><span>Global Stok</span></a></li>
+            <li><a href="stockOut.html" class="active"><i class="bx bx-truck"></i><span>Stock Out</span></a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i><span>Linked Data</span></a></li>
+            <li><a href="laporan.html"><i class="bx bx-file-report"></i><span>Laporan</span></a></li>
         </ul>
-        <div class="sidebar-footer">
-            <button class="btn-logout" id="logoutBtn">
-                <i class="bx bx-log-out"></i> Logout
-            </button>
+    </nav>
+
+    <div class="sidebar-footer">
+        <button class="btn-logout" id="logoutBtn">
+            <i class="bx bx-log-out"></i>
+            <span>Logout</span>
+        </button>
+    </div>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar">
+    <div class="navbar-left">
+        <button class="hamburger-btn" id="hamburger" aria-label="Buka menu">
+            <i class="bx bx-menu"></i>
+        </button>
+        <div class="nav-brand">
+            <span class="nav-brand-dot"></span>
+            <span class="nav-brand-text">INVENZ</span>
         </div>
     </div>
 
-    <div class="navbar">
-        <i class="bx bx-menu hamburger" id="hamburger"></i>
-        <div class="title">
-            <i class="bxf bx-truck"></i>
-            <h6>STOCK OUT</h6>
-        </div>
-        <i class="bxf bx-user-circle"></i>
+    <div class="nav-page-title">
+        <i class="bxf bx-truck"></i>
+        <span>STOCK OUT</span>
     </div>
 
-    <!-- Nav Control -->
-    <div class="nav-controll">
-        <div class="nav-left-controls">
-            <div class="filter-wrap">
+    <div class="navbar-right">
+        <div class="nav-avatar" id="navAvatar" title="User">A</div>
+    </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+    <!-- ===== FILTER & ACTIONS BAR ===== -->
+    <div class="control-bar">
+        <div class="control-bar-left">
+            <!-- Filter Waktu -->
+            <div class="filter-group">
                 <i class="bx bx-filter-alt filter-icon"></i>
-                <select id="filterWaktuSO" class="filter-select">
-                    <option value="all">All Time</option>
+                <select id="filterWaktuSO" class="filter-select" aria-label="Filter waktu">
+                    <option value="all">Semua Waktu</option>
                     <option value="today">Hari Ini</option>
                     <option value="7d">7 Hari Terakhir</option>
                     <option value="thismonth">Bulan Ini</option>
@@ -898,159 +101,257 @@
                     <option value="custom">Custom Range...</option>
                 </select>
             </div>
-            <div class="range-badge-so" id="rangeBadgeSO" title="Klik untuk reset">
-                <i class="bx bx-calendar"></i>
+
+            <!-- Range Badge -->
+            <div class="range-badge" id="rangeBadgeSO" title="Klik untuk reset filter">
+                <i class="bx bx-calendar-check"></i>
                 <span id="rangeBadgeTextSO"></span>
-                <i class="bx bx-x"></i>
+                <button class="range-badge-close" aria-label="Hapus filter">
+                    <i class="bx bx-x"></i>
+                </button>
             </div>
-            <input type="text" class="search-box-so" id="searchSO"
-                   placeholder="🔍 Cari customer / invoice...">
+
+            <!-- Search -->
+            <div class="search-wrapper">
+                <i class="bx bx-search search-icon"></i>
+                <input
+                    type="text"
+                    id="searchSO"
+                    class="search-input"
+                    placeholder="Cari customer atau invoice..."
+                    aria-label="Cari data"
+                />
+            </div>
         </div>
-        <button class="stockout-btn" id="openModalBtn">
-            <i class="bx bx-plus"></i> Stock Out
+
+        <button class="btn-new-so" id="openModalBtn">
+            <i class="bx bx-plus"></i>
+            <span>Stock Out Baru</span>
         </button>
     </div>
 
     <!-- Custom Date Range Panel -->
-    <div class="custom-range-panel-so" id="customRangePanelSO">
-        <label>Dari</label>
-        <input type="date" id="customFromSO">
-        <span class="range-sep-so">—</span>
-        <label>Sampai</label>
-        <input type="date" id="customToSO">
-        <button class="btn-apply-range-so" id="btnApplyRangeSO">Terapkan</button>
+    <div class="custom-range-panel" id="customRangePanelSO">
+        <span class="range-label"><i class="bx bx-calendar"></i> Rentang Tanggal</span>
+        <label class="range-date-label">Dari</label>
+        <input type="date" id="customFromSO" class="range-date-input" aria-label="Tanggal dari">
+        <span class="range-sep">→</span>
+        <label class="range-date-label">Sampai</label>
+        <input type="date" id="customToSO" class="range-date-input" aria-label="Tanggal sampai">
+        <button class="btn-apply-range" id="btnApplyRangeSO">
+            <i class="bx bx-check"></i> Terapkan
+        </button>
     </div>
 
-    <!-- Stats Strip -->
-    <div class="stats-strip" id="statsStrip">
-        <div class="stats-item">
-            <span class="stats-label">Total Invoice</span>
-            <span class="stats-val" id="statInvoiceOut">0</span>
-        </div>
-        <div class="stats-divider"></div>
-        <div class="stats-item">
-            <span class="stats-label">Total Barang</span>
-            <span class="stats-val" id="statBarangOut">0</span>
-        </div>
-        <div class="stats-divider"></div>
-        <div class="stats-item">
-            <span class="stats-label">Jenis Barang</span>
-            <span class="stats-val" id="statJenisOut">0</span>
-        </div>
-        <div class="stats-divider"></div>
-        <div class="stats-item">
-            <span class="stats-label">Total Nilai</span>
-            <span class="stats-val" id="statNilaiOut">Rp 0</span>
-        </div>
-    </div>
-
-    <div class="container">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Invoice Keluar</th>
-                    <th>Tanggal Keluar</th>
-                    <th>Customer</th>
-                    <th>No. Telepon</th>
-                    <th>Metode Bayar</th>
-                    <th>Total Barang</th>
-                    <th>Total Harga</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr class="empty-row">
-                    <td colspan="9">Belum ada data — klik "Stock Out" untuk membuat invoice keluar</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ===== MODAL BUAT INVOICE KELUAR ===== -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <div class="modal-top-bar">
-                <h3><i class="bx bx-truck"></i> Stock Out Barang</h3>
-                <button class="modal-close-x" id="modalCloseX"><i class="bx bx-x"></i></button>
+    <!-- ===== STATS STRIP ===== -->
+    <div class="stats-strip">
+        <div class="stat-item">
+            <div class="stat-icon stat-icon-blue"><i class="bx bx-receipt"></i></div>
+            <div class="stat-body">
+                <span class="stat-value" id="statInvoiceOut">0</span>
+                <span class="stat-label">Total Invoice</span>
             </div>
-            <div class="modal-form">
-                <div class="form-row">
-                    <label>No. Invoice Keluar <span class="req">*</span></label>
-                    <div class="invoice-preview-box" id="invoicePreviewBox">
-                        <i class="bx bx-barcode"></i>
-                        <span id="invoiceAutoPreview">INV-OUT-...</span>
-                        <span class="auto-badge">Auto</span>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <label>Tanggal Keluar <span class="req">*</span></label>
-                    <input type="date" id="inputTanggal">
-                </div>
-                <div class="form-row">
-                    <label>Nama Customer <span class="req">*</span></label>
-                    <div class="cd-wrapper" id="cdPenerima">
-                        <div class="cd-input-row">
-                            <input class="cd-input" id="inputPenerima" type="text"
-                                   placeholder="Pilih atau ketik nama customer" autocomplete="off">
-                            <i class="bx bx-chevron-down cd-arrow"></i>
-                        </div>
-                        <div class="cd-dropdown">
-                            <div class="cd-search-box">
-                                <i class="bx bx-search"></i>
-                                <input class="cd-search" type="text" placeholder="Cari customer...">
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stat-item">
+            <div class="stat-icon stat-icon-teal"><i class="bx bx-package"></i></div>
+            <div class="stat-body">
+                <span class="stat-value" id="statBarangOut">0</span>
+                <span class="stat-label">Total Barang</span>
+            </div>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stat-item">
+            <div class="stat-icon stat-icon-amber"><i class="bx bx-categories"></i></div>
+            <div class="stat-body">
+                <span class="stat-value" id="statJenisOut">0</span>
+                <span class="stat-label">Jenis Barang</span>
+            </div>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stat-item">
+            <div class="stat-icon stat-icon-green"><i class="bx bx-dollar-circle"></i></div>
+            <div class="stat-body">
+                <span class="stat-value stat-value-money" id="statNilaiOut">Rp 0</span>
+                <span class="stat-label">Total Nilai</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DATA TABLE ===== -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-card-title">
+                <i class="bx bx-list-ul"></i>
+                <span>Daftar Invoice Keluar</span>
+            </div>
+            <span class="table-hint">Klik baris untuk membuka detail invoice</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table" aria-label="Tabel invoice keluar">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">No. Invoice</th>
+                        <th scope="col">Tanggal</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">No. Telepon</th>
+                        <th scope="col">Metode Bayar</th>
+                        <th scope="col">Total Barang</th>
+                        <th scope="col">Total Harga</th>
+                        <th scope="col">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr class="empty-row">
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="bx bx-inbox empty-icon"></i>
+                                <p class="empty-title">Belum ada data</p>
+                                <p class="empty-desc">Klik "Stock Out Baru" untuk membuat invoice keluar</p>
                             </div>
-                            <ul class="cd-list"></ul>
-                            <div class="cd-empty">Belum ada data customer di Linked Data</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- ===================================================
+     MODAL: BUAT INVOICE KELUAR BARU
+===================================================== -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <div class="modal-icon-wrap">
+                    <i class="bx bx-truck"></i>
+                </div>
+                <div>
+                    <h2 class="modal-title" id="modalTitle">Stock Out Baru</h2>
+                    <p class="modal-subtitle">Buat invoice pengeluaran barang</p>
+                </div>
+            </div>
+            <button class="modal-close-btn" id="modalCloseX" aria-label="Tutup modal">
+                <i class="bx bx-x"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+
+            <!-- Invoice Number (Auto) -->
+            <div class="form-group">
+                <label class="form-label">No. Invoice</label>
+                <div class="invoice-auto-preview">
+                    <i class="bx bx-barcode invoice-icon"></i>
+                    <span class="invoice-number" id="invoiceAutoPreview">INV-OUT-...</span>
+                    <span class="auto-chip">AUTO</span>
+                </div>
+            </div>
+
+            <!-- Tanggal -->
+            <div class="form-group">
+                <label class="form-label" for="inputTanggal">
+                    Tanggal Keluar <span class="required-mark">*</span>
+                </label>
+                <input type="date" id="inputTanggal" class="form-control" required>
+            </div>
+
+            <!-- Customer -->
+            <div class="form-group">
+                <label class="form-label" for="inputPenerima">
+                    Nama Customer <span class="required-mark">*</span>
+                </label>
+                <div class="cd-wrapper" id="cdPenerima">
+                    <div class="cd-input-row">
+                        <input class="cd-input" id="inputPenerima" type="text"
+                               placeholder="Cari atau ketik nama customer" autocomplete="off">
+                        <i class="bx bx-chevron-down cd-arrow"></i>
+                    </div>
+                    <div class="cd-dropdown">
+                        <div class="cd-search-box">
+                            <i class="bx bx-search"></i>
+                            <input class="cd-search" type="text" placeholder="Cari customer...">
                         </div>
+                        <ul class="cd-list"></ul>
+                        <div class="cd-empty">Belum ada data customer</div>
                     </div>
                 </div>
-                <div class="form-row">
-                    <label>No. Telepon <span class="opt">(opsional)</span></label>
-                    <div class="phone-input-wrap">
-                        <span class="phone-prefix"><i class="bx bx-phone"></i></span>
-                        <input type="tel" id="inputTelepon"
-                               placeholder="Contoh: 08123456789" autocomplete="off">
-                    </div>
-                    <span class="field-hint" id="phonAutofillHint" style="display:none">
-                        <i class="bx bx-info-circle"></i> No. telepon terisi otomatis dari data customer.
-                    </span>
+            </div>
+
+            <!-- Telepon -->
+            <div class="form-group">
+                <label class="form-label" for="inputTelepon">
+                    No. Telepon <span class="optional-mark">(opsional)</span>
+                </label>
+                <div class="phone-input-wrap">
+                    <span class="phone-prefix"><i class="bx bx-phone"></i></span>
+                    <input type="tel" id="inputTelepon" class="phone-input"
+                           placeholder="Contoh: 08123456789" autocomplete="off">
                 </div>
-                <div class="form-row">
-                    <label>Metode Pembayaran <span class="req">*</span></label>
-                    <div class="payment-options" id="paymentOptions"></div>
-                    <p class="payment-empty-hint" id="paymentEmptyHint" style="display:none">
-                        <i class="bx bx-info-circle"></i>
-                        Belum ada metode pembayaran.
-                        <a href="linkedData.html">Tambahkan di Linked Data → Payment</a>
-                    </p>
+                <div class="field-hint hidden" id="phonAutofillHint">
+                    <i class="bx bx-info-circle"></i>
+                    No. telepon diisi otomatis dari data customer.
                 </div>
             </div>
-            <p class="error-msg" id="errorMsg"></p>
-            <div class="modal-actions">
-                <button class="btn-batal" id="batalBtn">Batal</button>
-                <button class="btn-simpan" id="simpanBtn">
-                    <i class="bx bx-save"></i> Simpan & Lanjut
-                </button>
+
+            <!-- Metode Pembayaran -->
+            <div class="form-group">
+                <label class="form-label">
+                    Metode Pembayaran <span class="required-mark">*</span>
+                </label>
+                <div class="payment-grid" id="paymentOptions"></div>
+                <div class="payment-empty-hint hidden" id="paymentEmptyHint">
+                    <i class="bx bx-info-circle"></i>
+                    Belum ada metode pembayaran.
+                    <a href="linkedData.html" class="link-hint">Tambahkan di Linked Data</a>
+                </div>
             </div>
+
+        </div>
+
+        <div class="modal-error" id="errorMsg"></div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" id="batalBtn">Batal</button>
+            <button class="btn-save" id="simpanBtn">
+                <i class="bx bx-save"></i>
+                <span>Simpan & Lanjut</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===================================================
+     MODAL: KONFIRMASI HAPUS
+===================================================== -->
+<div class="modal-overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-box modal-box-sm">
+        <div class="confirm-icon-wrap">
+            <i class="bx bx-trash confirm-icon"></i>
+        </div>
+        <h2 class="confirm-title" id="confirmTitle">Hapus Invoice?</h2>
+        <p class="confirm-desc">
+            Invoice keluar ini akan dihapus permanen dan stok akan dikembalikan.
+            Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div class="modal-footer modal-footer-center">
+            <button class="btn-cancel" id="confirmNo">Tidak, Batalkan</button>
+            <button class="btn-danger" id="confirmYes">
+                <i class="bx bx-trash"></i>
+                Ya, Hapus
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Modal Konfirmasi Hapus -->
-    <div class="modal-overlay" id="confirmOverlay">
-        <div class="modal modal-confirm">
-            <div class="confirm-icon">🗑️</div>
-            <h3>Hapus Invoice Keluar?</h3>
-            <p class="confirm-desc">Data invoice keluar ini akan dihapus permanen dan stok akan dikembalikan.</p>
-            <div class="modal-actions">
-                <button class="btn-batal" id="confirmNo">Tidak</button>
-                <button class="btn-hapus-confirm" id="confirmYes">Ya, Hapus</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/auth.js"></script>
-    <script src="js/customDropdown.js"></script>
-    <script src="js/stockOut.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/customDropdown.js"></script>
+<script src="js/stockOut.js"></script>
 </body>
 </html>
