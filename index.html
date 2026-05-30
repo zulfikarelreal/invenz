@@ -1,182 +1,1528 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/home.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/animations.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-    <title>Invenz - Sistem Manajemen Inventori</title>
+    <title>INVENZ — Sistem Manajemen Inventori</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --brand:      #4F8EF7;
+            --brand-dark: #2563EB;
+            --accent:     #00E5C4;
+            --bg:         #0C0F1A;
+            --bg2:        #111527;
+            --bg3:        #161B30;
+            --surface:    #1A2038;
+            --surface2:   #1F2644;
+            --border:     rgba(255,255,255,0.07);
+            --border-md:  rgba(255,255,255,0.12);
+            --text:       #E8ECFF;
+            --text2:      #8B97C2;
+            --text3:      #4D5A80;
+            --success:    #10D99A;
+            --warning:    #FBBC05;
+            --danger:     #F05252;
+            --purple:     #A78BFA;
+            --orange:     #F97316;
+            --font:       'DM Sans', sans-serif;
+            --mono:       'DM Mono', monospace;
+            --display:    'Syne', sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(79,142,247,0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,142,247,0.018) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Radial glow top-right */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0,229,196,0.06) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 48px;
+            height: 60px;
+            background: rgba(12,15,26,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-brand-mark {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--display);
+            font-size: 15px; font-weight: 800;
+            color: var(--bg);
+        }
+
+        .nav-brand-text {
+            font-family: var(--display);
+            font-weight: 800;
+            font-size: 17px;
+            letter-spacing: 3px;
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links a {
+            padding: 7px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover { color: var(--text); background: var(--surface); }
+
+        .nav-cta {
+            padding: 8px 20px;
+            background: var(--brand);
+            color: #fff !important;
+            border-radius: 8px;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 14px rgba(79,142,247,0.35) !important;
+        }
+        .nav-cta:hover { background: var(--brand-dark) !important; transform: translateY(-1px); }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 140px 48px 80px;
+            display: flex;
+            align-items: center;
+            gap: 64px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-left { flex: 1; max-width: 560px; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,229,196,0.1);
+            border: 1px solid rgba(0,229,196,0.25);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .hero-badge-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%,100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+
+        .hero-title {
+            font-family: var(--display);
+            font-size: clamp(38px, 5vw, 60px);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--text);
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-title .accent-word {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-desc {
+            font-size: 16px;
+            line-height: 1.75;
+            color: var(--text2);
+            margin-bottom: 36px;
+            max-width: 480px;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 52px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 26px;
+            background: var(--brand);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(79,142,247,0.4);
+            box-shadow: 0 6px 20px rgba(79,142,247,0.35);
+            transition: all 0.25s;
+        }
+        .btn-primary:hover {
+            background: var(--brand-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(79,142,247,0.45);
+        }
+        .btn-primary i { font-size: 18px; }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 22px;
+            background: var(--surface);
+            color: var(--text2);
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid var(--border-md);
+            transition: all 0.25s;
+        }
+        .btn-secondary:hover {
+            background: var(--surface2);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .btn-secondary i { font-size: 18px; }
+
+        /* Hero stats */
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: fit-content;
+            overflow: hidden;
+        }
+
+        .hs-item { text-align: center; padding: 14px 24px; }
+
+        .hs-val {
+            display: block;
+            font-family: var(--mono);
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1;
+        }
+        .hs-val.brand  { color: var(--brand); }
+        .hs-val.accent { color: var(--accent); }
+        .hs-val.warning{ color: var(--warning); }
+
+        .hs-label {
+            display: block;
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        .hs-divider { width: 1px; height: 44px; background: var(--border); flex-shrink: 0; }
+
+        /* ===== HERO RIGHT — DASHBOARD PREVIEW ===== */
+        .hero-right {
+            flex: 1;
+            position: relative;
+            animation: floatUp 0.8s 0.2s ease both;
+        }
+
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-preview {
+            background: var(--bg3);
+            border: 1px solid var(--border-md);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+        }
+
+        .dp-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dp-dots { display: flex; gap: 6px; }
+        .dp-dots span { width: 10px; height: 10px; border-radius: 50%; }
+        .dp-dots span:nth-child(1) { background: #FF5F57; }
+        .dp-dots span:nth-child(2) { background: #FFBD2E; }
+        .dp-dots span:nth-child(3) { background: #28C840; }
+
+        .dp-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text3);
+            margin: 0 auto;
+            padding-right: 46px;
+        }
+
+        .dp-body { padding: 18px; }
+
+        .dp-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .dp-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dp-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+        .dp-card.c-blue::before  { background: linear-gradient(90deg, var(--brand), var(--accent)); }
+        .dp-card.c-teal::before  { background: linear-gradient(90deg, var(--accent), var(--success)); }
+        .dp-card.c-amber::before { background: linear-gradient(90deg, var(--warning), var(--orange)); }
+        .dp-card.c-purple::before{ background: linear-gradient(90deg, var(--purple), var(--brand)); }
+
+        .dp-card-label {
+            font-family: var(--mono);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text3);
+            margin-bottom: 6px;
+        }
+
+        .dp-card-val {
+            font-family: var(--mono);
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .dp-card-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .dp-card-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            animation: barGrow 1.4s ease both;
+        }
+        @keyframes barGrow { from { width: 0 !important; } }
+        .c-blue  .dp-card-bar-fill { background: var(--brand);   animation-delay: 0.5s; }
+        .c-teal  .dp-card-bar-fill { background: var(--accent);  animation-delay: 0.6s; }
+        .c-amber .dp-card-bar-fill { background: var(--warning); animation-delay: 0.7s; }
+        .c-purple.dp-card-bar-fill { background: var(--purple);  animation-delay: 0.8s; }
+
+        /* Mini chart bars */
+        .dp-chart {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .dp-chart-label {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .dp-chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 52px;
+        }
+
+        .dp-bar-item {
+            flex: 1;
+            background: rgba(79,142,247,0.3);
+            border-radius: 3px 3px 0 0;
+            animation: barGrow 1s ease both;
+        }
+        .dp-bar-item.active { background: var(--brand); }
+        .dp-bar-item:nth-child(1) { animation-delay: 0.4s; }
+        .dp-bar-item:nth-child(2) { animation-delay: 0.5s; }
+        .dp-bar-item:nth-child(3) { animation-delay: 0.6s; }
+        .dp-bar-item:nth-child(4) { animation-delay: 0.7s; }
+        .dp-bar-item:nth-child(5) { animation-delay: 0.8s; }
+        .dp-bar-item:nth-child(6) { animation-delay: 0.9s; }
+        .dp-bar-item:nth-child(7) { animation-delay: 1.0s; }
+
+        /* Floating chips */
+        .float-chip {
+            position: absolute;
+            background: var(--surface2);
+            border: 1px solid var(--border-md);
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            animation: floatAnim 3s ease-in-out infinite;
+        }
+        .float-chip-1 {
+            top: -16px; right: -20px;
+            color: var(--accent);
+            animation-delay: 0s;
+        }
+        .float-chip-2 {
+            bottom: 24px; left: -28px;
+            color: var(--warning);
+            animation-delay: 1.5s;
+        }
+        @keyframes floatAnim {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-7px); }
+        }
+
+        /* ===== SECTION WRAPPER ===== */
+        .section {
+            position: relative;
+            z-index: 1;
+            padding: 80px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-eyebrow {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--brand);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-family: var(--display);
+            font-size: clamp(26px, 3.5vw, 38px);
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 14px;
+            line-height: 1.2;
+        }
+
+        .section-desc {
+            font-size: 15px;
+            color: var(--text2);
+            line-height: 1.7;
+            max-width: 520px;
+            margin-bottom: 48px;
+        }
+
+        /* Divider */
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            position: relative;
+            z-index: 1;
+            margin: 0 48px;
+        }
+
+        /* ===== MODULE GRID ===== */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .module-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px 22px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+            display: block;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            border-radius: 14px 14px 0 0;
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .module-card:hover {
+            background: var(--surface2);
+            border-color: var(--border-md);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+        }
+
+        .module-card:hover::before { opacity: 1; }
+
+        .mc-blue::before   { background: linear-gradient(90deg, var(--brand), var(--accent)); }
+        .mc-teal::before   { background: linear-gradient(90deg, var(--accent), var(--success)); }
+        .mc-amber::before  { background: linear-gradient(90deg, var(--warning), var(--orange)); }
+        .mc-danger::before { background: linear-gradient(90deg, var(--danger), #F97316); }
+        .mc-purple::before { background: linear-gradient(90deg, var(--purple), var(--brand)); }
+        .mc-success::before{ background: linear-gradient(90deg, var(--success), var(--accent)); }
+
+        .mc-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+            border: 1px solid;
+        }
+        .mc-blue   .mc-icon { background: rgba(79,142,247,0.12);  color: var(--brand);   border-color: rgba(79,142,247,0.25); }
+        .mc-teal   .mc-icon { background: rgba(0,229,196,0.1);    color: var(--accent);  border-color: rgba(0,229,196,0.2); }
+        .mc-amber  .mc-icon { background: rgba(251,188,5,0.1);    color: var(--warning); border-color: rgba(251,188,5,0.2); }
+        .mc-danger .mc-icon { background: rgba(240,82,82,0.1);    color: var(--danger);  border-color: rgba(240,82,82,0.2); }
+        .mc-purple .mc-icon { background: rgba(167,139,250,0.1);  color: var(--purple);  border-color: rgba(167,139,250,0.2); }
+        .mc-success.mc-icon { background: rgba(16,217,154,0.1);   color: var(--success); border-color: rgba(16,217,154,0.2); }
+        .mc-success .mc-icon { background: rgba(16,217,154,0.1);  color: var(--success); border-color: rgba(16,217,154,0.2); }
+
+        .mc-title {
+            font-family: var(--display);
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .mc-desc {
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--text2);
+        }
+
+        .mc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .mc-tag {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 500;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: var(--bg3);
+            color: var(--text3);
+            border: 1px solid var(--border);
+        }
+
+        /* ===== FEATURES DETAIL — 2-column alt layout ===== */
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        .feature-row {
+            display: flex;
+            align-items: center;
+            gap: 56px;
+        }
+
+        .feature-row.reverse { flex-direction: row-reverse; }
+
+        .feature-visual {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border-md);
+            border-radius: 14px;
+            padding: 24px;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .feature-text { flex: 1; }
+
+        .feature-kicker {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text3);
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-family: var(--display);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+            line-height: 1.25;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text2);
+            margin-bottom: 16px;
+        }
+
+        .feature-bullets {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .feature-bullets li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text2);
+        }
+
+        .feature-bullets li::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* ===== Mini table preview ===== */
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        .mini-table th {
+            font-family: var(--mono);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text3);
+            padding: 7px 10px;
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        .mini-table td {
+            padding: 8px 10px;
+            color: var(--text2);
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+        }
+        .mini-table tbody tr:last-child td { border-bottom: none; }
+        .mini-table tbody tr:hover { background: var(--surface2); }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+        .pill-green  { background: rgba(16,217,154,0.15); color: var(--success); }
+        .pill-blue   { background: rgba(79,142,247,0.15); color: var(--brand); }
+        .pill-orange { background: rgba(249,115,22,0.15); color: var(--orange); }
+        .pill-purple { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+        /* ===== Mini barcode / SKU preview ===== */
+        .sku-row-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .sku-badge-preview {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 6px;
+            background: rgba(79,142,247,0.12);
+            color: var(--brand);
+            border: 1px solid rgba(79,142,247,0.25);
+        }
+        .barcode-lines {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            margin-left: auto;
+        }
+        .barcode-lines span {
+            display: inline-block;
+            width: 2px;
+            background: var(--text2);
+            border-radius: 1px;
+        }
+
+        /* ===== ROLE / AKSES section ===== */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .role-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 14px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .role-card:hover {
+            background: var(--surface2);
+            border-color: var(--border-md);
+            transform: translateY(-2px);
+        }
+
+        .role-avatar {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            margin: 0 auto 10px;
+        }
+        .rc-owner   .role-avatar { background: rgba(251,188,5,0.12);    color: #FBBC05; }
+        .rc-admin   .role-avatar { background: rgba(79,142,247,0.12);   color: var(--brand); }
+        .rc-kepala  .role-avatar { background: rgba(167,139,250,0.12);  color: var(--purple); }
+        .rc-kasir   .role-avatar { background: rgba(16,217,154,0.12);   color: var(--success); }
+        .rc-gudang  .role-avatar { background: rgba(249,115,22,0.12);   color: var(--orange); }
+
+        .role-name {
+            font-family: var(--display);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .role-desc-text {
+            font-size: 11px;
+            color: var(--text3);
+            line-height: 1.5;
+        }
+
+        .role-badge-pill {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid;
+        }
+        .rc-owner  .role-badge-pill { background: rgba(251,188,5,0.1);    color: #FBBC05;        border-color: rgba(251,188,5,0.3); }
+        .rc-admin  .role-badge-pill { background: rgba(79,142,247,0.1);   color: var(--brand);   border-color: rgba(79,142,247,0.25); }
+        .rc-kepala .role-badge-pill { background: rgba(167,139,250,0.1);  color: var(--purple);  border-color: rgba(167,139,250,0.25); }
+        .rc-kasir  .role-badge-pill { background: rgba(16,217,154,0.1);   color: var(--success); border-color: rgba(16,217,154,0.25); }
+        .rc-gudang .role-badge-pill { background: rgba(249,115,22,0.1);   color: var(--orange);  border-color: rgba(249,115,22,0.25); }
+
+        /* ===== TECH STACK strip ===== */
+        .tech-strip {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 24px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text3);
+            white-space: nowrap;
+        }
+
+        .tech-item i { font-size: 18px; color: var(--text3); }
+
+        /* ===== CTA SECTION ===== */
+        .cta-section {
+            position: relative;
+            z-index: 1;
+            padding: 80px 48px;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: var(--bg3);
+            border: 1px solid var(--border-md);
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--brand), var(--accent), var(--brand));
+        }
+
+        .cta-glow {
+            position: absolute;
+            top: -100px; left: 50%;
+            transform: translateX(-50%);
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(79,142,247,0.1) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .cta-title {
+            font-family: var(--display);
+            font-size: clamp(26px, 3.5vw, 38px);
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 14px;
+            position: relative;
+        }
+
+        .cta-desc {
+            font-size: 15px;
+            color: var(--text2);
+            line-height: 1.7;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .cta-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 32px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--display);
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text2);
+        }
+
+        .footer-mark {
+            width: 26px; height: 26px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800;
+            color: var(--bg);
+        }
+
+        .footer-info {
+            font-size: 12px;
+            color: var(--text3);
+            text-align: center;
+        }
+
+        .footer-team {
+            font-size: 12px;
+            color: var(--text3);
+            text-align: right;
+            line-height: 1.7;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        .hero-left { animation: fadeSlideLeft 0.7s ease both; }
+        @keyframes fadeSlideLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .navbar { padding: 0 20px; }
+            .nav-links { display: none; }
+            .hero { flex-direction: column; padding: 110px 24px 60px; gap: 40px; }
+            .hero-left { max-width: 100%; }
+            .hero-right { display: none; }
+            .section { padding: 60px 24px; }
+            .section-divider { margin: 0 24px; }
+            .modules-grid { grid-template-columns: 1fr 1fr; }
+            .roles-grid { grid-template-columns: 1fr 1fr; }
+            .feature-row { flex-direction: column !important; gap: 28px; }
+            .tech-strip { padding: 20px 24px; gap: 24px; }
+            .cta-section { padding: 60px 24px; }
+            .footer { padding: 24px; }
+        }
+
+        @media (max-width: 520px) {
+            .modules-grid { grid-template-columns: 1fr; }
+            .roles-grid { grid-template-columns: 1fr 1fr; }
+            .hero-stats { flex-wrap: wrap; }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Background grid -->
-    <div class="bg-grid"></div>
-    <div class="bg-glow"></div>
-
-    <!-- Navbar -->
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar">
         <div class="nav-brand">
-            <span class="brand-dot"></span>
-            INVENZ
+            <div class="nav-brand-mark">I</div>
+            <span class="nav-brand-text">INVENZ</span>
         </div>
-        <a href="login.html" class="nav-login-btn">Masuk →</a>
+        <div class="nav-links">
+            <a href="#fitur">Fitur</a>
+            <a href="#modul">Modul</a>
+            <a href="#akses">Level Akses</a>
+            <a href="login.html" class="nav-cta">Masuk ke Sistem →</a>
+        </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- ===== HERO ===== -->
     <section class="hero">
         <div class="hero-left">
             <div class="hero-badge">
-                <span class="badge-pulse"></span>
-                Sistem Manajemen Inventori
+                <span class="hero-badge-dot"></span>
+                Sistem Aktif & Siap Digunakan
             </div>
             <h1 class="hero-title">
-                Kelola Inventori<br>
-                <span class="title-accent">Lebih Cerdas</span>
+                Inventori lebih<br>
+                <span class="accent-word">terstruktur,</span><br>
+                lebih akurat.
             </h1>
             <p class="hero-desc">
-                Platform terpusat untuk pencatatan barang masuk, barang keluar, 
-                dan pengelolaan stok secara real-time — akurat, efisien, dan terstruktur.
+                INVENZ adalah platform manajemen inventori digital yang memungkinkan pencatatan barang masuk, pengeluaran stok, analisis laporan keuangan, dan pengelolaan data pendukung dalam satu sistem terintegrasi.
             </p>
             <div class="hero-actions">
                 <a href="login.html" class="btn-primary">
-                    Mulai Sekarang
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
+                    <i class="bx bx-log-in"></i>
+                    Masuk
+                </a>
+                <a href="#modul" class="btn-secondary">
+                    <i class="bx bx-grid-alt"></i>
+                    Lihat Fitur
                 </a>
             </div>
-
-            <!-- Stats -->
             <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-num">∞</span>
-                    <span class="stat-label">Data Realtime</span>
+                <div class="hs-item">
+                    <span class="hs-val brand">∞</span>
+                    <span class="hs-label">Data Realtime</span>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-num">5+</span>
-                    <span class="stat-label">Modul Fitur</span>
+                <div class="hs-divider"></div>
+                <div class="hs-item">
+                    <span class="hs-val accent">7+</span>
+                    <span class="hs-label">Modul Utama</span>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-num">0</span>
-                    <span class="stat-label">Kehilangan Data</span>
+                <div class="hs-divider"></div>
+                <div class="hs-item">
+                    <span class="hs-val warning">5</span>
+                    <span class="hs-label">Level Akses</span>
+                </div>
+                <div class="hs-divider"></div>
+                <div class="hs-item">
+                    <span class="hs-val" style="color:var(--success)">0</span>
+                    <span class="hs-label">Kehilangan Data</span>
                 </div>
             </div>
         </div>
 
         <div class="hero-right">
-            <div class="dashboard-mockup">
-                <div class="mockup-header">
-                    <div class="mockup-dots">
+            <!-- Floating chips -->
+            <div class="float-chip float-chip-1">
+                <i class="bx bx-check-circle"></i> Stok terupdate
+            </div>
+            <div class="float-chip float-chip-2">
+                <i class="bx bx-package"></i> Barang baru masuk
+            </div>
+
+            <div class="dashboard-preview">
+                <div class="dp-bar">
+                    <div class="dp-dots">
                         <span></span><span></span><span></span>
                     </div>
-                    <span class="mockup-title">Dashboard Invenz</span>
+                    <span class="dp-title">Dashboard — INVENZ</span>
                 </div>
-                <div class="mockup-body">
-                    <div class="mockup-cards">
-                        <div class="mockup-card blue">
-                            <div class="mc-label">Total Stok</div>
-                            <div class="mc-value">1,248</div>
-                            <div class="mc-bar"><div class="mc-bar-fill" style="width:80%"></div></div>
+                <div class="dp-body">
+                    <div class="dp-cards">
+                        <div class="dp-card c-blue">
+                            <div class="dp-card-label">Total Stok</div>
+                            <div class="dp-card-val">2,847</div>
+                            <div class="dp-card-bar"><div class="dp-card-bar-fill" style="width:82%"></div></div>
                         </div>
-                        <div class="mockup-card green">
-                            <div class="mc-label">Invoice Masuk</div>
-                            <div class="mc-value">34</div>
-                            <div class="mc-bar"><div class="mc-bar-fill" style="width:60%"></div></div>
+                        <div class="dp-card c-teal">
+                            <div class="dp-card-label">Invoice Masuk</div>
+                            <div class="dp-card-val">48</div>
+                            <div class="dp-card-bar"><div class="dp-card-bar-fill" style="width:65%"></div></div>
                         </div>
-                        <div class="mockup-card orange">
-                            <div class="mc-label">Stock Out</div>
-                            <div class="mc-value">12</div>
-                            <div class="mc-bar"><div class="mc-bar-fill" style="width:40%"></div></div>
+                        <div class="dp-card c-amber">
+                            <div class="dp-card-label">Stock Out</div>
+                            <div class="dp-card-val">31</div>
+                            <div class="dp-card-bar"><div class="dp-card-bar-fill" style="width:45%"></div></div>
                         </div>
-                        <div class="mockup-card purple">
-                            <div class="mc-label">Kategori</div>
-                            <div class="mc-value">8</div>
-                            <div class="mc-bar"><div class="mc-bar-fill" style="width:50%"></div></div>
+                        <div class="dp-card c-purple">
+                            <div class="dp-card-label">Kategori</div>
+                            <div class="dp-card-val">12</div>
+                            <div class="dp-card-bar"><div class="dp-card-bar-fill" style="width:55%"></div></div>
                         </div>
                     </div>
-                    <div class="mockup-chart">
-                        <div class="chart-label">Distribusi Stok Bulan Ini</div>
-                        <div class="chart-bars">
-                            <div class="cb" style="--h:55%"><span>Jan</span></div>
-                            <div class="cb" style="--h:72%"><span>Feb</span></div>
-                            <div class="cb" style="--h:45%"><span>Mar</span></div>
-                            <div class="cb" style="--h:88%"><span>Apr</span></div>
-                            <div class="cb active" style="--h:65%"><span>Mei</span></div>
+                    <div class="dp-chart">
+                        <div class="dp-chart-label">Tren Stok Masuk</div>
+                        <div class="dp-chart-bars">
+                            <div class="dp-bar-item" style="height:45%"></div>
+                            <div class="dp-bar-item" style="height:62%"></div>
+                            <div class="dp-bar-item" style="height:38%"></div>
+                            <div class="dp-bar-item" style="height:80%"></div>
+                            <div class="dp-bar-item active" style="height:70%"></div>
+                            <div class="dp-bar-item" style="height:55%"></div>
+                            <div class="dp-bar-item" style="height:90%"></div>
                         </div>
                     </div>
-                </div>
-                <!-- Floating badge -->
-                <div class="float-badge float-1">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Stok terupdate
-                </div>
-                <div class="float-badge float-2">
-                    🟢 Barang baru masuk
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features -->
-    <section class="features">
-        <div class="features-header">
-            <p class="features-eyebrow">Kenapa Invenz?</p>
-            <h2>Semua yang kamu butuhkan<br>dalam satu platform</h2>
+    <!-- ===== TECH STRIP ===== -->
+    <div class="tech-strip">
+        <div class="tech-item"><i class="bx bx-barcode"></i> Barcode Scanner ZXing</div>
+        <div class="tech-item"><i class="bx bx-bar-chart-alt-2"></i> Chart.js Analytics</div>
+        <div class="tech-item"><i class="bx bx-file-blank"></i> Export Excel & PDF</div>
+        <div class="tech-item"><i class="bx bx-printer"></i> Cetak Nota & Barcode</div>
+        <div class="tech-item"><i class="bx bx-shield-alt-2"></i> Multi-Role Auth</div>
+        <div class="tech-item"><i class="bx bx-data"></i> localStorage Offline-First</div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ===== MODUL SECTION ===== -->
+    <section class="section" id="modul">
+        <p class="section-eyebrow">Modul Sistem</p>
+        <h2 class="section-title">Semua yang dibutuhkan<br>dalam satu platform</h2>
+        <p class="section-desc">
+            Setiap modul dirancang untuk saling terintegrasi — perubahan stok di satu tempat otomatis tersinkronisasi ke seluruh sistem.
+        </p>
+
+        <div class="modules-grid">
+            <!-- Input Barang -->
+            <a href="inputBarang.html" class="module-card mc-blue">
+                <div class="mc-icon"><i class="bx bx-package"></i></div>
+                <div class="mc-title">Input Barang</div>
+                <p class="mc-desc">Catat setiap barang masuk berdasarkan invoice, supplier, dan tanggal. Dukung input manual maupun scan barcode.</p>
+                <div class="mc-tags">
+                    <span class="mc-tag">Invoice Digital</span>
+                    <span class="mc-tag">Scan Barcode</span>
+                    <span class="mc-tag">Harga HPP & Jual</span>
+                </div>
+            </a>
+
+            <!-- Global Stok -->
+            <a href="globalStok.html" class="module-card mc-teal">
+                <div class="mc-icon"><i class="bx bx-list-ul-square"></i></div>
+                <div class="mc-title">Global Stok</div>
+                <p class="mc-desc">Pantau kondisi stok seluruh barang secara terpusat. Filter berdasarkan periode, pencarian bebas, dan tampilkan barcode SKU.</p>
+                <div class="mc-tags">
+                    <span class="mc-tag">Real-time</span>
+                    <span class="mc-tag">Expired Date</span>
+                    <span class="mc-tag">SKU Barcode</span>
+                </div>
+            </a>
+
+            <!-- Stock Out -->
+            <a href="stockOut.html" class="module-card mc-amber">
+                <div class="mc-icon"><i class="bx bx-truck"></i></div>
+                <div class="mc-title">Stock Out</div>
+                <p class="mc-desc">Kelola pengeluaran barang ke pelanggan. Buat invoice keluar, pilih metode bayar, dan stok terupdate otomatis.</p>
+                <div class="mc-tags">
+                    <span class="mc-tag">Nota Cetak</span>
+                    <span class="mc-tag">Cash / QRIS</span>
+                    <span class="mc-tag">Kembalikan Stok</span>
+                </div>
+            </a>
+
+            <!-- Laporan -->
+            <a href="laporan.html" class="module-card mc-success">
+                <div class="mc-icon"><i class="bx bx-file-report"></i></div>
+                <div class="mc-title">Laporan & Analisis</div>
+                <p class="mc-desc">Dashboard analitik lengkap: revenue, HPP, profit, grafik tren, top produk, dan distribusi per kategori.</p>
+                <div class="mc-tags">
+                    <span class="mc-tag">Export Excel</span>
+                    <span class="mc-tag">Export PDF</span>
+                    <span class="mc-tag">Print Laporan</span>
+                </div>
+            </a>
+
+            <!-- Linked Data -->
+            <a href="linkedData.html" class="module-card mc-purple">
+                <div class="mc-icon"><i class="bx bx-network-chart"></i></div>
+                <div class="mc-title">Linked Data</div>
+                <p class="mc-desc">Kelola data master: kategori, merk, supplier, lokasi, customer, dan metode pembayaran yang saling terhubung.</p>
+                <div class="mc-tags">
+                    <span class="mc-tag">Auto-sync</span>
+                    <span class="mc-tag">Barcode Print</span>
+                    <span class="mc-tag">Payment Method</span>
+                </div>
+            </a>
+
+            <!-- User Management -->
+            <a href="userManagement.html" class="module-card mc-danger">
+                <div class="mc-icon"><i class="bx bx-shield-alt-2"></i></div>
+                <div class="mc-title">Manajemen Akun</div>
+                <p class="mc-desc">Atur akun pengguna dengan 5 level akses berbeda. Kontrol siapa bisa mengakses fitur mana di sistem.</p>
+                <div class="mc-tags">
+                    <span class="mc-tag">5 Level Role</span>
+                    <span class="mc-tag">Aktif/Nonaktif</span>
+                    <span class="mc-tag">Ganti Password</span>
+                </div>
+            </a>
         </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="fc-icon"><i class="bx bx-package" ></i></div>
-                <h3>Input Barang</h3>
-                <p>Catat setiap barang masuk berdasarkan invoice, supplier, dan tanggal secara terstruktur.</p>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ===== FITUR DETAIL ===== -->
+    <section class="section" id="fitur">
+        <p class="section-eyebrow">Fitur Unggulan</p>
+        <h2 class="section-title">Dirancang untuk akurasi<br>dan efisiensi operasional</h2>
+
+        <div class="features-list">
+
+            <!-- Feature 1 — Invoice & Barang -->
+            <div class="feature-row">
+                <div class="feature-visual">
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Invoice</th><th>Supplier</th><th>Total Barang</th><th>Nilai HPP</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="color:var(--text3)">1</td>
+                                <td style="color:var(--brand);font-family:var(--mono);font-size:10px">INV-2024-001</td>
+                                <td>PT Maju Jaya</td>
+                                <td>120 unit</td>
+                                <td style="color:var(--success);font-family:var(--mono);font-size:10px">Rp 6.500.000</td>
+                                <td><span class="pill pill-green">Masuk</span></td>
+                            </tr>
+                            <tr>
+                                <td style="color:var(--text3)">2</td>
+                                <td style="color:var(--brand);font-family:var(--mono);font-size:10px">INV-2024-002</td>
+                                <td>CV Sentosa</td>
+                                <td>85 unit</td>
+                                <td style="color:var(--success);font-family:var(--mono);font-size:10px">Rp 4.200.000</td>
+                                <td><span class="pill pill-green">Masuk</span></td>
+                            </tr>
+                            <tr>
+                                <td style="color:var(--text3)">3</td>
+                                <td style="color:var(--brand);font-family:var(--mono);font-size:10px">INV-2024-003</td>
+                                <td>UD Prima</td>
+                                <td>230 unit</td>
+                                <td style="color:var(--success);font-family:var(--mono);font-size:10px">Rp 11.750.000</td>
+                                <td><span class="pill pill-green">Masuk</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="feature-text">
+                    <p class="feature-kicker">Input Barang & Invoice</p>
+                    <h3 class="feature-title">Pencatatan barang masuk yang terstruktur</h3>
+                    <p class="feature-desc">Setiap pengiriman barang dicatat dalam invoice tersendiri. Detail item mencakup SKU, nama, merk, kategori, lokasi inventori, harga HPP, harga jual, stok, dan expired date.</p>
+                    <ul class="feature-bullets">
+                        <li>Scan barcode invoice dan SKU barang via kamera atau galeri</li>
+                        <li>Auto-generate subtotal dan total nilai per invoice</li>
+                        <li>Sinkronisasi otomatis ke Global Stok dan Linked Data</li>
+                        <li>Edit dan hapus item dengan restore stok otomatis</li>
+                    </ul>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="fc-icon"><i class="bx bx-truck"></i></div>
-                <h3>Stock Out</h3>
-                <p>Kelola barang keluar dengan pencatatan penerima dan stok langsung terupdate otomatis.</p>
+
+            <!-- Feature 2 — Stock Out & Nota -->
+            <div class="feature-row reverse">
+                <div class="feature-visual">
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th><th>Customer</th><th>Metode</th><th>Total</th><th>Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="color:var(--orange);font-family:var(--mono);font-size:10px">INV-OUT-1</td>
+                                <td>Budi Santoso</td>
+                                <td><span class="pill pill-green">💵 Cash</span></td>
+                                <td style="color:var(--success);font-family:var(--mono);font-size:10px">Rp 850.000</td>
+                                <td style="color:var(--success);font-size:11px;font-weight:600">+Rp 175k</td>
+                            </tr>
+                            <tr>
+                                <td style="color:var(--orange);font-family:var(--mono);font-size:10px">INV-OUT-2</td>
+                                <td>Divisi IT</td>
+                                <td><span class="pill pill-purple">📱 QRIS</span></td>
+                                <td style="color:var(--success);font-family:var(--mono);font-size:10px">Rp 2.300.000</td>
+                                <td style="color:var(--success);font-size:11px;font-weight:600">+Rp 460k</td>
+                            </tr>
+                            <tr>
+                                <td style="color:var(--orange);font-family:var(--mono);font-size:10px">INV-OUT-3</td>
+                                <td>PT Nusantara</td>
+                                <td><span class="pill pill-orange">💰 Transfer</span></td>
+                                <td style="color:var(--success);font-family:var(--mono);font-size:10px">Rp 5.120.000</td>
+                                <td style="color:var(--success);font-size:11px;font-weight:600">+Rp 980k</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="feature-text">
+                    <p class="feature-kicker">Stock Out & Penjualan</p>
+                    <h3 class="feature-title">Proses penjualan dengan nota digital</h3>
+                    <p class="feature-desc">Buat invoice keluar untuk setiap transaksi penjualan. Pilih barang dari stok yang tersedia, tentukan jumlah, dan sistem otomatis mengurangi stok serta menghitung profit.</p>
+                    <ul class="feature-bullets">
+                        <li>Auto-generate nomor invoice berurutan</li>
+                        <li>Pilih metode bayar: Cash, QRIS, atau custom</li>
+                        <li>Cetak nota penjualan langsung dari browser</li>
+                        <li>Kembalikan stok jika transaksi dibatalkan</li>
+                    </ul>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="fc-icon"><i class="bx bx-chart-trend"></i></div>
-                <h3>Dashboard</h3>
-                <p>Pantau kondisi stok, kategori, dan distribusi barang secara visual dan real-time.</p>
+
+            <!-- Feature 3 — Laporan Keuangan -->
+            <div class="feature-row">
+                <div class="feature-visual" style="gap:12px">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+                            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Revenue</div>
+                            <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--success)">Rp 48,5jt</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+                            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Profit</div>
+                            <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--brand)">Rp 9,7jt</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+                            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Margin</div>
+                            <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--warning)">20,1%</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+                            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Pelanggan</div>
+                            <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--purple)">24 unik</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px">
+                        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Top 3 Produk Terlaris</div>
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:11px;color:#FBBC05">🥇</span>
+                                <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:100%;background:var(--brand);border-radius:2px"></div></div>
+                                <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">82 pcs</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:11px;color:var(--text3)">🥈</span>
+                                <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:68%;background:var(--accent);border-radius:2px"></div></div>
+                                <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">56 pcs</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:11px;color:var(--text3)">🥉</span>
+                                <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:45%;background:var(--warning);border-radius:2px"></div></div>
+                                <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">37 pcs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-text">
+                    <p class="feature-kicker">Laporan Keuangan & Analitik</p>
+                    <h3 class="feature-title">Analisis bisnis lengkap dengan grafik</h3>
+                    <p class="feature-desc">Pantau revenue, HPP, profit, dan profit margin dalam satu halaman. Lihat distribusi penjualan per kategori, grafik tren harian, dan riwayat lengkap transaksi.</p>
+                    <ul class="feature-bullets">
+                        <li>Filter periode: harian, bulanan, tahunan, atau custom range</li>
+                        <li>Grafik revenue vs HPP vs profit per bulan</li>
+                        <li>Top 10 produk terlaris dengan margin per item</li>
+                        <li>Export ke Excel (.xlsx) dan PDF siap cetak</li>
+                    </ul>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="fc-icon"><i class="bx bx-network-chart"></i></div>
-                <h3>Linked Data</h3>
-                <p>Data kategori, merk, supplier, dan lokasi saling terhubung dan auto-sync.</p>
+
+            <!-- Feature 4 — SKU & Barcode -->
+            <div class="feature-row reverse">
+                <div class="feature-visual" style="justify-content:center">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <div class="sku-row-preview">
+                            <span class="sku-badge-preview"><i class="bx bx-barcode" style="vertical-align:-2px"></i> SKU-001-ELEC</span>
+                            <span style="font-size:11px;color:var(--text2);flex:1">Samsung Monitor 24"</span>
+                            <div class="barcode-lines">
+                                <span style="height:24px"></span><span style="height:18px"></span><span style="height:24px"></span><span style="height:14px"></span>
+                                <span style="height:24px"></span><span style="height:20px"></span><span style="height:24px"></span><span style="height:16px"></span>
+                                <span style="height:24px"></span><span style="height:22px"></span><span style="height:24px"></span>
+                            </div>
+                        </div>
+                        <div class="sku-row-preview">
+                            <span class="sku-badge-preview"><i class="bx bx-barcode" style="vertical-align:-2px"></i> SKU-024-CLOTH</span>
+                            <span style="font-size:11px;color:var(--text2);flex:1">Kaos Polo Nike XL</span>
+                            <div class="barcode-lines">
+                                <span style="height:22px"></span><span style="height:16px"></span><span style="height:22px"></span><span style="height:24px"></span>
+                                <span style="height:18px"></span><span style="height:22px"></span><span style="height:20px"></span><span style="height:24px"></span>
+                                <span style="height:14px"></span><span style="height:22px"></span><span style="height:24px"></span>
+                            </div>
+                        </div>
+                        <div class="sku-row-preview">
+                            <span class="sku-badge-preview"><i class="bx bx-barcode" style="vertical-align:-2px"></i> SKU-055-FOOD</span>
+                            <span style="font-size:11px;color:var(--text2);flex:1">Indomie Goreng 40gr</span>
+                            <div class="barcode-lines">
+                                <span style="height:24px"></span><span style="height:20px"></span><span style="height:16px"></span><span style="height:24px"></span>
+                                <span style="height:22px"></span><span style="height:14px"></span><span style="height:24px"></span><span style="height:18px"></span>
+                                <span style="height:24px"></span><span style="height:20px"></span><span style="height:22px"></span>
+                            </div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+                            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Generate & Print Barcode SKU</div>
+                            <div style="display:flex;justify-content:center;gap:8px">
+                                <span style="font-size:11px;font-weight:600;color:var(--brand);background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);padding:4px 10px;border-radius:6px"><i class="bx bx-download" style="vertical-align:-1px"></i> Download PNG</span>
+                                <span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--surface2);border:1px solid var(--border-md);padding:4px 10px;border-radius:6px"><i class="bx bx-printer" style="vertical-align:-1px"></i> Print</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-text">
+                    <p class="feature-kicker">SKU & Barcode Scanner</p>
+                    <h3 class="feature-title">Identifikasi barang lebih cepat dengan barcode</h3>
+                    <p class="feature-desc">Setiap barang memiliki kode SKU unik yang bisa dikonversi menjadi barcode CODE128. Scanner barcode terintegrasi menggunakan kamera atau galeri foto.</p>
+                    <ul class="feature-bullets">
+                        <li>Scan barcode langsung di browser via ZXing library</li>
+                        <li>Autofill data barang saat SKU dikenali</li>
+                        <li>Generate barcode CODE128 dari kode SKU</li>
+                        <li>Download PNG atau cetak label barcode langsung</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ===== ROLE / AKSES SECTION ===== -->
+    <section class="section" id="akses">
+        <p class="section-eyebrow">Multi-Role Access</p>
+        <h2 class="section-title">5 Level akses untuk<br>tim yang beragam</h2>
+        <p class="section-desc">
+            Setiap anggota tim mendapat akses sesuai tanggung jawabnya. Tidak ada fitur yang terbuka untuk semua orang secara default.
+        </p>
+
+        <div class="roles-grid">
+            <div class="role-card rc-owner">
+                <div class="role-avatar"><i class="bx bx-crown"></i></div>
+                <div class="role-name">Owner</div>
+                <p class="role-desc-text">Akses penuh absolut ke semua fitur dan manajemen pengguna</p>
+                <span class="role-badge-pill">Semua Fitur</span>
+            </div>
+            <div class="role-card rc-admin">
+                <div class="role-avatar"><i class="bx bx-shield-alt-2"></i></div>
+                <div class="role-name">Admin</div>
+                <p class="role-desc-text">Akses penuh termasuk manajemen akun pengguna</p>
+                <span class="role-badge-pill">Full Access</span>
+            </div>
+            <div class="role-card rc-kepala">
+                <div class="role-avatar"><i class="bx bx-store"></i></div>
+                <div class="role-name">Kepala Toko</div>
+                <p class="role-desc-text">Operasional lengkap dan laporan keuangan, tanpa user management</p>
+                <span class="role-badge-pill">Ops + Laporan</span>
+            </div>
+            <div class="role-card rc-kasir">
+                <div class="role-avatar"><i class="bx bx-receipt"></i></div>
+                <div class="role-name">Kasir</div>
+                <p class="role-desc-text">Stock out, laporan, dan baca stok saja</p>
+                <span class="role-badge-pill">Penjualan</span>
+            </div>
+            <div class="role-card rc-gudang">
+                <div class="role-avatar"><i class="bx bx-package"></i></div>
+                <div class="role-name">Staf Gudang</div>
+                <p class="role-desc-text">Input barang masuk dan kelola stok, tanpa akses penjualan</p>
+                <span class="role-badge-pill">Stok & Input</span>
             </div>
         </div>
     </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ===== CTA ===== -->
+    <section class="cta-section">
+        <div class="cta-box">
+            <div class="cta-glow"></div>
+            <h2 class="cta-title">Mulai kelola inventori<br>dengan lebih baik</h2>
+            <p class="cta-desc">Masuk ke dashboard INVENZ dan mulai catat barang, kelola stok, serta pantau performa bisnis Anda sekarang.</p>
+            <div class="cta-actions">
+                <a href="login.html" class="btn-primary">
+                    <i class="bx bx-log-in"></i>
+                    Masuk ke Sistem
+                </a>
+                <!-- <a href="dashboard.html" class="btn-secondary">
+                    <i class="bx bx-layout"></i>
+                    Lihat Dashboard
+                </a> -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="footer-brand">
+            <div class="footer-mark">I</div>
+            INVENZ
+        </div>
+        <div class="footer-info">
+            Sistem Manajemen Inventori Digital<br>
+            <span style="color:var(--text3);font-size:11px"></span>
+        </div>
+        <div class="footer-team">
+            Ihsan Mahfudh · M. Agung Zulfikar<br>
+            Naila Maritza Azahra · Testsa Adel R.F.
+        </div>
+    </footer>
 
     <script>
-        // Parallax glow on mousemove
-        document.addEventListener('mousemove', (e) => {
-            const glow = document.querySelector('.bg-glow');
-            const x = (e.clientX / window.innerWidth) * 100;
-            const y = (e.clientY / window.innerHeight) * 100;
-            glow.style.background = `radial-gradient(600px circle at ${x}% ${y}%, rgba(16,44,168,0.12), transparent 60%)`;
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const id = a.getAttribute('href').slice(1);
+                const el = document.getElementById(id);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
         });
 
-        // Animate numbers on load
-        function animateNum(el, target) {
-            if (isNaN(target)) return;
-            let current = 0;
-            const step = Math.ceil(target / 40);
-            const timer = setInterval(() => {
-                current = Math.min(current + step, target);
-                el.textContent = current;
-                if (current >= target) clearInterval(timer);
-            }, 30);
-        }
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.style.animation = 'fadeUp 0.5s ease both';
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
 
-        document.querySelectorAll('.stat-num').forEach(el => {
-            const val = parseInt(el.textContent);
-            if (!isNaN(val)) animateNum(el, val);
+        document.querySelectorAll('.module-card, .feature-row, .role-card').forEach(el => {
+            el.style.opacity = '0';
+            obs.observe(el);
         });
     </script>
 </body>
