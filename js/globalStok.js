@@ -1,4 +1,17 @@
 "use strict";
+const RETUR_KEY_GS = "invenz_retur_items";
+
+function loadReturSetGS() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(RETUR_KEY_GS) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function itemReturKeyGS(invoiceId, sku, nama) {
+  return `${invoiceId}::${sku}::${nama}`;
+}
 
 // ============================================================
 // ===== AUTH CHECK ===========================================
@@ -221,22 +234,29 @@ function loadGlobalStok() {
 
   allRows = [];
 
+  var returSet = loadReturSetGS();
+ 
   Object.values(invoices).forEach(function (inv) {
     if (!inv.items || inv.items.length === 0) return;
     inv.items.forEach(function (item) {
+ 
+      // Sembunyikan item yang di-retur
+      var rk = itemReturKeyGS(inv.invoice, item.sku || item.nama, item.nama);
+      if (returSet.has(rk)) return;
+ 
       allRows.push({
-        invoice: inv.invoice || "—",
-        tanggal: inv.tanggal || "",
-        supplier: inv.supplier || "—",
-        sku: item.sku || "—",
-        nama: item.nama || "—",
-        merk: item.merk || "—",
-        kategori: item.kategori || "—",
-        expired: item.expired || "—",
-        stok: item.stok || 0,
-        hpp: item.hargaHPP || 0,
-        jual: item.hargaJual || 0,
-        lokasi: item.lokasi || "—",
+        invoice  : inv.invoice   || "—",
+        tanggal  : inv.tanggal   || "",
+        supplier : inv.supplier  || "—",
+        sku      : item.sku      || "—",
+        nama     : item.nama     || "—",
+        merk     : item.merk     || "—",
+        kategori : item.kategori || "—",
+        expired  : item.expired  || "—",
+        stok     : item.stok     || 0,
+        hpp      : item.hargaHPP  || 0,
+        jual     : item.hargaJual || 0,
+        lokasi   : item.lokasi    || "—",
       });
     });
   });

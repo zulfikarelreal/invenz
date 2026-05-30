@@ -52,6 +52,7 @@
       "laporan",
       "user_management",
       "settings",
+      "expired_items",
     ],
 
     admin: [
@@ -65,6 +66,7 @@
       "laporan",
       "user_management",
       "settings",
+      "expired_items",
     ],
 
     kepala_toko: [
@@ -76,6 +78,7 @@
       "linked_data",
       "linked_data_read",
       "laporan",
+      "expired_items",
     ],
 
     kasir: [
@@ -92,6 +95,7 @@
       "global_stok",
       "global_stok_read",
       "linked_data_read",
+      "expired_items",
     ],
   };
 
@@ -105,6 +109,7 @@
     "laporan.html": "laporan",
     "userManagement.html": "user_management",
     "settings.html": "settings",
+    "barangKadaluarsa.html": "expired_items",
   };
 
   // ── 6. Expose helper global ──

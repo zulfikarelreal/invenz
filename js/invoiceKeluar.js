@@ -368,22 +368,48 @@ function buildStokList() {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
   allGlobalStok = [];
 
+  // Muat retur set sekali di luar loop (efisien)
+  let returSetIK;
+  try {
+    returSetIK = new Set(
+      JSON.parse(localStorage.getItem("invenz_retur_items") || "[]"),
+    );
+  } catch {
+    returSetIK = new Set();
+  }
+
+  const todayIK = new Date();
+  todayIK.setHours(0, 0, 0, 0);
+
   Object.values(invoices).forEach((inv) => {
     if (!inv.items) return;
     inv.items.forEach((item) => {
       const stokSisa = parseInt(item.stok) || 0;
-      // Hanya tampilkan barang yang stoknya > 0
+
+      // Skip stok habis
       if (stokSisa <= 0) return;
+
+      // Skip item yang sudah di-retur
+      const rkIK = `${inv.invoice}::${item.sku || item.nama}::${item.nama}`;
+      if (returSetIK.has(rkIK)) return;
+
+      // Skip item yang sudah expired
+      if (item.expired && item.expired !== "-" && item.expired !== "") {
+        const expDate = new Date(item.expired);
+        expDate.setHours(0, 0, 0, 0);
+        if (expDate < todayIK) return;
+      }
+
       allGlobalStok.push({
-        invoiceAsal : inv.invoice,
-        nama        : item.nama,
-        kategori    : item.kategori || "—",
-        merk        : item.merk     || "—",
-        lokasi      : item.lokasi   || "—",
-        sku         : item.sku      || "—",
-        hargaHPP    : item.hargaHPP  || 0,
-        hargaJual   : item.hargaJual || 0,
-        stok        : stokSisa,
+        invoiceAsal: inv.invoice,
+        nama: item.nama,
+        kategori: item.kategori || "—",
+        merk: item.merk || "—",
+        lokasi: item.lokasi || "—",
+        sku: item.sku || "—",
+        hargaHPP: item.hargaHPP || 0,
+        hargaJual: item.hargaJual || 0,
+        stok: stokSisa,
       });
     });
   });

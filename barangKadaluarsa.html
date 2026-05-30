@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <title>Barang Kadaluarsa | Invenz</title>
+    <style>
+/* ================================================================
+   INVENZ — BARANG KADALUARSA
+   Dark Navy theme, selaras dengan globalStok.css
+================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+    --brand:        #4F8EF7;
+    --brand-dark:   #2563EB;
+    --accent:       #00E5C4;
+    --bg:           #0C0F1A;
+    --bg2:          #111527;
+    --bg3:          #161B30;
+    --surface:      #1A2038;
+    --surface2:     #1F2644;
+    --surface3:     #242B4A;
+    --border:       rgba(255,255,255,0.07);
+    --border-md:    rgba(255,255,255,0.12);
+    --border-hi:    rgba(79,142,247,0.35);
+    --text:         #E8ECFF;
+    --text2:        #8B97C2;
+    --text3:        #4D5A80;
+    --success:      #10D99A;
+    --success-bg:   rgba(16,217,154,0.12);
+    --warning:      #FBBC05;
+    --warning-bg:   rgba(251,188,5,0.12);
+    --danger:       #F05252;
+    --danger-bg:    rgba(240,82,82,0.12);
+    --danger-border:rgba(240,82,82,0.30);
+    --expired:      #FF6B35;
+    --expired-bg:   rgba(255,107,53,0.12);
+    --expired-border:rgba(255,107,53,0.30);
+    --navbar-h:     56px;
+    --sidebar-w:    265px;
+    --radius:       12px;
+    --radius-sm:    8px;
+    --radius-lg:    16px;
+    --font:         'DM Sans', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+    --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+    --transition:   0.2s var(--ease);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+    content:'';
+    position: fixed; inset: 0;
+    background-image:
+        linear-gradient(rgba(79,142,247,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
+
+/* ===== SIDEBAR OVERLAY ===== */
+.sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    z-index: 150;
+}
+.sidebar-overlay.active { display: block; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    position: fixed; top: 0; left: calc(-1 * var(--sidebar-w));
+    width: var(--sidebar-w); height: 100vh;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    z-index: 200; display: flex; flex-direction: column;
+    transition: left 0.3s var(--ease); overflow-y: auto; overflow-x: hidden;
+}
+.sidebar.open { left: 0; }
+
+.sidebar-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; height: var(--navbar-h);
+    border-bottom: 1px solid var(--border); background: var(--bg3); flex-shrink: 0;
+}
+
+.sidebar-brand { display: flex; align-items: center; gap: 9px; }
+.sidebar-brand-dot {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--brand); display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: var(--bg);
+    box-shadow: 0 0 12px rgba(79,142,247,0.45); flex-shrink: 0;
+}
+.sidebar-brand-text {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 16px; color: var(--text); letter-spacing: 3px;
+}
+.sidebar-close {
+    font-size: 22px !important; cursor: pointer; color: var(--text2);
+    padding: 4px; border-radius: 6px; transition: all var(--transition);
+}
+.sidebar-close:hover { color: var(--text); transform: rotate(90deg); }
+
+.sidebar-user {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 18px; border-bottom: 1px solid var(--border);
+}
+.sidebar-avatar {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--brand) 0%, #7C3AED 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 16px; flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(79,142,247,0.35);
+}
+.sidebar-uname { font-weight: 600; font-size: 13px; color: var(--text); display: block; }
+.sidebar-urole { font-size: 11px; color: var(--accent); display: block; margin-top: 2px; }
+
+.role-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; border: 1px solid; }
+.role-owner   { background: rgba(251,191,36,.15); color: #fbbf24; border-color: rgba(251,191,36,.35); }
+.role-admin   { background: rgba(79,142,247,.12); color: var(--brand); border-color: rgba(79,142,247,.3); }
+.role-kepala  { background: rgba(139,92,246,.15); color: #a78bfa; border-color: rgba(139,92,246,.35); }
+.role-kasir   { background: rgba(16,217,154,.12); color: #10d99a; border-color: rgba(16,217,154,.3); }
+.role-gudang  { background: rgba(245,158,11,.12); color: #f59e0b; border-color: rgba(245,158,11,.3); }
+
+.sidebar-section-label {
+    padding: 14px 18px 5px; font-size: 9px; font-weight: 700;
+    letter-spacing: 2px; color: var(--text3); text-transform: uppercase;
+}
+.sidebar-menu { list-style: none; padding: 0 10px; }
+.sidebar-menu li { margin-bottom: 2px; }
+.sidebar-menu li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; font-size: 13px; font-weight: 500;
+    color: var(--text2); text-decoration: none;
+    border-radius: var(--radius-sm); transition: all var(--transition);
+    border-left: 2px solid transparent;
+}
+.sidebar-menu li a:hover { background: var(--surface); color: var(--text); }
+.sidebar-menu li a.active {
+    background: linear-gradient(90deg, rgba(79,142,247,0.2), rgba(79,142,247,0.05));
+    color: var(--brand); border-left-color: var(--brand);
+}
+.sidebar-menu li a.active-expired {
+    background: linear-gradient(90deg, rgba(255,107,53,0.2), rgba(255,107,53,0.05));
+    color: var(--expired); border-left-color: var(--expired);
+}
+.sidebar-menu li a i { font-size: 18px !important; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 7px; flex-shrink: 0; }
+.sidebar-menu li a:hover i { background: var(--surface2); }
+.sidebar-menu li a.active i { background: rgba(79,142,247,0.15); }
+.sidebar-menu li a.active-expired i { background: rgba(255,107,53,0.15); }
+
+.menu-badge {
+    margin-left: auto; font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 20px;
+    background: var(--brand); color: var(--bg); font-family: var(--font-mono);
+}
+.menu-badge-exp {
+    margin-left: auto; font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 20px;
+    background: var(--expired); color: #fff; font-family: var(--font-mono);
+}
+
+.sidebar-footer {
+    margin-top: auto; padding: 14px 10px;
+    border-top: 1px solid var(--border); flex-shrink: 0;
+}
+.btn-logout {
+    width: 100%; padding: 9px;
+    background: var(--danger-bg); color: var(--danger);
+    border: 1px solid var(--danger-border); border-radius: var(--radius-sm);
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: all var(--transition); font-family: var(--font);
+}
+.btn-logout:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-logout i { font-size: 16px !important; }
+
+/* ===== NAVBAR ===== */
+.navbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; height: var(--navbar-h);
+    background: rgba(17,21,39,0.85); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+}
+.hamburger-btn {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 20px; color: var(--text2); transition: all var(--transition);
+}
+.hamburger-btn:hover { background: var(--surface2); border-color: var(--border-md); color: var(--text); }
+.nav-title {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    color: var(--text2); letter-spacing: 2px; text-transform: uppercase;
+    background: var(--surface); padding: 6px 12px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+}
+.nav-title i { font-size: 16px !important; color: var(--expired); }
+.nav-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand), #7C3AED);
+    color: #fff; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 0 10px rgba(79,142,247,0.3);
+    transition: transform var(--transition);
+}
+.nav-avatar:hover { transform: scale(1.08); }
+
+/* ===== MAIN ===== */
+.main {
+    margin-top: var(--navbar-h);
+    padding: 24px 22px 60px;
+    position: relative; z-index: 1;
+}
+
+/* ===== HERO BANNER ===== */
+.exp-banner {
+    background: linear-gradient(135deg, rgba(255,107,53,0.15) 0%, rgba(240,82,82,0.08) 100%);
+    border: 1px solid var(--expired-border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s var(--ease) both;
+}
+
+.exp-banner::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--expired), var(--danger));
+}
+
+.exp-banner-icon {
+    font-size: 40px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 12px rgba(255,107,53,0.4));
+    animation: pulse-exp 2s ease-in-out infinite;
+}
+
+@keyframes pulse-exp {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.exp-banner-text h2 {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 800;
+    color: var(--text); margin-bottom: 4px;
+}
+.exp-banner-text p {
+    font-size: 13px; color: var(--text2); line-height: 1.5;
+}
+.exp-banner-text strong { color: var(--expired); }
+
+.exp-banner-stats {
+    margin-left: auto;
+    display: flex;
+    gap: 0;
+    background: rgba(0,0,0,0.25);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-md);
+    flex-shrink: 0;
+}
+
+.exp-stat {
+    padding: 12px 20px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+}
+.exp-stat:last-child { border-right: none; }
+.exp-stat-val {
+    font-family: var(--font-mono);
+    font-size: 24px; font-weight: 700; color: var(--expired);
+    line-height: 1; display: block;
+}
+.exp-stat-val.warn { color: var(--warning); }
+.exp-stat-val.ok   { color: var(--success); }
+.exp-stat-label { font-size: 10px; color: var(--text3); margin-top: 3px; display: block; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== TABS ===== */
+.tabs {
+    display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+    animation: fadeUp 0.4s 0.05s var(--ease) both;
+}
+
+.tab-btn {
+    padding: 8px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: all var(--transition); font-family: var(--font);
+    color: var(--text2);
+}
+.tab-btn:hover { border-color: var(--border-md); color: var(--text); background: var(--surface2); }
+.tab-btn.active-exp {
+    background: var(--expired-bg);
+    border-color: var(--expired-border);
+    color: var(--expired);
+    box-shadow: 0 2px 12px rgba(255,107,53,0.2);
+}
+.tab-btn.active-warn {
+    background: var(--warning-bg);
+    border-color: rgba(251,188,5,0.35);
+    color: var(--warning);
+}
+.tab-btn.active-all {
+    background: rgba(79,142,247,0.12);
+    border-color: var(--border-hi);
+    color: var(--brand);
+}
+.tab-btn .tab-count {
+    font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 20px;
+    background: rgba(255,255,255,0.1);
+    font-family: var(--font-mono);
+}
+
+/* ===== NAV CONTROL ===== */
+.nav-controll {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; margin-bottom: 14px;
+    animation: fadeUp 0.4s 0.08s var(--ease) both;
+}
+
+.filter-wrap {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 7px 12px;
+    transition: border-color var(--transition);
+}
+.filter-wrap:hover { border-color: var(--border-md); }
+.filter-icon { font-size: 16px !important; color: var(--brand); cursor: default; }
+.filter-select {
+    font-family: var(--font); font-size: 12px; font-weight: 500;
+    border: none; outline: none; background: transparent;
+    cursor: pointer; color: var(--text); -webkit-appearance: none;
+}
+.filter-select option { background: var(--surface); color: var(--text); }
+
+.search-box {
+    flex: 1; max-width: 260px;
+    padding: 7px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size: 12.5px;
+    font-family: var(--font); background: var(--surface);
+    color: var(--text); outline: none; transition: all var(--transition);
+}
+.search-box::placeholder { color: var(--text3); }
+.search-box:focus { border-color: var(--brand); background: var(--surface2); box-shadow: 0 0 0 2px rgba(79,142,247,0.15); }
+
+/* ===== SUMMARY STRIP ===== */
+.summary-strip {
+    display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 14px; overflow: hidden;
+    position: relative; transition: border-color var(--transition);
+    animation: fadeUp 0.4s 0.1s var(--ease) both;
+}
+.summary-strip:hover { border-color: var(--border-md); }
+.summary-strip::before {
+    content:''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--expired), var(--danger), var(--warning));
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+.summary-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 14px 12px; gap: 3px; cursor: default; transition: background var(--transition);
+}
+.summary-item:hover { background: var(--surface2); }
+.summary-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; color: var(--text3); text-align: center; }
+.summary-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; line-height: 1; }
+.summary-val.exp    { color: var(--expired); }
+.summary-val.warn   { color: var(--warning); }
+.summary-val.danger { color: var(--danger); }
+.summary-val.ok     { color: var(--success); }
+.summary-divider { width: 1px; height: 44px; background: var(--border); flex-shrink: 0; }
+
+/* ===== TABLE ===== */
+.container {
+    width: 100%; overflow-x: auto;
+    animation: fadeUp 0.4s 0.14s var(--ease) both;
+}
+
+table {
+    width: 100%; border-collapse: collapse;
+    background: var(--surface); border-radius: var(--radius);
+    overflow: hidden; border: 1px solid var(--border); font-size: 13px;
+}
+
+thead { background: var(--bg3); }
+
+th {
+    padding: 11px 14px; text-align: center;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 500;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+
+td {
+    padding: 11px 14px; text-align: center;
+    font-size: 12.5px; color: var(--text2);
+    border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle;
+}
+
+.empty-row td {
+    color: var(--text3); font-style: italic; font-size: 13px; padding: 36px; text-align: center;
+}
+
+tbody tr:not(.empty-row) { transition: background var(--transition); }
+tbody tr:not(.empty-row):hover { background: var(--surface2); }
+
+/* Row status tints */
+tbody tr.row-expired { background: rgba(255,107,53,0.04); }
+tbody tr.row-expired:hover { background: rgba(255,107,53,0.09); }
+tbody tr.row-soon { background: rgba(251,188,5,0.04); }
+tbody tr.row-soon:hover { background: rgba(251,188,5,0.09); }
+tbody tr.row-retur { background: rgba(79,142,247,0.04); opacity: 0.65; }
+
+/* ===== EXPIRED BADGES ===== */
+.exp-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 10.5px; font-weight: 700;
+    border: 1px solid; white-space: nowrap;
+}
+.exp-badge.expired { background: var(--expired-bg); color: var(--expired); border-color: var(--expired-border); }
+.exp-badge.soon    { background: var(--warning-bg); color: var(--warning); border-color: rgba(251,188,5,0.3); }
+.exp-badge.ok      { background: var(--success-bg); color: var(--success); border-color: rgba(16,217,154,0.3); }
+.exp-badge.retur   { background: rgba(79,142,247,0.12); color: var(--brand); border-color: var(--border-hi); }
+.exp-badge i       { font-size: 12px !important; }
+
+/* ===== ACTION BUTTONS ===== */
+.btn-retur {
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    background: rgba(79,142,247,0.12); color: var(--brand);
+    border: 1px solid var(--border-hi); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all var(--transition);
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font); white-space: nowrap;
+}
+.btn-retur:hover { background: var(--brand); color: #fff; border-color: var(--brand); transform: translateY(-1px); }
+.btn-retur i { font-size: 13px !important; }
+
+.btn-restore {
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    background: var(--success-bg); color: var(--success);
+    border: 1px solid rgba(16,217,154,0.3); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all var(--transition);
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font); white-space: nowrap;
+}
+.btn-restore:hover { background: var(--success); color: var(--bg); border-color: var(--success); }
+.btn-restore i { font-size: 13px !important; }
+
+.btn-hapus {
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    background: var(--danger-bg); color: var(--danger);
+    border: 1px solid var(--danger-border); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all var(--transition);
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font); white-space: nowrap;
+}
+.btn-hapus:hover { background: var(--danger); color: #fff; }
+.btn-hapus i { font-size: 13px !important; }
+
+.btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: var(--expired); color: #fff;
+    border: 1px solid var(--expired-border); border-radius: var(--radius-sm);
+    box-shadow: 0 4px 14px rgba(255,107,53,0.3);
+    cursor: pointer; transition: all var(--transition);
+    font-family: var(--font); font-size: 12.5px; font-weight: 600;
+    white-space: nowrap;
+}
+.btn-primary:hover { background: #e5572a; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,107,53,0.4); }
+.btn-primary i { font-size: 16px !important; }
+
+.actions-cell { display: flex; gap: 5px; justify-content: center; align-items: center; flex-wrap: wrap; }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    z-index: 300; justify-content: center; align-items: center; padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+
+.modal {
+    background: var(--surface); border: 1px solid var(--border-md);
+    border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    padding: 28px 24px; width: 100%; max-width: 380px;
+    display: flex; flex-direction: column; gap: 16px; text-align: center;
+    animation: modalIn 0.22s var(--ease) both;
+}
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.confirm-icon { font-size: 48px; }
+.confirm-title { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text); }
+.confirm-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.modal-actions { display: flex; gap: 10px; }
+
+.btn-batal {
+    flex: 1; padding: 10px; font-size: 13px; font-weight: 600;
+    background: var(--bg3); color: var(--text2); border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font); transition: all var(--transition);
+}
+.btn-batal:hover { background: var(--surface2); color: var(--text); border-color: var(--border-hi); }
+
+.btn-confirm-retur {
+    flex: 1; padding: 10px; font-size: 13px; font-weight: 600;
+    background: var(--brand); color: #fff; border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font); transition: all var(--transition);
+    box-shadow: 0 4px 14px rgba(79,142,247,0.3);
+}
+.btn-confirm-retur:hover { background: var(--brand-dark); transform: translateY(-1px); }
+
+.btn-confirm-hapus {
+    flex: 1; padding: 10px; font-size: 13px; font-weight: 600;
+    background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font); transition: all var(--transition);
+}
+.btn-confirm-hapus:hover { background: var(--danger); color: #fff; }
+
+/* ===== TOAST ===== */
+.toast {
+    position: fixed; bottom: 28px; right: 24px; z-index: 9999;
+    padding: 12px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s var(--ease); pointer-events: none;
+    border: 1px solid;
+    backdrop-filter: blur(12px);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--success-bg); color: var(--success); border-color: rgba(16,217,154,0.3); }
+.toast.warn    { background: var(--warning-bg); color: var(--warning); border-color: rgba(251,188,5,0.3); }
+.toast.info    { background: rgba(79,142,247,0.15); color: var(--brand); border-color: var(--border-hi); }
+.toast i { font-size: 16px !important; }
+
+/* ===== INFO BANNER ===== */
+.info-note {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: rgba(79,142,247,0.06); border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-size: 12px; color: var(--brand); line-height: 1.6;
+    margin-bottom: 14px; animation: fadeUp 0.4s 0.02s var(--ease) both;
+}
+.info-note i { font-size: 16px !important; flex-shrink: 0; margin-top: 1px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 700px) {
+    .exp-banner { flex-direction: column; }
+    .exp-banner-stats { margin-left: 0; width: 100%; justify-content: center; }
+    .summary-strip { flex-wrap: wrap; }
+}
+    </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-dot">I</div>
+            <span class="sidebar-brand-text">INVENZ</span>
+        </div>
+        <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+        <div>
+            <span class="sidebar-uname" id="sidebarUsername">Admin</span>
+            <span class="sidebar-urole" id="sidebarRole">Administrator</span>
+        </div>
+    </div>
+
+    <div class="sidebar-section-label">— Navigasi</div>
+    <ul class="sidebar-menu">
+        <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+        <li><a href="inputBarang.html"><i class="bx bx-package"></i> Input Barang</a></li>
+        <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+        <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
+        <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+        <li><a href="laporan.html"><i class="bx bx-file-report"></i> Laporan</a></li>
+        <li><a href="barangKadaluarsa.html" class="active-expired"><i class="bx bx-alert-triangle"></i> Barang Kadaluarsa <span class="menu-badge-exp" id="sidebarExpCount">0</span></a></li>
+    </ul>
+
+    <div class="sidebar-section-label" id="adminSectionLabel" style="display:none">— Admin</div>
+    <ul class="sidebar-menu" id="adminMenu" style="display:none">
+        <li>
+            <a href="userManagement.html">
+                <i class="bx bx-shield-alt-2"></i> Manajemen Akun
+                <span class="menu-badge">Admin</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <button class="btn-logout" id="logoutBtn">
+            <i class="bx bx-log-out"></i> Logout
+        </button>
+    </div>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<div class="navbar">
+    <button class="hamburger-btn" id="hamburger" aria-label="Menu"><i class="bx bx-menu"></i></button>
+    <div class="nav-title">
+        <i class="bx bx-error-alt"></i>
+        <span>BARANG KADALUARSA</span>
+    </div>
+    <div class="nav-avatar" id="navAvatar" title="User">A</div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+    <!-- Hero Banner -->
+    <div class="exp-banner" id="heroBanner">
+        <div class="exp-banner-icon">⚠️</div>
+        <div class="exp-banner-text">
+            <h2>Manajemen Barang Kadaluarsa & Retur</h2>
+            <p>Barang <strong>expired</strong> otomatis diblokir dari Stock Out. Tandai sebagai <strong>retur</strong> untuk menyembunyikannya dari Global Stok, atau pulihkan jika tanggal kadaluarsa diperbarui.</p>
+        </div>
+        <div class="exp-banner-stats">
+            <div class="exp-stat">
+                <span class="exp-stat-val exp" id="statExpired">0</span>
+                <span class="exp-stat-label">Sudah Exp.</span>
+            </div>
+            <div class="exp-stat">
+                <span class="exp-stat-val warn" id="statSegera">0</span>
+                <span class="exp-stat-label">Segera Exp.</span>
+            </div>
+            <div class="exp-stat">
+                <span class="exp-stat-val ok" id="statRetur">0</span>
+                <span class="exp-stat-label">Di-Retur</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info note -->
+    <div class="info-note">
+        <i class="bx bx-info-circle"></i>
+        <span>
+            <strong>Blokir otomatis:</strong> Barang yang sudah melewati tanggal expired tidak bisa dipilih saat Stock Out.
+            Gunakan tombol <strong>Retur</strong> untuk menandai barang rusak/expired agar tidak tampil di Global Stok.
+            Gunakan <strong>Pulihkan</strong> jika barang masih layak jual (misal tanggal salah input).
+        </span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active-exp" id="tabExpired" onclick="switchTab('expired')">
+            <i class="bx bx-error-circle"></i> Sudah Kadaluarsa
+            <span class="tab-count" id="countExpired">0</span>
+        </button>
+        <button class="tab-btn" id="tabSegera" onclick="switchTab('segera')">
+            <i class="bx bx-time"></i> Segera Kadaluarsa ≤30 hari
+            <span class="tab-count" id="countSegera">0</span>
+        </button>
+        <button class="tab-btn" id="tabRetur" onclick="switchTab('retur')">
+            <i class="bx bx-undo"></i> Sudah Di-Retur
+            <span class="tab-count" id="countRetur">0</span>
+        </button>
+        <button class="tab-btn" id="tabAll" onclick="switchTab('all')">
+            <i class="bx bx-list-ul"></i> Semua (Exp. Tercatat)
+            <span class="tab-count" id="countAll">0</span>
+        </button>
+    </div>
+
+    <!-- Nav controll -->
+    <div class="nav-controll">
+        <div class="filter-wrap">
+            <i class="bx bx-filter-alt filter-icon"></i>
+            <select id="filterKategori" class="filter-select" onchange="render()">
+                <option value="">Semua Kategori</option>
+            </select>
+        </div>
+        <div class="filter-wrap">
+            <i class="bx bx-store filter-icon"></i>
+            <select id="filterSupplier" class="filter-select" onchange="render()">
+                <option value="">Semua Invoice</option>
+            </select>
+        </div>
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Cari nama, SKU…" oninput="render()">
+        <button class="btn-primary" id="btnReturAll" title="Retur semua barang expired sekaligus">
+            <i class="bx bx-layer-minus"></i> Retur Semua Expired
+        </button>
+    </div>
+
+    <!-- Summary strip -->
+    <div class="summary-strip" id="summaryStrip">
+        <div class="summary-item">
+            <span class="summary-label">Total Barang Exp.</span>
+            <span class="summary-val exp" id="sumTotal">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Total Qty</span>
+            <span class="summary-val warn" id="sumQty">0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Nilai HPP Terblokir</span>
+            <span class="summary-val danger" id="sumNilai">Rp 0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span class="summary-label">Sudah Diretur</span>
+            <span class="summary-val ok" id="sumRetur">0</span>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="container">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice Asal</th>
+                    <th>SKU</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th>Merk</th>
+                    <th>Lokasi</th>
+                    <th>Expired Date</th>
+                    <th>Sisa Qty</th>
+                    <th>Nilai HPP</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="empty-row">
+                    <td colspan="12">Memuat data…</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- ===== MODAL KONFIRMASI ===== -->
+<div class="modal-overlay" id="confirmOverlay">
+    <div class="modal">
+        <div class="confirm-icon" id="confirmIcon">♻️</div>
+        <div class="confirm-title" id="confirmTitle">Tandai Retur?</div>
+        <div class="confirm-desc" id="confirmDesc">Barang ini akan ditandai sebagai retur dan disembunyikan dari Global Stok.</div>
+        <div class="modal-actions">
+            <button class="btn-batal" id="btnBatal">Batal</button>
+            <button class="btn-confirm-retur" id="btnConfirm">Ya, Lanjutkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"><i class="bx bx-check-circle"></i> <span id="toastMsg"></span></div>
+
+<script src="js/auth.js"></script>
+<script>
+"use strict";
+
+/* ================================================================
+   ROLE & SIDEBAR SETUP
+================================================================ */
+(function () {
+    const role = localStorage.getItem("loggedRole") || "owner";
+    const user = localStorage.getItem("loggedUser") || "Admin";
+    const ROLE_LABELS = { owner:"Owner", admin:"Administrator", kepala_toko:"Kepala Toko", kasir:"Kasir", gudang:"Staf Gudang" };
+    const ROLE_CLASSES = { owner:"role-owner", admin:"role-admin", kepala_toko:"role-kepala", kasir:"role-kasir", gudang:"role-gudang" };
+    document.getElementById("sidebarUsername").textContent = user;
+    document.getElementById("sidebarAvatar").textContent   = user.charAt(0).toUpperCase();
+    document.getElementById("navAvatar").textContent       = user.charAt(0).toUpperCase();
+    const roleEl = document.getElementById("sidebarRole");
+    if (roleEl) roleEl.innerHTML = `<span class="role-badge ${ROLE_CLASSES[role]||'role-admin'}">${ROLE_LABELS[role]||role}</span>`;
+    if (role === "owner" || role === "admin") {
+        document.getElementById("adminSectionLabel").style.display = "";
+        document.getElementById("adminMenu").style.display = "";
+    }
+})();
+
+/* ================================================================
+   SIDEBAR TOGGLE / LOGOUT
+================================================================ */
+const sidebar  = document.getElementById("sidebar");
+const overlay  = document.getElementById("sidebarOverlay");
+document.getElementById("hamburger").addEventListener("click", () => { sidebar.classList.add("open"); overlay.classList.add("active"); });
+document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
+overlay.addEventListener("click", closeSidebar);
+function closeSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("loggedUser");
+    localStorage.removeItem("loggedRole");
+    window.location.href = "login.html";
+});
+
+/* ================================================================
+   RETUR STORAGE KEY
+================================================================ */
+const RETUR_KEY = "invenz_retur_items"; // Set of "invoiceId::sku::nama"
+
+function loadReturSet() {
+    try { return new Set(JSON.parse(localStorage.getItem(RETUR_KEY) || "[]")); }
+    catch { return new Set(); }
+}
+function saveReturSet(s) {
+    localStorage.setItem(RETUR_KEY, JSON.stringify([...s]));
+}
+function itemKey(inv, sku, nama) { return `${inv}::${sku}::${nama}`; }
+
+/* ================================================================
+   DATA LOADING
+================================================================ */
+function today() {
+    const d = new Date(); d.setHours(0,0,0,0); return d;
+}
+
+function getExpiredItems() {
+    const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
+    const retur    = loadReturSet();
+    const result   = [];
+
+    Object.values(invoices).forEach(inv => {
+        if (!inv.items) return;
+        inv.items.forEach(item => {
+            if (!item.expired || item.expired === "-" || item.expired === "") return;
+            const expDate = new Date(item.expired);
+            expDate.setHours(0,0,0,0);
+            const t = today();
+            const diffDays = Math.ceil((expDate - t) / (1000*60*60*24));
+
+            let status;
+            if (retur.has(itemKey(inv.invoice, item.sku || item.nama, item.nama))) {
+                status = "retur";
+            } else if (diffDays <= 0) {
+                status = "expired";
+            } else if (diffDays <= 30) {
+                status = "soon";
+            } else {
+                return; // masih aman, tidak ditampilkan
+            }
+
+            result.push({
+                invoiceAsal : inv.invoice,
+                tanggal     : inv.tanggal,
+                sku         : item.sku || "-",
+                nama        : item.nama,
+                kategori    : item.kategori || "-",
+                merk        : item.merk || "-",
+                lokasi      : item.lokasi || "-",
+                expired     : item.expired,
+                stok        : parseInt(item.stok) || 0,
+                hargaHPP    : parseFloat(item.hargaHPP) || 0,
+                status,
+                diffDays,
+            });
+        });
+    });
+
+    return result;
+}
+
+/* ================================================================
+   STATE
+================================================================ */
+let currentTab = "expired";
+let allItems   = [];
+
+/* ================================================================
+   RENDER
+================================================================ */
+function render() {
+    allItems = getExpiredItems();
+    const kw   = (document.getElementById("searchBox").value||"").toLowerCase();
+    const kat  = document.getElementById("filterKategori").value;
+    const sup  = document.getElementById("filterSupplier").value;
+
+    // Counts per tab
+    const counts = { expired:0, soon:0, retur:0, all:0 };
+    allItems.forEach(i => { counts[i.status]++; counts.all++; });
+    document.getElementById("countExpired").textContent = counts.expired;
+    document.getElementById("countSegera").textContent  = counts.soon;
+    document.getElementById("countRetur").textContent   = counts.retur;
+    document.getElementById("countAll").textContent     = counts.all;
+
+    // Hero stats
+    document.getElementById("statExpired").textContent = counts.expired;
+    document.getElementById("statSegera").textContent  = counts.soon;
+    document.getElementById("statRetur").textContent   = counts.retur;
+    document.getElementById("sidebarExpCount").textContent = counts.expired + counts.soon;
+
+    // Populate filters
+    populateFilters(allItems);
+
+    // Filter by tab
+    let filtered = allItems;
+    if (currentTab === "expired") filtered = filtered.filter(i => i.status === "expired");
+    else if (currentTab === "segera") filtered = filtered.filter(i => i.status === "soon");
+    else if (currentTab === "retur")  filtered = filtered.filter(i => i.status === "retur");
+
+    // Search + filter
+    if (kw)  filtered = filtered.filter(i => i.nama.toLowerCase().includes(kw) || (i.sku||"").toLowerCase().includes(kw));
+    if (kat) filtered = filtered.filter(i => i.kategori === kat);
+    if (sup) filtered = filtered.filter(i => i.invoiceAsal === sup);
+
+    // Summary strip
+    const sumQty   = filtered.reduce((s,i) => s + i.stok, 0);
+    const sumNilai = filtered.reduce((s,i) => s + i.hargaHPP * i.stok, 0);
+    const sumRetur = filtered.filter(i => i.status === "retur").length;
+    document.getElementById("sumTotal").textContent = filtered.length;
+    document.getElementById("sumQty").textContent   = sumQty;
+    document.getElementById("sumNilai").textContent = "Rp " + Math.round(sumNilai).toLocaleString("id-ID");
+    document.getElementById("sumRetur").textContent = sumRetur;
+
+    // Table
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="12">
+            ${currentTab === "expired" ? "🎉 Tidak ada barang yang sudah kadaluarsa." :
+              currentTab === "segera"  ? "Tidak ada barang yang akan segera kadaluarsa." :
+              currentTab === "retur"   ? "Belum ada barang yang di-retur." :
+              "Tidak ada data."}
+        </td></tr>`;
+        return;
+    }
+
+    filtered.forEach((item, idx) => {
+        const retur = loadReturSet();
+        const key = itemKey(item.invoiceAsal, item.sku, item.nama);
+        const isRetur = retur.has(key);
+
+        const rowClass = isRetur ? "row-retur" : item.status === "expired" ? "row-expired" : "row-soon";
+        const expDate  = new Date(item.expired);
+        expDate.setHours(0,0,0,0);
+        const diff = Math.ceil((expDate - today()) / (1000*60*60*24));
+
+        let badgeHtml, badgeLabel;
+        if (isRetur) {
+            badgeHtml = `<span class="exp-badge retur"><i class="bx bx-undo"></i> Retur</span>`;
+        } else if (item.status === "expired") {
+            badgeHtml = `<span class="exp-badge expired"><i class="bx bx-x-circle"></i> Kadaluarsa</span>`;
+            badgeLabel = `${Math.abs(diff)} hari lalu`;
+        } else {
+            badgeHtml = `<span class="exp-badge soon"><i class="bx bx-time"></i> ${diff} hari lagi</span>`;
+        }
+
+        const expdisplay = item.expired || "-";
+        const nilaiHPP   = "Rp " + Math.round(item.hargaHPP * item.stok).toLocaleString("id-ID");
+
+        const tr = document.createElement("tr");
+        tr.className = rowClass;
+        tr.innerHTML = `
+            <td style="color:var(--text3);font-family:var(--font-mono);font-size:11px">${idx+1}</td>
+            <td style="font-family:var(--font-mono);font-size:12px;color:var(--brand)">${item.invoiceAsal}</td>
+            <td style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${item.sku}</td>
+            <td style="text-align:left;font-weight:600;color:var(--text)">${item.nama}</td>
+            <td>${item.kategori}</td>
+            <td>${item.merk}</td>
+            <td>${item.lokasi}</td>
+            <td style="font-family:var(--font-mono);font-size:12px;color:${item.status==='expired'?'var(--expired)':item.status==='soon'?'var(--warning)':'var(--text2)'};font-weight:600">
+                ${expdisplay}
+                ${!isRetur && badgeLabel ? `<div style="font-size:10px;color:var(--text3);font-weight:400;margin-top:2px">${badgeLabel}</div>` : ""}
+            </td>
+            <td style="font-weight:700;color:var(--text)">${item.stok}</td>
+            <td style="font-family:var(--font-mono);font-size:12px;color:var(--danger);font-weight:600">${nilaiHPP}</td>
+            <td>${badgeHtml}</td>
+            <td>
+                <div class="actions-cell">
+                    ${isRetur
+                        ? `<button class="btn-restore" data-key="${key}"><i class="bx bx-revision"></i> Pulihkan</button>
+                           <button class="btn-hapus" data-key="${key}" data-inv="${item.invoiceAsal}" data-sku="${item.sku}" data-nama="${item.nama}"><i class="bx bx-trash"></i></button>`
+                        : `<button class="btn-retur" data-key="${key}"><i class="bx bx-layer-minus"></i> Retur</button>`
+                    }
+                </div>
+            </td>`;
+
+        tbody.appendChild(tr);
+    });
+
+    // Bind events
+    tbody.querySelectorAll(".btn-retur").forEach(btn => {
+        btn.addEventListener("click", () => openConfirm("retur", btn.dataset.key));
+    });
+    tbody.querySelectorAll(".btn-restore").forEach(btn => {
+        btn.addEventListener("click", () => openConfirm("restore", btn.dataset.key));
+    });
+    tbody.querySelectorAll(".btn-hapus").forEach(btn => {
+        btn.addEventListener("click", () => openConfirm("hapus", btn.dataset.key, btn.dataset.inv, btn.dataset.sku, btn.dataset.nama));
+    });
+}
+
+/* ================================================================
+   FILTERS POPULATE
+================================================================ */
+function populateFilters(items) {
+    const katSel = document.getElementById("filterKategori");
+    const supSel = document.getElementById("filterSupplier");
+    const prevKat = katSel.value;
+    const prevSup = supSel.value;
+
+    const kats = [...new Set(items.map(i => i.kategori).filter(k => k !== "-"))];
+    const sups = [...new Set(items.map(i => i.invoiceAsal))];
+
+    katSel.innerHTML = '<option value="">Semua Kategori</option>';
+    kats.forEach(k => { const o = document.createElement("option"); o.value = o.textContent = k; katSel.appendChild(o); });
+    katSel.value = prevKat;
+
+    supSel.innerHTML = '<option value="">Semua Invoice</option>';
+    sups.forEach(s => { const o = document.createElement("option"); o.value = o.textContent = s; supSel.appendChild(o); });
+    supSel.value = prevSup;
+}
+
+/* ================================================================
+   TAB SWITCH
+================================================================ */
+function switchTab(tab) {
+    currentTab = tab;
+    const map = { expired: "tabExpired", segera: "tabSegera", retur: "tabRetur", all: "tabAll" };
+    Object.keys(map).forEach(k => {
+        const btn = document.getElementById(map[k]);
+        btn.className = "tab-btn";
+        if (k === tab) {
+            if (k === "expired") btn.classList.add("active-exp");
+            else if (k === "segera") btn.classList.add("active-warn");
+            else btn.classList.add("active-all");
+        }
+    });
+    render();
+}
+
+/* ================================================================
+   CONFIRM MODAL
+================================================================ */
+let _pendingAction = null;
+
+function openConfirm(action, key, inv, sku, nama) {
+    _pendingAction = { action, key, inv, sku, nama };
+    const overlay   = document.getElementById("confirmOverlay");
+    const icon      = document.getElementById("confirmIcon");
+    const title     = document.getElementById("confirmTitle");
+    const desc      = document.getElementById("confirmDesc");
+    const btnConf   = document.getElementById("btnConfirm");
+
+    if (action === "retur") {
+        icon.textContent   = "♻️";
+        title.textContent  = "Tandai sebagai Retur?";
+        desc.textContent   = "Barang ini akan disembunyikan dari Global Stok dan tidak bisa di-StockOut. Stok di invoice tidak dihapus.";
+        btnConf.className  = "btn-confirm-retur";
+        btnConf.textContent = "Ya, Retur";
+    } else if (action === "restore") {
+        icon.textContent   = "🔄";
+        title.textContent  = "Pulihkan Barang?";
+        desc.textContent   = "Barang ini akan kembali muncul di Global Stok. Pastikan tanggal kadaluarsa sudah diperbarui.";
+        btnConf.className  = "btn-confirm-retur";
+        btnConf.textContent = "Ya, Pulihkan";
+    } else if (action === "hapus") {
+        icon.textContent   = "🗑️";
+        title.textContent  = "Hapus dari Daftar Retur?";
+        desc.textContent   = "Barang ini akan dihapus dari daftar retur. Stok di invoice tetap ada.";
+        btnConf.className  = "btn-confirm-hapus";
+        btnConf.textContent = "Ya, Hapus";
+    }
+
+    overlay.classList.add("active");
+}
+
+document.getElementById("btnBatal").addEventListener("click", () => {
+    document.getElementById("confirmOverlay").classList.remove("active");
+    _pendingAction = null;
+});
+document.getElementById("confirmOverlay").addEventListener("click", e => {
+    if (e.target === document.getElementById("confirmOverlay")) {
+        document.getElementById("confirmOverlay").classList.remove("active");
+        _pendingAction = null;
+    }
+});
+
+document.getElementById("btnConfirm").addEventListener("click", () => {
+    if (!_pendingAction) return;
+    const { action, key } = _pendingAction;
+    const retur = loadReturSet();
+
+    if (action === "retur") {
+        retur.add(key);
+        saveReturSet(retur);
+        showToast("Barang berhasil diretur dan disembunyikan dari stok.", "success");
+    } else if (action === "restore") {
+        retur.delete(key);
+        saveReturSet(retur);
+        showToast("Barang dipulihkan ke stok.", "success");
+    } else if (action === "hapus") {
+        retur.delete(key);
+        saveReturSet(retur);
+        showToast("Barang dihapus dari daftar retur.", "info");
+    }
+
+    document.getElementById("confirmOverlay").classList.remove("active");
+    _pendingAction = null;
+    render();
+});
+
+/* ================================================================
+   RETUR ALL EXPIRED
+================================================================ */
+document.getElementById("btnReturAll").addEventListener("click", () => {
+    const expiredItems = allItems.filter(i => i.status === "expired");
+    if (!expiredItems.length) { showToast("Tidak ada barang expired untuk di-retur.", "warn"); return; }
+
+    const retur = loadReturSet();
+    let count = 0;
+    expiredItems.forEach(i => {
+        const k = itemKey(i.invoiceAsal, i.sku, i.nama);
+        if (!retur.has(k)) { retur.add(k); count++; }
+    });
+    saveReturSet(retur);
+    showToast(`${count} barang expired berhasil di-retur.`, "success");
+    render();
+});
+
+/* ================================================================
+   TOAST
+================================================================ */
+function showToast(msg, type = "success") {
+    const t = document.getElementById("toast");
+    const icons = { success:"bx-check-circle", warn:"bx-error", info:"bx-info-circle" };
+    t.innerHTML = `<i class="bx ${icons[type]||'bx-check-circle'}" style="font-size:16px"></i> ${msg}`;
+    t.className = `toast ${type} show`;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+render();
+window.addEventListener("focus", render);
+</script>
+</body>
+</html>
