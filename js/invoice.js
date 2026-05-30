@@ -537,34 +537,34 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
   if (document.getElementById("invoiceBarcodOverlay")) return;
   const overlay = document.createElement("div");
   overlay.id = "invoiceBarcodOverlay";
-  overlay.style.cssText = "display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;justify-content:center;align-items:center;padding:16px";
+  overlay.style.cssText = "display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;justify-content:center;align-items:center;padding:16px";
   overlay.innerHTML = `
-    <div style="background:#fff;border:2px solid #111;border-radius:15px;box-shadow:8px 12px 0 0 #111;
+    <div style="background:#111527;border:1px solid rgba(79,142,247,0.35);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.6);
                 padding:22px 20px;width:min(380px,100%);display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <h3 style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px">
-          <i class="bx bx-barcode" style="font-size:20px;color:rgb(16,44,168)"></i> Barcode SKU
+        <h3 style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;color:#E8ECFF">
+          <i class="bx bx-barcode" style="font-size:20px;color:#4F8EF7"></i> Barcode SKU
         </h3>
-        <button id="invBcClose" style="background:none;border:none;cursor:pointer;font-size:22px;color:#888">
+        <button id="invBcClose" style="background:#161B30;border:1px solid rgba(255,255,255,0.08);border-radius:6px;cursor:pointer;font-size:18px;color:#8B97C2;width:30px;height:30px;display:flex;align-items:center;justify-content:center">
           <i class="bx bx-x"></i>
         </button>
       </div>
-      <div id="invBcInfo" style="background:#f5f7ff;border:1px solid #dde3ff;border-radius:10px;
-                                  padding:12px 16px;display:flex;flex-direction:column;gap:6px;font-size:12px"></div>
-      <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;
+      <div id="invBcInfo" style="background:#161B30;border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+                                  padding:12px 16px;display:flex;flex-direction:column;gap:7px"></div>
+      <div style="background:#1A2038;border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:16px;
                   display:flex;justify-content:center;overflow:hidden">
         <svg id="invBcSvg" style="max-width:100%;height:auto"></svg>
       </div>
       <div style="display:flex;gap:10px">
         <button id="invBcDownload"
-          style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid #111;
-                 background:rgb(16,44,168);color:white;box-shadow:3px 4px 0 0 #111;cursor:pointer;
+          style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid rgba(79,142,247,0.4);
+                 background:#4F8EF7;color:white;box-shadow:0 4px 14px rgba(79,142,247,0.3);cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:6px;font-family:Poppins,sans-serif">
           <i class="bx bx-download"></i> Download PNG
         </button>
         <button id="invBcPrint"
-          style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid #111;
-                 background:#eee;box-shadow:3px 4px 0 0 #111;cursor:pointer;
+          style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+                 background:#1F2644;color:#white;cursor:pointer;
                  display:flex;align-items:center;justify-content:center;gap:6px;font-family:Poppins,sans-serif">
           <i class="bx bx-printer"></i> Print
         </button>
@@ -572,42 +572,56 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
     </div>`;
   document.body.appendChild(overlay);
 
-  document.getElementById("invBcClose").addEventListener("click",  () => closeInvBarcodePopup());
+  document.getElementById("invBcClose").addEventListener("click", () => closeInvBarcodePopup());
   overlay.addEventListener("click", e => { if (e.target === overlay) closeInvBarcodePopup(); });
+  // ... sisa event listener tetap sama
+
+  document
+    .getElementById("invBcClose")
+    .addEventListener("click", () => closeInvBarcodePopup());
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeInvBarcodePopup();
+  });
 
   document.getElementById("invBcDownload").addEventListener("click", () => {
-    const svg    = document.getElementById("invBcSvg");
-    const item   = overlay._currentItem;
+    const svg = document.getElementById("invBcSvg");
+    const item = overlay._currentItem;
     if (!item) return;
     const svgStr = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement("canvas");
-    const img    = new Image();
-    const blob   = new Blob([svgStr], { type:"image/svg+xml;charset=utf-8" });
-    const url    = URL.createObjectURL(blob);
+    const img = new Image();
+    const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     img.onload = () => {
-      canvas.width = img.width || 300; canvas.height = img.height || 150;
+      canvas.width = img.width || 300;
+      canvas.height = img.height || 150;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.drawImage(img,0,0); URL.revokeObjectURL(url);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
       const link = document.createElement("a");
-      link.download = `SKU_${item.sku}.png`; link.href = canvas.toDataURL("image/png"); link.click();
+      link.download = `SKU_${item.sku}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
     };
     img.src = url;
   });
 
   document.getElementById("invBcPrint").addEventListener("click", () => {
     if (!overlay._currentItem) return;
-    const svg    = document.getElementById("invBcSvg");
-    const item   = overlay._currentItem;
+    const svg = document.getElementById("invBcSvg");
+    const item = overlay._currentItem;
     const svgStr = new XMLSerializer().serializeToString(svg);
     const win = window.open("", "_blank", "width=420,height=320");
-    win.document.write(`<!DOCTYPE html><html><head><title>Print Barcode — ${item.sku}</title>
+    win.document
+      .write(`<!DOCTYPE html><html><head><title>Print Barcode — ${item.sku}</title>
       <style>body{margin:0;padding:24px;font-family:Poppins,sans-serif;display:flex;flex-direction:column;align-items:center}
       .n{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px}
       .m{font-size:12px;color:#555;text-align:center;margin-bottom:12px}
       img{max-width:320px}@media print{body{padding:8px}}</style></head><body>
       <div class="n">${item.nama}</div>
-      <div class="m">SKU: ${item.sku}${item.merk ? ' · ' + item.merk : ''}</div>
+      <div class="m">SKU: ${item.sku}${item.merk ? " · " + item.merk : ""}</div>
       <img src="data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgStr)))}"/>
       <script>window.onload=function(){window.print();window.close()}<\/script></body></html>`);
     win.document.close();

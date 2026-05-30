@@ -3,74 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/invoiceKeluar.css">
+    <link rel="stylesheet" href="css/invoice.css">
     <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <title>Detail Invoice | Invenz</title>
     <style>
-        /* Override warna aksen orange → brand blue untuk halaman invoice masuk */
-        .tambah-btn {
-            background: var(--brand) !important;
-            border-color: var(--border-hi) !important;
-            box-shadow: 0 4px 14px var(--brand-glow) !important;
-        }
-        .tambah-btn:hover {
-            background: var(--brand-dark) !important;
-            box-shadow: 0 6px 20px var(--brand-glow) !important;
-        }
-        .btn-out {
-            background: var(--brand) !important;
-            border-color: var(--border-hi) !important;
-            box-shadow: 0 4px 14px var(--brand-glow) !important;
-        }
-        .btn-out:hover {
-            background: var(--brand-dark) !important;
-        }
-        /* Subtotal preview */
-        .subtotal-preview {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: var(--success-bg);
-            border: 1px solid rgba(16,217,154,0.25);
-            border-radius: var(--radius-sm);
-            padding: 10px 14px;
-        }
-        .subtotal-label {
-            font-family: var(--font-mono);
-            font-size: 9px; font-weight: 500;
-            color: var(--text3);
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .subtotal-preview strong {
-            font-size: 16px; font-weight: 700;
-            color: var(--success);
-            font-family: var(--font-mono);
-        }
-        /* Autofill notice */
-        .autofill-notice {
-            display: flex; align-items: center; gap: 8px;
-            background: var(--warning-bg);
-            border: 1px solid rgba(251,188,5,0.25);
-            border-radius: var(--radius-sm);
-            padding: 8px 12px; font-size: 12px;
-            color: var(--warning);
-        }
-        .autofill-notice.hidden { display: none; }
-        .autofill-notice i { font-size: 16px !important; flex-shrink: 0; }
-        /* Form section label */
-        .form-section-label {
-            font-family: var(--font-mono);
-            font-size: 9px; font-weight: 500;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--brand);
-            background: rgba(79,142,247,0.1);
-            border-radius: var(--radius-sm);
-            padding: 3px 10px; display: inline-block;
-            border: 1px solid var(--border-hi);
-        }
-        /* Custom dropdown dark override */
+        /* ===== CUSTOM DROPDOWN DARK OVERRIDE ===== */
         .cd-input-row {
             background: var(--bg3) !important;
             border-color: var(--border-md) !important;
@@ -99,7 +39,7 @@
         .cd-search { color: var(--text) !important; }
         .cd-search::placeholder { color: var(--text3) !important; }
         .cd-search-box i { color: var(--text3) !important; }
-        .cd-list li { color: var(--text2) !important; }
+        .cd-list li { color: var(--text2) !important; border-left-color: transparent !important; }
         .cd-list li:hover {
             background: var(--surface2) !important;
             border-left-color: var(--brand) !important;
@@ -111,49 +51,15 @@
             color: var(--brand) !important;
         }
         .cd-empty, .cd-no-result { color: var(--text3) !important; }
-        /* Table col harga */
-        .col-harga-subtotal {
-            font-weight: 600; color: var(--success);
-            font-family: var(--font-mono); font-size: 12px;
-        }
+        .cd-list::-webkit-scrollbar-track { background: var(--bg3) !important; }
+        .cd-list::-webkit-scrollbar-thumb { background: var(--surface3) !important; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- ===== SIDEBAR ===== -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <span>INVENZ</span>
-            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
-        </div>
-        <div class="sidebar-user">
-            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
-            <div>
-                <div class="sidebar-username" id="sidebarUsername">Admin</div>
-                <div class="sidebar-role">Operator Inventori</div>
-            </div>
-        </div>
-        <ul class="sidebar-menu">
-            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
-            <li><a href="inputBarang.html" class="active"><i class="bx bx-package"></i> Input Barang</a></li>
-            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
-            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
-            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
-            <li><a href="laporan.html"><i class="bx bx-file-report"></i> Laporan</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <button class="btn-logout" id="logoutBtn">
-                <i class="bx bx-log-out"></i> Logout
-            </button>
-        </div>
-    </div>
-
     <!-- Navbar -->
     <div class="navbar">
-        <i class="bxf bx-chevron-left-circle" id="backBtn"></i>
+        <i class="bxf bx-chevron-left-circle" id="backBtn" title="Kembali"></i>
         <div class="title">
             <i class="bxf bx-file-blank"></i>
             <h6 id="navInvoiceId">INVOICE</h6>
@@ -167,7 +73,9 @@
     <!-- Nav Control -->
     <div class="nav-controll">
         <p>* klik "+ Tambah Barang" untuk menambah item ke invoice ini</p>
-        <button class="tambah-btn" id="openTambahBtn">+ Tambah Barang</button>
+        <button class="tambah-btn" id="openTambahBtn">
+            <i class="bx bx-plus"></i> Tambah Barang
+        </button>
     </div>
 
     <!-- Table -->
@@ -197,36 +105,36 @@
         </table>
     </div>
 
-    <!-- Total Harga Bar -->
+    <!-- Total Bar -->
     <div class="total-bar">
-        <div class="total-bar-left">
-            <span>Total Nilai Invoice: <strong id="totalHargaDisplay">Rp 0</strong></span>
-        </div>
-        <div class="total-bar-left">
-            <span>Jenis Barang: <strong id="infoJenis">0</strong> item</span>
-        </div>
+        <span>Total Nilai Invoice: <strong id="totalHargaDisplay">Rp 0</strong></span>
+        <span>Jenis Barang: <strong id="infoJenis" style="color:var(--brand)">0</strong> item</span>
     </div>
 
     <!-- ===== MODAL TAMBAH / EDIT BARANG ===== -->
     <div class="modal-overlay" id="modalOverlay">
-        <div class="modal modal-wide" style="max-width:520px; overflow-y:auto;">
+        <div class="modal" style="max-width:520px; overflow-y:auto;">
+
+            <!-- TOP BAR — FIXED -->
             <div class="modal-top-bar">
                 <h3><i class="bx bx-package"></i> Tambah Barang</h3>
-                <button class="modal-close-x" id="modalCloseX"><i class="bx bx-x"></i></button>
+                <button class="modal-close-x" id="modalCloseX">
+                    <i class="bx bx-x"></i>
+                </button>
             </div>
 
             <div class="modal-form">
 
-                <!-- Section: SKU -->
+                <!-- Section: Identifikasi -->
                 <span class="form-section-label">Identifikasi Barang</span>
 
                 <div class="form-row">
                     <label>Kode SKU <span class="req">*</span></label>
-                    <div class="modal-header-row">
+                    <div class="sku-row">
                         <input type="text" id="inputSKU"
-                               placeholder="Ketik SKU atau scan barcode" autocomplete="off"
-                               style="flex:1;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;">
-                        <button class="btn-scan-sku-modal" id="btnScanSKU" title="Scan Barcode SKU">
+                               placeholder="Ketik SKU atau scan barcode"
+                               autocomplete="off">
+                        <button class="btn-scan-sku" id="btnScanSKU" title="Scan Barcode SKU">
                             <i class="bx bx-barcode-reader"></i>
                         </button>
                     </div>
@@ -295,7 +203,7 @@
                 </div>
 
                 <!-- Merk & Kategori -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="form-grid-2">
                     <div class="form-row">
                         <label>Merk <span class="req">*</span></label>
                         <div class="cd-wrapper" id="cdMerk">
@@ -355,31 +263,27 @@
                 </div>
 
                 <!-- Section: Harga & Stok -->
-                <span class="form-section-label">Harga & Stok</span>
+                <span class="form-section-label">Harga &amp; Stok</span>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="form-grid-2">
                     <div class="form-row">
                         <label>Harga HPP / Modal <span class="req">*</span></label>
-                        <input type="number" id="inputHargaHPP" placeholder="50000" min="0"
-                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;">
+                        <input type="number" id="inputHargaHPP" placeholder="50000" min="0">
                     </div>
                     <div class="form-row">
-                        <label>Harga Jual <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none">(opsional)</span></label>
-                        <input type="number" id="inputHargaJual" placeholder="75000" min="0"
-                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;">
+                        <label>Harga Jual <span class="opt">(opsional)</span></label>
+                        <input type="number" id="inputHargaJual" placeholder="75000" min="0">
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="form-grid-2">
                     <div class="form-row">
                         <label>Jumlah / Stok <span class="req">*</span></label>
-                        <input type="number" id="inputStok" placeholder="100" min="1"
-                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;">
+                        <input type="number" id="inputStok" placeholder="100" min="1">
                     </div>
                     <div class="form-row">
-                        <label>Expired Date <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none">(opsional)</span></label>
-                        <input type="date" id="inputExpired"
-                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;color-scheme:dark;">
+                        <label>Expired Date <span class="opt">(opsional)</span></label>
+                        <input type="date" id="inputExpired">
                     </div>
                 </div>
 
@@ -389,13 +293,13 @@
                     <strong id="subtotalVal">Rp 0</strong>
                 </div>
 
-            </div><!-- end modal-form -->
+            </div>
 
             <p class="error-msg" id="errorMsg"></p>
 
             <div class="modal-actions">
                 <button class="btn-batal" id="batalBtn">Batal</button>
-                <button class="btn-out" id="simpanBtn">
+                <button class="btn-simpan" id="simpanBtn">
                     <i class="bx bx-save"></i> Simpan
                 </button>
             </div>
