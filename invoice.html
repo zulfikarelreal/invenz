@@ -3,198 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/invoiceKeluar.css">
     <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <title>Detail Invoice | Invenz</title>
-
     <style>
-        :root {
-            --brand:        #0F3CC9;
-            --brand-dark:   #0A28A0;
-            --accent:       #00E5C4;
-            --bg:           #0A0F1C;
-            --surface:      #161F38;
-            --surface2:     #1E2A4A;
-            --border:       rgba(255,255,255,0.08);
-            --text:         #E0E7FF;
-            --text2:        #A5B4FC;
-            --text3:        #64748B;
-            --success:      #00E5C4;
-            --danger:       #E24B4A;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding-bottom: 40px;
-        }
-
-        /* ===== NAVBAR ===== */
-        .navbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 18px; height: 54px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-        }
-        .title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
-        .title i { font-size: 24px; color: var(--brand); }
-
-        /* ===== INVOICE INFO ===== */
-        .invoice-info {
-            margin-top: 70px; width: 94%; max-width: 1100px; margin-left: auto; margin-right: auto;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 18px 22px;
-            display: flex; flex-wrap: wrap; gap: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .info-item { flex: 1; min-width: 160px; }
-        .info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text3); }
-        .info-value { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 4px; }
-
-        /* ===== NAV CONTROL ===== */
-        .nav-controll {
-            width: 94%; max-width: 1100px; margin: 20px auto;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .nav-controll p { color: var(--text3); font-size: 13px; }
+        /* Override warna aksen orange → brand blue untuk halaman invoice masuk */
         .tambah-btn {
-            padding: 9px 16px; background: var(--brand); color: white;
-            border: none; border-radius: 10px; font-weight: 600;
-            cursor: pointer; box-shadow: 0 4px 12px rgba(15,60,201,0.4);
-            transition: all 0.2s;
+            background: var(--brand) !important;
+            border-color: var(--border-hi) !important;
+            box-shadow: 0 4px 14px var(--brand-glow) !important;
         }
-        .tambah-btn:hover { transform: translateY(-2px); }
-
-        /* ===== TABLE ===== */
-        .container { width: 94%; max-width: 1100px; margin: 0 auto; overflow-x: auto; }
-        table {
-            width: 100%; border-collapse: collapse; background: var(--surface);
-            border-radius: 14px; overflow: hidden; border: 1px solid var(--border);
+        .tambah-btn:hover {
+            background: var(--brand-dark) !important;
+            box-shadow: 0 6px 20px var(--brand-glow) !important;
         }
-        thead { background: var(--surface2); }
-        th {
-            padding: 14px 12px; text-align: center; font-size: 11px;
-            font-weight: 700; color: var(--text2); text-transform: uppercase;
-            border-bottom: 1px solid var(--border);
+        .btn-out {
+            background: var(--brand) !important;
+            border-color: var(--border-hi) !important;
+            box-shadow: 0 4px 14px var(--brand-glow) !important;
         }
-        td {
-            padding: 13px 12px; text-align: center; font-size: 13px;
-            border-bottom: 1px solid var(--border); color: var(--text);
+        .btn-out:hover {
+            background: var(--brand-dark) !important;
         }
-        tbody tr:hover { background: rgba(15,60,201,0.15); }
-        .empty-row td { color: var(--text3); font-style: italic; padding: 40px 20px; }
-
-        .sku-badge {
-            background: rgba(15,60,201,0.2); color: #A5B4FC;
-            border: 1px solid rgba(15,60,201,0.4); padding: 4px 10px;
-            border-radius: 8px; font-size: 12px; font-weight: 600;
+        /* Subtotal preview */
+        .subtotal-preview {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: var(--success-bg);
+            border: 1px solid rgba(16,217,154,0.25);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
         }
-        .sku-badge:hover { background: var(--brand); color: white; }
-
-        /* ===== TOTAL BAR ===== */
-        .total-harga-bar {
-            width: 94%; max-width: 1100px; margin: 20px auto;
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 14px; padding: 16px 22px;
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 15px; font-weight: 600;
+        .subtotal-label {
+            font-family: var(--font-mono);
+            font-size: 9px; font-weight: 500;
+            color: var(--text3);
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        .total-harga-bar strong { color: var(--accent); font-size: 19px; }
-
-        /* ===== MODAL ===== */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(10,15,28,0.85); backdrop-filter: blur(4px);
-            z-index: 200; justify-content: center; align-items: center;
+        .subtotal-preview strong {
+            font-size: 16px; font-weight: 700;
+            color: var(--success);
+            font-family: var(--font-mono);
         }
-        .modal-overlay.active { display: flex; }
-
-        .modal {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 16px; width: 92%; max-width: 480px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* Autofill notice */
+        .autofill-notice {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--warning-bg);
+            border: 1px solid rgba(251,188,5,0.25);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px; font-size: 12px;
+            color: var(--warning);
         }
-
-        .modal-top-bar { 
-            padding: 18px 22px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .modal-top-bar h3 { color: var(--text); font-size: 16px; }
-
-        .modal-form { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
-
+        .autofill-notice.hidden { display: none; }
+        .autofill-notice i { font-size: 16px !important; flex-shrink: 0; }
+        /* Form section label */
         .form-section-label {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            color: var(--brand); background: rgba(15,60,201,0.15);
-            padding: 4px 10px; border-radius: 6px; width: fit-content;
+            font-family: var(--font-mono);
+            font-size: 9px; font-weight: 500;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--brand);
+            background: rgba(79,142,247,0.1);
+            border-radius: var(--radius-sm);
+            padding: 3px 10px; display: inline-block;
+            border: 1px solid var(--border-hi);
         }
-
-        input, select {
-            background: var(--surface2); border: 1px solid var(--border);
-            color: var(--text); padding: 10px 14px; border-radius: 10px;
-            font-size: 14px;
+        /* Custom dropdown dark override */
+        .cd-input-row {
+            background: var(--bg3) !important;
+            border-color: var(--border-md) !important;
         }
-        input:focus { border-color: var(--brand); outline: none; }
-
-        .btn-batal, .btn-simpan {
-            padding: 11px; border-radius: 10px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
+        .cd-input {
+            background: transparent !important;
+            color: var(--text) !important;
+            font-family: var(--font) !important;
         }
-        .btn-batal {
-            background: var(--surface2); color: var(--text2); border: 1px solid var(--border);
+        .cd-input::placeholder { color: var(--text3) !important; }
+        .cd-arrow { color: var(--text2) !important; }
+        .cd-wrapper.open .cd-input-row {
+            border-color: var(--brand) !important;
+            background: var(--surface2) !important;
         }
-        .btn-simpan {
-            background: var(--brand); color: white; border: none;
+        .cd-wrapper.open .cd-arrow { color: var(--brand) !important; }
+        .cd-dropdown {
+            background: var(--surface) !important;
+            border-color: var(--brand) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
         }
-
-        /* Additional styling for buttons */
-        .btn-edit-item, .btn-hapus {
-            padding: 6px 10px; border-radius: 8px; font-size: 13px;
+        .cd-search-box {
+            background: var(--bg3) !important;
+            border-bottom-color: var(--border) !important;
         }
-        .btn-hapus { background: rgba(226,75,74,0.2); color: var(--danger); }
+        .cd-search { color: var(--text) !important; }
+        .cd-search::placeholder { color: var(--text3) !important; }
+        .cd-search-box i { color: var(--text3) !important; }
+        .cd-list li { color: var(--text2) !important; }
+        .cd-list li:hover {
+            background: var(--surface2) !important;
+            border-left-color: var(--brand) !important;
+            color: var(--brand) !important;
+        }
+        .cd-list li.selected {
+            background: var(--surface3) !important;
+            border-left-color: var(--brand) !important;
+            color: var(--brand) !important;
+        }
+        .cd-empty, .cd-no-result { color: var(--text3) !important; }
+        /* Table col harga */
+        .col-harga-subtotal {
+            font-weight: 600; color: var(--success);
+            font-family: var(--font-mono); font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>INVENZ</span>
+            <i class="bx bx-x sidebar-close" id="sidebarClose"></i>
+        </div>
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+            <div>
+                <div class="sidebar-username" id="sidebarUsername">Admin</div>
+                <div class="sidebar-role">Operator Inventori</div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="bx bx-home"></i> Dashboard</a></li>
+            <li><a href="inputBarang.html" class="active"><i class="bx bx-package"></i> Input Barang</a></li>
+            <li><a href="globalStok.html"><i class="bx bx-list-ul-square"></i> Global Stok</a></li>
+            <li><a href="stockOut.html"><i class="bx bx-truck"></i> Stock Out</a></li>
+            <li><a href="linkedData.html"><i class="bx bx-network-chart"></i> Linked Data</a></li>
+            <li><a href="laporan.html"><i class="bx bx-file-report"></i> Laporan</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="logoutBtn">
+                <i class="bx bx-log-out"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
     <div class="navbar">
-        <i class="bx bx-chevron-left-circle" id="backBtn" style="font-size:28px;cursor:pointer;color:var(--text2)"></i>
+        <i class="bxf bx-chevron-left-circle" id="backBtn"></i>
         <div class="title">
-            <i class="bx bx-file"></i>
+            <i class="bxf bx-file-blank"></i>
             <h6 id="navInvoiceId">INVOICE</h6>
         </div>
-        <i class="bx bx-user-circle" style="font-size:28px;color:var(--text2)"></i>
+        <i class="bxf bx-user-circle"></i>
     </div>
 
+    <!-- Invoice Info Bar -->
     <div class="invoice-info" id="invoiceInfo"></div>
 
+    <!-- Nav Control -->
     <div class="nav-controll">
-        <p>* klik tambah barang untuk menambah item · klik ✏️ untuk edit</p>
-        <div class="tambah-btn" id="openTambahBtn">+ Tambah Barang</div>
+        <p>* klik "+ Tambah Barang" untuk menambah item ke invoice ini</p>
+        <button class="tambah-btn" id="openTambahBtn">+ Tambah Barang</button>
     </div>
 
+    <!-- Table -->
     <div class="container">
         <table>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>SKU</th>
-                    <th>Nama Produk</th>
+                    <th>Nama Barang</th>
                     <th>Merk</th>
                     <th>Kategori</th>
                     <th>Lokasi Inventori</th>
                     <th>Expired</th>
                     <th>Harga HPP</th>
                     <th>Harga Jual</th>
-                    <th>Qty</th>
-                    <th>Total Harga</th>
+                    <th>Qty / Stok</th>
+                    <th>Subtotal</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -206,30 +197,222 @@
         </table>
     </div>
 
-    <div class="total-harga-bar">
-        <span>Total Nilai Invoice:</span>
-        <strong id="totalHargaDisplay">Rp 0</strong>
+    <!-- Total Harga Bar -->
+    <div class="total-bar">
+        <div class="total-bar-left">
+            <span>Total Nilai Invoice: <strong id="totalHargaDisplay">Rp 0</strong></span>
+        </div>
+        <div class="total-bar-left">
+            <span>Jenis Barang: <strong id="infoJenis">0</strong> item</span>
+        </div>
     </div>
 
-    <!-- Modal dan elemen lain tetap sama seperti kode asli Anda -->
-    <!-- (Modal, Scanner, Confirm, dll tetap sama) -->
-
-    <!-- ===== MODAL TAMBAH / EDIT (dengan style baru) ===== -->
+    <!-- ===== MODAL TAMBAH / EDIT BARANG ===== -->
     <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <!-- Isi modal tetap sama seperti kode asli Anda -->
-            <!-- Saya tidak ubah struktur, hanya warna di CSS di atas -->
+        <div class="modal modal-wide" style="max-width:520px; overflow-y:auto;">
             <div class="modal-top-bar">
                 <h3><i class="bx bx-package"></i> Tambah Barang</h3>
                 <button class="modal-close-x" id="modalCloseX"><i class="bx bx-x"></i></button>
             </div>
-            <!-- ... (semua form modal tetap sama) ... -->
+
+            <div class="modal-form">
+
+                <!-- Section: SKU -->
+                <span class="form-section-label">Identifikasi Barang</span>
+
+                <div class="form-row">
+                    <label>Kode SKU <span class="req">*</span></label>
+                    <div class="modal-header-row">
+                        <input type="text" id="inputSKU"
+                               placeholder="Ketik SKU atau scan barcode" autocomplete="off"
+                               style="flex:1;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;">
+                        <button class="btn-scan-sku-modal" id="btnScanSKU" title="Scan Barcode SKU">
+                            <i class="bx bx-barcode-reader"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scanner Panel SKU -->
+                <div class="scanner-panel hidden" id="scannerSKUPanel">
+                    <div class="scan-box">
+                        <video id="cameraStreamSKU" autoplay playsinline></video>
+                        <div class="scan-frame"><div class="scan-line"></div></div>
+                        <div class="scan-placeholder" id="scanPlaceholderSKU">
+                            <i class="bx bx-barcode-reader"></i>
+                            <p>Kamera belum aktif</p>
+                        </div>
+                    </div>
+                    <div class="scan-actions">
+                        <button class="btn-cam" id="btnOpenCamSKU">
+                            <i class="bx bx-camera"></i> Kamera
+                        </button>
+                        <span class="scan-or">atau</span>
+                        <label class="btn-gallery" for="galleryInputSKU">
+                            <i class="bx bx-image"></i> Galeri
+                        </label>
+                        <input type="file" id="galleryInputSKU" accept="image/*" style="display:none">
+                        <button class="btn-close-scanner" id="btnCloseScannerSKU" title="Tutup">
+                            <i class="bx bx-x"></i>
+                        </button>
+                    </div>
+                    <div class="scan-result hidden" id="scanResultSKU">
+                        <i class="bx bx-check-circle"></i>
+                        <div>
+                            <span class="scan-result-label">Hasil Scan:</span>
+                            <span class="scan-result-val" id="scanResultValSKU">—</span>
+                        </div>
+                        <button class="btn-use-scan" id="btnUseScanSKU">Gunakan</button>
+                    </div>
+                </div>
+
+                <!-- Autofill notice -->
+                <div class="autofill-notice hidden" id="autofillNotice">
+                    <i class="bx bx-magic-wand"></i>
+                    Data barang terisi otomatis dari SKU yang tersimpan.
+                </div>
+
+                <!-- Section: Detail -->
+                <span class="form-section-label">Detail Barang</span>
+
+                <!-- Nama Barang -->
+                <div class="form-row">
+                    <label>Nama Barang <span class="req">*</span></label>
+                    <div class="cd-wrapper" id="cdNama">
+                        <div class="cd-input-row">
+                            <input class="cd-input" id="inputNama" type="text"
+                                   placeholder="Pilih atau ketik nama barang" autocomplete="off">
+                            <i class="bx bx-chevron-down cd-arrow"></i>
+                        </div>
+                        <div class="cd-dropdown">
+                            <div class="cd-search-box">
+                                <i class="bx bx-search"></i>
+                                <input class="cd-search" type="text" placeholder="Cari barang...">
+                            </div>
+                            <ul class="cd-list"></ul>
+                            <div class="cd-empty">Belum ada data barang</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merk & Kategori -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-row">
+                        <label>Merk <span class="req">*</span></label>
+                        <div class="cd-wrapper" id="cdMerk">
+                            <div class="cd-input-row">
+                                <input class="cd-input" id="inputMerk" type="text"
+                                       placeholder="Pilih merk" autocomplete="off">
+                                <i class="bx bx-chevron-down cd-arrow"></i>
+                            </div>
+                            <div class="cd-dropdown">
+                                <div class="cd-search-box">
+                                    <i class="bx bx-search"></i>
+                                    <input class="cd-search" type="text" placeholder="Cari merk...">
+                                </div>
+                                <ul class="cd-list"></ul>
+                                <div class="cd-empty">Belum ada data merk</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label>Kategori <span class="req">*</span></label>
+                        <div class="cd-wrapper" id="cdKategori">
+                            <div class="cd-input-row">
+                                <input class="cd-input" id="inputKategori" type="text"
+                                       placeholder="Pilih kategori" autocomplete="off">
+                                <i class="bx bx-chevron-down cd-arrow"></i>
+                            </div>
+                            <div class="cd-dropdown">
+                                <div class="cd-search-box">
+                                    <i class="bx bx-search"></i>
+                                    <input class="cd-search" type="text" placeholder="Cari kategori...">
+                                </div>
+                                <ul class="cd-list"></ul>
+                                <div class="cd-empty">Belum ada data kategori</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lokasi -->
+                <div class="form-row">
+                    <label>Lokasi Inventori <span class="req">*</span></label>
+                    <div class="cd-wrapper" id="cdLokasi">
+                        <div class="cd-input-row">
+                            <input class="cd-input" id="inputLokasi" type="text"
+                                   placeholder="Pilih lokasi penyimpanan" autocomplete="off">
+                            <i class="bx bx-chevron-down cd-arrow"></i>
+                        </div>
+                        <div class="cd-dropdown">
+                            <div class="cd-search-box">
+                                <i class="bx bx-search"></i>
+                                <input class="cd-search" type="text" placeholder="Cari lokasi...">
+                            </div>
+                            <ul class="cd-list"></ul>
+                            <div class="cd-empty">Belum ada data lokasi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Harga & Stok -->
+                <span class="form-section-label">Harga & Stok</span>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-row">
+                        <label>Harga HPP / Modal <span class="req">*</span></label>
+                        <input type="number" id="inputHargaHPP" placeholder="50000" min="0"
+                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;">
+                    </div>
+                    <div class="form-row">
+                        <label>Harga Jual <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none">(opsional)</span></label>
+                        <input type="number" id="inputHargaJual" placeholder="75000" min="0"
+                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-row">
+                        <label>Jumlah / Stok <span class="req">*</span></label>
+                        <input type="number" id="inputStok" placeholder="100" min="1"
+                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;">
+                    </div>
+                    <div class="form-row">
+                        <label>Expired Date <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none">(opsional)</span></label>
+                        <input type="date" id="inputExpired"
+                               style="padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-md);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;color-scheme:dark;">
+                    </div>
+                </div>
+
+                <!-- Subtotal preview -->
+                <div class="subtotal-preview">
+                    <span class="subtotal-label">Subtotal HPP</span>
+                    <strong id="subtotalVal">Rp 0</strong>
+                </div>
+
+            </div><!-- end modal-form -->
+
+            <p class="error-msg" id="errorMsg"></p>
+
+            <div class="modal-actions">
+                <button class="btn-batal" id="batalBtn">Batal</button>
+                <button class="btn-out" id="simpanBtn">
+                    <i class="bx bx-save"></i> Simpan
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Confirm Overlay tetap sama -->
+    <!-- Modal Konfirmasi Hapus -->
     <div class="modal-overlay" id="confirmOverlay">
-        <!-- Isi confirm tetap sama -->
+        <div class="modal modal-confirm">
+            <div class="confirm-icon">🗑️</div>
+            <h3>Hapus Barang?</h3>
+            <p class="confirm-desc">Item ini akan dihapus dari invoice. Tindakan ini tidak bisa dibatalkan.</p>
+            <div class="modal-actions">
+                <button class="btn-batal" id="confirmNo">Tidak</button>
+                <button class="btn-hapus-confirm" id="confirmYes">Ya, Hapus</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/auth.js"></script>
