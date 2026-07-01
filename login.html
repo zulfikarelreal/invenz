@@ -1,490 +1,750 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <title>Login | Invenz</title>
-    <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+<link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Masuk | INVENZ</title>
+<style>
+/* ============================================================
+   INVENZ LOGIN — Manifest theme
+   Selaras dengan design system dashboard (Syne / DM Sans / DM Mono,
+   brand blue + accent teal di atas navy gelap).
+   Signature: "live manifest" ticker — daftar transaksi stok
+   berjalan, merefleksikan fungsi inti aplikasi (catat barang
+   masuk & keluar), bukan dekorasi generik.
+   ============================================================ */
 
-        :root {
-            --primary: #102ca8;
-            --primary-light: #1a40d4;
-            --accent: #00ffd1;
-            --dark: #0a0e1a;
-            --dark-card: #0f1420;
-            --text: #e8eeff;
-            --text-muted: #7a8db8;
-            --border: rgba(255,255,255,0.08);
-            --success: #10b981;
-            --error: #ef4444;
-        }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html, body { height: 100%; overflow: hidden; }
+:root {
+    --brand:       #4F8EF7;
+    --brand-dark:  #2563EB;
+    --accent:      #00E5C4;
+    --bg:          #0A0D18;
+    --bg2:         #10oe1a;
+    --bg2:         #10131F;
+    --surface:     #151A2B;
+    --surface2:    #1A2038;
+    --surface3:    #212A47;
+    --border:      rgba(255,255,255,0.08);
+    --border-md:   rgba(255,255,255,0.14);
+    --text:        #E9EEFF;
+    --text2:       #8F9BC4;
+    --text3:       #545F86;
+    --success:     #17D9A0;
+    --success-bg:  rgba(23,217,160,0.12);
+    --danger:      #F0555A;
+    --danger-bg:   rgba(240,85,90,0.12);
+    --font:        'DM Sans', sans-serif;
+    --font-mono:   'DM Mono', monospace;
+    --font-display:'Syne', sans-serif;
+    --ease:        cubic-bezier(.4,0,.2,1);
+}
 
-        body {
-            background: var(--dark);
-            font-family: 'Poppins', sans-serif;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+html { -webkit-text-size-adjust: 100%; }
 
-        /* ===== ANIMATED BACKGROUND ===== */
-        .animated-bg {
-            position: fixed; inset: 0; z-index: 0; overflow: hidden;
-            background: linear-gradient(135deg, #0a0e1a 0%, #0f1420 50%, #0a0e1a 100%);
-        }
-        .animated-bg::before {
-            content: ''; position: absolute; inset: 0;
-            background-image:
-                linear-gradient(rgba(16,44,168,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(16,44,168,0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-        }
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-        .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; pointer-events: none; }
-        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(16,44,168,0.6) 0%, transparent 70%); top: -200px; left: -100px; animation: float1 15s ease-in-out infinite; }
-        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(0,255,209,0.4) 0%, transparent 70%); bottom: -150px; right: -80px; animation: float2 18s ease-in-out infinite; }
-        .orb-3 { width: 350px; height: 350px; background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%); top: 50%; right: 20%; animation: float3 20s ease-in-out infinite; }
-        @keyframes float1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(50px, -30px); } }
-        @keyframes float2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-40px, -50px); } }
-        @keyframes float3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -40px); } }
+body {
+    background: var(--bg);
+    font-family: var(--font);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+}
 
-        #particlesCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-        .mouse-glow { position: fixed; width: 400px; height: 400px; background: radial-gradient(circle, rgba(0,255,209,0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); transition: opacity 0.3s; z-index: 2; opacity: 0; }
+/* ===== BACKDROP ===== */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(720px circle at 14% 18%, rgba(79,142,247,0.16), transparent 60%),
+        radial-gradient(560px circle at 88% 82%, rgba(0,229,196,0.09), transparent 60%),
+        var(--bg);
+}
+.backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 46px 46px;
+}
 
-        /* ===== BACK BUTTON ===== */
-        .btn-back {
-            position: fixed; top: 24px; left: 24px; z-index: 100;
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px 16px; background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px); border: 1px solid var(--border);
-            border-radius: 12px; color: var(--text-muted); text-decoration: none;
-            font-size: 14px; font-weight: 500; transition: all 0.3s;
-        }
-        .btn-back:hover { background: rgba(255,255,255,0.1); color: var(--text); transform: translateX(-4px); }
-        .btn-back i { font-size: 18px; }
+/* ===== BACK LINK ===== */
+.btn-back {
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    left: 18px;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px 8px 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s var(--ease);
+}
+.btn-back:hover { color: var(--text); border-color: var(--border-md); background: rgba(255,255,255,0.08); }
+.btn-back i { font-size: 17px; }
 
-        /* ===== MAIN CONTAINER ===== */
-        .login-container {
-            position: relative; z-index: 10;
-            display: flex; width: 100%; max-width: 1100px; min-height: 600px;
-            margin: 0 24px;
-            background: rgba(15,20,32,0.7); backdrop-filter: blur(20px);
-            border: 1px solid var(--border); border-radius: 24px; overflow: hidden;
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            animation: containerSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        @keyframes containerSlideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+/* ===== SHELL ===== */
+.shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: stretch;
+}
 
-        /* ===== LEFT PANEL ===== */
-        .panel-left {
-            flex: 1.3; padding: 60px;
-            display: flex; flex-direction: column; justify-content: center;
-            background: linear-gradient(135deg, rgba(16,44,168,0.15) 0%, rgba(0,255,209,0.05) 100%);
-            border-right: 1px solid var(--border); position: relative; overflow: hidden;
-            animation: fadeSlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-        }
-        @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+/* ===== LEFT: MANIFEST PANEL ===== */
+.panel-manifest {
+    flex: 1 1 52%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+    padding: 64px clamp(28px, 5vw, 72px);
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+}
 
-        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 60px; }
-        .brand-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(16,44,168,0.4); }
-        .brand-icon i { font-size: 22px; color: white; }
-        .brand-text { font-size: 24px; font-weight: 800; letter-spacing: 2px; color: white; }
+.brand-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+.brand-mark {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--brand), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--bg);
+    flex-shrink: 0;
+}
+.brand-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--text);
+}
 
-        .hero-title { font-size: clamp(32px, 4vw, 48px); font-weight: 800; line-height: 1.2; color: white; margin-bottom: 20px; }
-        .hero-title .gradient-text { background: linear-gradient(135deg, var(--accent), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .hero-subtitle { font-size: 15px; line-height: 1.7; color: var(--text-muted); max-width: 420px; margin-bottom: 48px; }
+.hero-copy { max-width: 460px; }
 
-        .features { display: flex; flex-direction: column; gap: 16px; }
-        .feature-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; transition: all 0.3s; opacity: 0; animation: fadeSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .feature-item:nth-child(1) { animation-delay: 0.5s; }
-        .feature-item:nth-child(2) { animation-delay: 0.6s; }
-        .feature-item:nth-child(3) { animation-delay: 0.7s; }
-        @keyframes fadeSlideRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        .feature-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(16,44,168,0.3); transform: translateX(4px); }
-        .feature-icon { width: 40px; height: 40px; background: rgba(16,44,168,0.2); border: 1px solid rgba(16,44,168,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .feature-icon i { font-size: 20px; color: var(--accent); }
-        .feature-text { font-size: 14px; color: rgba(232,238,255,0.7); font-weight: 500; }
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(0,229,196,0.08);
+    border: 1px solid rgba(0,229,196,0.2);
+    padding: 5px 11px;
+    border-radius: 20px;
+    margin-bottom: 22px;
+}
+.hero-eyebrow .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+}
 
-        /* ===== RIGHT PANEL ===== */
-        .panel-right {
-            flex: 1; padding: 60px 50px;
-            display: flex; flex-direction: column; justify-content: center;
-            animation: fadeSlideLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-        }
-        @keyframes fadeSlideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+.hero-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(30px, 3.4vw, 44px);
+    line-height: 1.14;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+}
+.hero-title em {
+    font-style: normal;
+    background: linear-gradient(120deg, var(--accent), var(--brand));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 20px; font-size: 11px; color: var(--success); font-weight: 600; margin-bottom: 32px; }
-        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.8); } }
+.hero-desc {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text2);
+}
 
-        .login-header { margin-bottom: 36px; }
-        .login-title { font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px; }
-        .login-subtitle { font-size: 14px; color: var(--text-muted); }
+/* ===== SIGNATURE: LIVE MANIFEST TICKER ===== */
+.manifest-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 460px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+}
+.manifest-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+}
+.manifest-head-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+}
+.live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: livePulse 1.6s ease-in-out infinite;
+}
+@keyframes livePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.75); } }
 
-        /* ===== FORM ===== */
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.3px; }
-        .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-icon { position: absolute; left: 16px; font-size: 18px; color: var(--text-muted); pointer-events: none; transition: all 0.3s; z-index: 1; }
-        .form-input {
-            width: 100%; padding: 14px 16px 14px 48px;
-            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-            border-radius: 12px; color: var(--text); font-size: 14px;
-            font-family: 'Poppins', sans-serif; outline: none; transition: all 0.3s;
-        }
-        .form-input::placeholder { color: rgba(122,141,184,0.4); }
-        .form-input:focus { background: rgba(16,44,168,0.1); border-color: rgba(16,44,168,0.5); box-shadow: 0 0 0 3px rgba(16,44,168,0.15); }
-        .input-wrapper:has(.form-input:focus) .input-icon { color: var(--accent); transform: scale(1.1); }
+.manifest-head-right {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text3);
+}
 
-        .eye-toggle { position: absolute; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 6px; display: flex; align-items: center; border-radius: 6px; transition: all 0.2s; }
-        .eye-toggle:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.manifest-viewport {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+.manifest-track {
+    display: flex;
+    flex-direction: column;
+    animation: manifestScroll 16s linear infinite;
+}
+@keyframes manifestScroll {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
+}
 
-        /* ===== ERROR MESSAGE ===== */
-        .error-message { display: none; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; color: var(--error); font-size: 13px; margin-bottom: 20px; animation: shakeError 0.4s ease; }
-        .error-message.show { display: flex; }
-        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
-        .error-message i { font-size: 18px; flex-shrink: 0; }
+.manifest-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12.5px;
+}
+.m-badge {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid;
+}
+.m-badge.in  { color: var(--success); background: var(--success-bg); border-color: rgba(23,217,160,0.3); }
+.m-badge.out { color: #F6A93C; background: rgba(246,169,60,0.12); border-color: rgba(246,169,60,0.3); }
 
-        /* ===== LOGIN BUTTON ===== */
-        .btn-login {
-            width: 100%; padding: 15px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            border: none; border-radius: 12px; color: white; font-size: 15px;
-            font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: all 0.3s; box-shadow: 0 8px 24px rgba(16,44,168,0.4);
-            position: relative; overflow: hidden; margin-bottom: 20px;
-        }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(16,44,168,0.5); }
-        .btn-login:active { transform: translateY(0) scale(0.98); }
-        .btn-login.success { background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 8px 24px rgba(16,185,129,0.4); }
-        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.m-code { font-family: var(--font-mono); font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.m-label { color: var(--text2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-qty { font-family: var(--font-mono); font-size: 12px; color: var(--text); flex-shrink: 0; }
 
-        .btn-loader { display: flex; gap: 4px; }
-        .btn-loader span { width: 6px; height: 6px; background: white; border-radius: 50%; animation: dotBounce 0.8s ease-in-out infinite; }
-        .btn-loader span:nth-child(2) { animation-delay: 0.15s; }
-        .btn-loader span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+.manifest-foot {
+    display: flex;
+    gap: 20px;
+    padding: 13px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+}
+.mf-stat { display: flex; flex-direction: column; gap: 2px; }
+.mf-val { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); }
+.mf-lbl { font-size: 10px; color: var(--text3); letter-spacing: 0.3px; }
 
-        .login-hint { font-size: 12px; color: rgba(122,141,184,0.6); text-align: center; line-height: 1.6; }
+/* Barcode flourish */
+.barcode-strip {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 26px;
+    opacity: 0.55;
+}
+.barcode-strip span { display: block; width: 2px; background: var(--text3); border-radius: 1px; }
 
-        /* Role badge (setelah login sukses) */
-        .role-preview { display: none; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(0,255,209,0.06); border: 1px solid rgba(0,255,209,0.2); border-radius: 10px; font-size: 13px; color: var(--accent); margin-bottom: 16px; font-weight: 500; }
-        .role-preview.show { display: flex; }
-        .role-preview i { font-size: 18px; }
+/* ===== RIGHT: FORM PANEL ===== */
+.panel-form {
+    flex: 1 1 420px;
+    max-width: 460px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px clamp(24px, 4vw, 56px);
+}
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 900px) {
-            html, body { overflow-y: auto; overflow-x: hidden; }
-            .login-container { flex-direction: column; min-height: auto; margin: 80px 20px 40px; }
-            .panel-left { border-right: none; border-bottom: 1px solid var(--border); padding: 40px 32px; }
-            .panel-right { padding: 40px 32px; }
-        }
-        @media (max-width: 480px) {
-            .btn-back { padding: 8px 12px; font-size: 13px; }
-            .hero-title { font-size: 28px; }
-            .login-title { font-size: 26px; }
-        }
-    </style>
+.form-card { width: 100%; max-width: 340px; }
+
+.form-head { margin-bottom: 30px; }
+.form-head h1 {
+    font-family: var(--font-display);
+    font-size: 25px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+.form-head p { font-size: 13px; color: var(--text2); }
+
+.alert {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    margin-bottom: 18px;
+    border: 1px solid;
+    animation: shakeIn 0.35s var(--ease);
+}
+.alert.show { display: flex; }
+.alert.error   { background: var(--danger-bg);  color: #FF9A9D; border-color: rgba(240,85,90,0.3); }
+.alert.success { background: var(--success-bg); color: var(--success); border-color: rgba(23,217,160,0.3); }
+.alert i { font-size: 16px; flex-shrink: 0; }
+@keyframes shakeIn {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.field { margin-bottom: 18px; }
+.field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 7px;
+    letter-spacing: 0.2px;
+}
+.field-wrap { position: relative; display: flex; align-items: center; }
+.field-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 17px;
+    color: var(--text3);
+    pointer-events: none;
+    transition: color 0.2s var(--ease);
+}
+.field-wrap input {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+    outline: none;
+    transition: all 0.2s var(--ease);
+}
+.field-wrap input::placeholder { color: var(--text3); }
+.field-wrap input:focus {
+    border-color: var(--brand);
+    background: var(--surface2);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.15);
+}
+.field-wrap input:focus ~ .field-icon,
+.field-wrap:has(input:focus) .field-icon { color: var(--brand); }
+.field-wrap.has-toggle input { padding-right: 42px; }
+
+.eye-btn {
+    position: absolute;
+    right: 10px;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 7px;
+    transition: color 0.2s;
+}
+.eye-btn:hover { color: var(--text2); }
+.eye-btn:focus-visible, .field-wrap input:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 13px;
+    margin-top: 6px;
+    background: var(--brand);
+    color: #fff;
+    border: 1px solid rgba(79,142,247,0.5);
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 22px rgba(79,142,247,0.3);
+    transition: all 0.2s var(--ease);
+}
+.btn-submit:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 10px 28px rgba(79,142,247,0.4); }
+.btn-submit:active { transform: translateY(0) scale(0.98); }
+.btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.btn-submit.success { background: var(--success); border-color: rgba(23,217,160,0.5); box-shadow: 0 6px 22px rgba(23,217,160,0.35); }
+.btn-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.btn-loader { display: flex; gap: 4px; }
+.btn-loader span {
+    width: 5px; height: 5px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 50%;
+    animation: dotBounce 0.8s ease-in-out infinite;
+}
+.btn-loader span:nth-child(2) { animation-delay: 0.15s; }
+.btn-loader span:nth-child(3) { animation-delay: 0.30s; }
+@keyframes dotBounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+
+.form-hint {
+    margin-top: 22px;
+    font-size: 11.5px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 980px) {
+    .shell { flex-direction: column; }
+    .panel-manifest {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 88px 28px 40px;
+        gap: 28px;
+    }
+    .hero-title { font-size: clamp(26px, 6vw, 34px); }
+    .manifest-viewport { height: 150px; }
+    .panel-form { max-width: none; padding: 40px 28px 56px; }
+}
+
+@media (max-width: 560px) {
+    .panel-manifest { padding: 84px 20px 32px; }
+    .manifest-card { max-width: 100%; }
+    .manifest-foot { flex-wrap: wrap; gap: 14px 22px; }
+    .panel-form { padding: 32px 20px 48px; }
+    .btn-back { top: max(14px, env(safe-area-inset-top)); left: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .manifest-track { animation: none; }
+    .live-dot { animation: none; }
+}
+</style>
 </head>
-
 <body>
 
-    <div class="animated-bg">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
-    <canvas id="particlesCanvas"></canvas>
-    <div class="mouse-glow" id="mouseGlow"></div>
+<div class="backdrop"></div>
 
-    <a href="index.html" class="btn-back">
-        <i class="bx bx-arrow-back"></i>
-        <span>Kembali</span>
-    </a>
+<a href="index.html" class="btn-back">
+    <i class="bx bx-arrow-back"></i>
+    <span>Kembali</span>
+</a>
 
-    <div class="login-container">
-        <!-- Left Panel -->
-        <div class="panel-left">
-            <div class="brand">
-                <div class="brand-icon"><i class="bxf bx-bar-chart"></i></div>
-                <span class="brand-text">INVENZ</span>
+<div class="shell">
+
+    <!-- ===== LEFT: BRAND + LIVE MANIFEST ===== -->
+    <section class="panel-manifest">
+        <div>
+            <div class="brand-row" style="margin-bottom: 30px;">
+                <div class="brand-mark">I</div>
+                <span class="brand-name">INVENZ</span>
             </div>
-            <h1 class="hero-title">Kelola inventori<br><span class="gradient-text">lebih cerdas.</span></h1>
-            <p class="hero-subtitle">Sistem manajemen inventori modern — lacak stok, catat transaksi, dan analisis performa bisnis dalam satu platform.</p>
-            <div class="features">
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="bx bx-package"></i></div>
-                    <span class="feature-text">Input barang masuk dengan invoice digital</span>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="bx bx-truck"></i></div>
-                    <span class="feature-text">Pencatatan stock out otomatis & real-time</span>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="bx bx-bar-chart-alt-2"></i></div>
-                    <span class="feature-text">Laporan analitik lengkap dengan grafik</span>
-                </div>
+
+            <div class="hero-copy">
+                <span class="hero-eyebrow"><span class="dot"></span>Sistem Online</span>
+                <h1 class="hero-title">Setiap barang<br><em>tercatat, terlacak.</em></h1>
+                <p class="hero-desc">Masuk untuk melanjutkan pencatatan stok, invoice, dan transaksi inventori bisnis Anda secara real-time.</p>
             </div>
         </div>
 
-        <!-- Right Panel -->
-        <div class="panel-right">
-            <div class="status-badge">
-                <span class="status-dot"></span>
-                Sistem Online
+        <!-- Signature element: live manifest ticker -->
+        <div class="manifest-card" aria-hidden="true">
+            <div class="manifest-head">
+                <div class="manifest-head-left"><span class="live-dot"></span> Live Manifest</div>
+                <div class="barcode-strip" id="barcodeStrip"></div>
+            </div>
+            <div class="manifest-viewport">
+                <div class="manifest-track" id="manifestTrack"></div>
+            </div>
+            <div class="manifest-foot">
+                <div class="mf-stat"><span class="mf-val">2,847</span><span class="mf-lbl">UNIT DI GUDANG</span></div>
+                <div class="mf-stat"><span class="mf-val">48</span><span class="mf-lbl">INVOICE BULAN INI</span></div>
+                <div class="mf-stat"><span class="mf-val" style="color:var(--accent)">99.2%</span><span class="mf-lbl">AKURASI STOK</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RIGHT: LOGIN FORM ===== -->
+    <section class="panel-form">
+        <div class="form-card">
+            <div class="form-head">
+                <h1>Selamat datang kembali</h1>
+                <p>Masuk ke dashboard INVENZ Anda.</p>
             </div>
 
-            <div class="login-header">
-                <h2 class="login-title">Selamat Datang 👋</h2>
-                <p class="login-subtitle">Masuk ke dashboard Invenz Anda</p>
-            </div>
-
-            <div id="errorMessage" class="error-message">
+            <div id="errorMessage" class="alert error">
                 <i class="bx bx-error-circle"></i>
                 <span id="errorText">Username atau password salah</span>
             </div>
-
-            <div id="rolePreview" class="role-preview">
+            <div id="rolePreview" class="alert success">
                 <i class="bx bx-shield-check"></i>
                 <span id="rolePreviewText"></span>
             </div>
 
-            <form id="loginForm" autocomplete="off">
-                <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <div class="input-wrapper">
-                        <i class="bx bx-user input-icon"></i>
-                        <input type="text" id="username" class="form-input" placeholder="Masukkan username" autocomplete="off" required>
+            <form id="loginForm" autocomplete="off" novalidate>
+                <div class="field">
+                    <label for="username">Username</label>
+                    <div class="field-wrap">
+                        <i class="bx bx-user field-icon"></i>
+                        <input type="text" id="username" placeholder="Masukkan username" autocomplete="off" required>
                     </div>
                 </div>
-                <div class="form-group" style="margin-bottom: 28px;">
-                    <label class="form-label">Password</label>
-                    <div class="input-wrapper">
-                        <i class="bxf bx-lock-keyhole input-icon"></i>
-                        <input type="password" id="password" class="form-input" placeholder="Masukkan password" required>
-                        <button type="button" class="eye-toggle" id="eyeToggle">
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="field-wrap has-toggle">
+                        <i class="bx bx-lock-alt field-icon"></i>
+                        <input type="password" id="password" placeholder="Masukkan password" required>
+                        <button type="button" class="eye-btn" id="eyeToggle" aria-label="Tampilkan password">
                             <i class="bx bx-show" id="eyeIcon"></i>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-login" id="loginBtn">
+                <button type="submit" class="btn-submit" id="loginBtn">
                     <span id="btnText">Masuk ke Dashboard</span>
-                    <div id="btnLoader" class="btn-loader" style="display: none;">
+                    <div id="btnLoader" class="btn-loader" style="display:none">
                         <span></span><span></span><span></span>
                     </div>
                 </button>
             </form>
 
-            <p class="login-hint">Gunakan kredensial yang telah diberikan oleh administrator sistem.</p>
+            <p class="form-hint">Gunakan kredensial yang telah diberikan oleh administrator sistem.</p>
         </div>
-    </div>
+    </section>
 
-    <script>
-        // ===== VALID USERS (Built-in) =====
-        // Password harus di-hash sama dengan hashPassword() di userManagement.js
-        function hashPassword(pw) {
-            let h = 0;
-            for (let i = 0; i < pw.length; i++) {
-                h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
-            }
-            return "h_" + Math.abs(h).toString(36);
+</div>
+
+<script>
+    /* ===== SIGNATURE MANIFEST TICKER ===== */
+    const MANIFEST_ITEMS = [
+        { type: "in",  code: "SKU-2291-ELEC", label: "Monitor LED 24\"",      qty: "+12" },
+        { type: "out", code: "SKU-0044-FOOD", label: "Kopi Sachet 20g",        qty: "-86" },
+        { type: "in",  code: "SKU-1187-CLTH", label: "Kaos Polo XL",           qty: "+40" },
+        { type: "out", code: "SKU-3320-ELEC", label: "Kabel HDMI 2m",          qty: "-15" },
+        { type: "in",  code: "SKU-0812-HOME", label: "Rak Besi Serbaguna",     qty: "+8"  },
+        { type: "out", code: "SKU-5567-FOOD", label: "Indomie Goreng 40g",     qty: "-120"},
+        { type: "in",  code: "SKU-2734-ELEC", label: "Charger USB-C 20W",      qty: "+30" },
+        { type: "out", code: "SKU-1901-CLTH", label: "Jaket Hoodie L",         qty: "-6"  },
+    ];
+
+    function renderManifest() {
+        const track = document.getElementById("manifestTrack");
+        if (!track) return;
+        const rowsHtml = MANIFEST_ITEMS.map(item => `
+            <div class="manifest-row">
+                <span class="m-badge ${item.type}">${item.type === "in" ? "MASUK" : "KELUAR"}</span>
+                <span class="m-code">${item.code}</span>
+                <span class="m-label">${item.label}</span>
+                <span class="m-qty">${item.qty}</span>
+            </div>`).join("");
+        // duplicate list for seamless loop
+        track.innerHTML = rowsHtml + rowsHtml;
+    }
+    renderManifest();
+
+    function renderBarcode() {
+        const el = document.getElementById("barcodeStrip");
+        if (!el) return;
+        let html = "";
+        for (let i = 0; i < 22; i++) {
+            const w = Math.random() > 0.7 ? 3 : 1.5;
+            const h = 40 + Math.random() * 60;
+            html += `<span style="width:${w}px;height:${h}%"></span>`;
         }
+        el.innerHTML = html;
+    }
+    renderBarcode();
 
-        const BUILTIN_USERS = [
-            { username: "owner",  password: "owner123",   role: "owner",       nama: "Owner INVENZ" },
-            { username: "admin",  password: "admin123",   role: "admin",       nama: "Administrator" },
-            { username: "invenz", password: "invenz123",  role: "admin",       nama: "Invenz Demo" },
-        ];
+    /* ===== VALID USERS (Built-in) ===== */
+    function hashPassword(pw) {
+        let h = 0;
+        for (let i = 0; i < pw.length; i++) {
+            h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+        }
+        return "h_" + Math.abs(h).toString(36);
+    }
 
-        const ROLE_LABELS = {
-            owner:       "Owner",
-            admin:       "Administrator",
-            kepala_toko: "Kepala Toko",
-            kasir:       "Kasir",
-            gudang:      "Staf Gudang",
-        };
+    const BUILTIN_USERS = [
+        { username: "owner",  password: "owner123",   role: "owner",       nama: "Owner INVENZ" },
+        { username: "admin",  password: "admin123",   role: "admin",       nama: "Administrator" },
+        { username: "invenz", password: "invenz123",  role: "admin",       nama: "Invenz Demo" },
+    ];
 
-        // Cek custom users dari localStorage
-        function findUser(username, password) {
-            const uname = username.trim().toLowerCase();
+    const ROLE_LABELS = {
+        owner:       "Owner",
+        admin:       "Administrator",
+        kepala_toko: "Kepala Toko",
+        kasir:       "Kasir",
+        gudang:      "Staf Gudang",
+    };
 
-            // Cek built-in dulu
-            const builtin = BUILTIN_USERS.find(
-                u => u.username === uname && u.password === password
+    function findUser(username, password) {
+        const uname = username.trim().toLowerCase();
+
+        const builtin = BUILTIN_USERS.find(
+            u => u.username === uname && u.password === password
+        );
+        if (builtin) return { ...builtin, isBuiltin: true };
+
+        try {
+            const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
+            const ph = hashPassword(password);
+            const found = customUsers.find(
+                u => u.username.toLowerCase() === uname
+                    && u.passwordHash === ph
+                    && u.aktif !== false
             );
-            if (builtin) return { ...builtin, isBuiltin: true };
+            if (found) return found;
+        } catch (_) {}
 
-            // Cek custom users dari localStorage
-            try {
-                const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
-                const ph = hashPassword(password);
-                const found = customUsers.find(
-                    u => u.username.toLowerCase() === uname
-                        && u.passwordHash === ph
-                        && u.aktif !== false
-                );
-                if (found) return found;
-            } catch (_) {}
+        return null;
+    }
 
-            return null;
-        }
+    if (localStorage.getItem("isLoggedIn") === "true") {
+        window.location.href = "dashboard.html";
+    }
 
-        // Redirect kalau sudah login
-        if (localStorage.getItem("isLoggedIn") === "true") {
-            window.location.href = "dashboard.html";
-        }
+    document.getElementById("eyeToggle").addEventListener("click", () => {
+        const pw = document.getElementById("password");
+        const icon = document.getElementById("eyeIcon");
+        if (pw.type === "password") { pw.type = "text"; icon.className = "bx bx-hide"; }
+        else { pw.type = "password"; icon.className = "bx bx-show"; }
+    });
 
-        // ===== PARTICLES ===== (ringan, minimal)
-        const canvas = document.getElementById("particlesCanvas");
-        const ctx = canvas.getContext("2d");
-        let particles = [];
-
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        function createParticles() {
-            particles = [];
-            const count = Math.floor((canvas.width * canvas.height) / 20000);
-            for (let i = 0; i < count; i++) {
-                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.4, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, o: Math.random() * 0.4 + 0.15 });
-            }
-        }
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p, i) => {
-                p.x += p.vx; p.y += p.vy;
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(16,44,168,${p.o})`; ctx.fill();
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = p.x - particles[j].x, dy = p.y - particles[j].y, d = Math.sqrt(dx*dx+dy*dy);
-                    if (d < 90) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(0,255,209,${0.08*(1-d/90)})`; ctx.lineWidth = 0.4; ctx.stroke(); }
-                }
-            });
-            requestAnimationFrame(animateParticles);
-        }
-        resizeCanvas(); createParticles(); animateParticles();
-        window.addEventListener("resize", () => { resizeCanvas(); createParticles(); });
-
-        // ===== MOUSE GLOW ===== 
-        const mouseGlow = document.getElementById("mouseGlow");
-        let glowTimeout;
-        document.addEventListener("mousemove", (e) => {
-            mouseGlow.style.left = e.clientX + "px"; mouseGlow.style.top = e.clientY + "px"; mouseGlow.style.opacity = "1";
-            clearTimeout(glowTimeout); glowTimeout = setTimeout(() => { mouseGlow.style.opacity = "0"; }, 200);
+    document.querySelectorAll(".field-wrap input").forEach(input => {
+        input.addEventListener("input", () => {
+            document.getElementById("errorMessage").classList.remove("show");
+            document.getElementById("rolePreview").classList.remove("show");
+            input.style.borderColor = "";
         });
+    });
 
-        // ===== PASSWORD TOGGLE =====
-        document.getElementById("eyeToggle").addEventListener("click", () => {
-            const pw = document.getElementById("password");
-            const icon = document.getElementById("eyeIcon");
-            if (pw.type === "password") { pw.type = "text"; icon.className = "bx bx-hide"; }
-            else { pw.type = "password"; icon.className = "bx bx-show"; }
-        });
+    const loginForm      = document.getElementById("loginForm");
+    const loginBtn        = document.getElementById("loginBtn");
+    const btnText          = document.getElementById("btnText");
+    const btnLoader        = document.getElementById("btnLoader");
+    const errorMessage     = document.getElementById("errorMessage");
+    const errorText        = document.getElementById("errorText");
+    const rolePreview       = document.getElementById("rolePreview");
+    const rolePreviewText  = document.getElementById("rolePreviewText");
 
-        // Clear error on input
-        document.querySelectorAll(".form-input").forEach(input => {
-            input.addEventListener("input", () => {
-                document.getElementById("errorMessage").classList.remove("show");
-                document.getElementById("rolePreview").classList.remove("show");
-                input.style.borderColor = "";
-            });
-        });
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-        // ===== LOGIN SUBMIT =====
-        const loginForm = document.getElementById("loginForm");
-        const loginBtn = document.getElementById("loginBtn");
-        const btnText = document.getElementById("btnText");
-        const btnLoader = document.getElementById("btnLoader");
-        const errorMessage = document.getElementById("errorMessage");
-        const errorText = document.getElementById("errorText");
-        const rolePreview = document.getElementById("rolePreview");
-        const rolePreviewText = document.getElementById("rolePreviewText");
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
 
-        loginForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
+        errorMessage.classList.remove("show");
+        rolePreview.classList.remove("show");
+        btnText.style.display = "none";
+        btnLoader.style.display = "flex";
+        loginBtn.disabled = true;
 
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value;
+        await new Promise(r => setTimeout(r, 800));
 
-            errorMessage.classList.remove("show");
-            rolePreview.classList.remove("show");
-            btnText.style.display = "none";
-            btnLoader.style.display = "flex";
-            loginBtn.disabled = true;
+        const user = findUser(username, password);
 
-            await new Promise(r => setTimeout(r, 900));
+        if (user) {
+            const roleName = ROLE_LABELS[user.role] || user.role;
+            rolePreviewText.textContent = `Masuk sebagai ${roleName} · ${user.nama || username}`;
+            rolePreview.classList.add("show");
 
-            const user = findUser(username, password);
+            btnText.textContent = "✓ Login Berhasil!";
+            btnText.style.display = "";
+            btnLoader.style.display = "none";
+            loginBtn.classList.add("success");
 
-            if (user) {
-            if (user) {
-                // Tampilkan role preview
-                const roleName = ROLE_LABELS[user.role] || user.role;
-                rolePreviewText.textContent = `Masuk sebagai ${roleName} · ${user.nama || username}`;
-                rolePreview.classList.add("show");
-            
-                btnText.textContent = "✓ Login Berhasil!";
-                btnText.style.display = "";
-                btnLoader.style.display = "none";
-                loginBtn.classList.add("success");
-            
-                // Simpan session — nama LENGKAP (bukan hanya nama depan)
-                const displayName = user.nama
+            const displayName = user.nama
                 ? user.nama
                 : username.charAt(0).toUpperCase() + username.slice(1);
-            
-                localStorage.setItem("isLoggedIn", "true");
-                localStorage.setItem("loggedUser", displayName);
-                localStorage.setItem("loggedRole", user.role);
-            
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 900);}
-            } else {
-                btnText.style.display = "";
-                btnLoader.style.display = "none";
-                loginBtn.disabled = false;
 
-                // Cek apakah akun nonaktif
-                let inactiveMsg = false;
-                try {
-                    const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
-                    const uname = username.trim().toLowerCase();
-                    const found = customUsers.find(u => u.username.toLowerCase() === uname);
-                    if (found && found.aktif === false) inactiveMsg = true;
-                } catch (_) {}
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("loggedUser", displayName);
+            localStorage.setItem("loggedRole", user.role);
 
-                errorText.textContent = inactiveMsg
-                    ? "Akun ini telah dinonaktifkan. Hubungi administrator."
-                    : "Username atau password salah. Silakan coba lagi.";
-                errorMessage.classList.add("show");
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 800);
+        } else {
+            btnText.style.display = "";
+            btnLoader.style.display = "none";
+            loginBtn.disabled = false;
 
-                document.querySelectorAll(".form-input").forEach(input => {
-                    input.style.borderColor = "rgba(239,68,68,0.5)";
-                    input.style.animation = "none";
-                    setTimeout(() => { input.style.animation = "shakeError 0.4s ease"; }, 10);
+            let inactiveMsg = false;
+            try {
+                const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
+                const uname = username.trim().toLowerCase();
+                const found = customUsers.find(u => u.username.toLowerCase() === uname);
+                if (found && found.aktif === false) inactiveMsg = true;
+            } catch (_) {}
+
+            errorText.textContent = inactiveMsg
+                ? "Akun ini telah dinonaktifkan. Hubungi administrator."
+                : "Username atau password salah. Silakan coba lagi.";
+            errorMessage.classList.add("show");
+
+            document.querySelectorAll(".field-wrap input").forEach(input => {
+                input.style.borderColor = "rgba(240,85,90,0.55)";
+            });
+            setTimeout(() => {
+                document.querySelectorAll(".field-wrap input").forEach(input => {
+                    input.style.borderColor = "";
                 });
-                setTimeout(() => {
-                    document.querySelectorAll(".form-input").forEach(input => {
-                        input.style.animation = ""; input.style.borderColor = "";
-                    });
-                }, 400);
-            }
-        });
+            }, 500);
+        }
+    });
 
-        window.addEventListener("load", () => { document.getElementById("username").focus(); });
-    </script>
+    window.addEventListener("load", () => { document.getElementById("username").focus(); });
+</script>
 </body>
 </html>
