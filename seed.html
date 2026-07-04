@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muat Sample Data | Invenz</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: #0C0F1A;
+        color: #E8ECFF;
+        font-family: 'DM Sans', 'Segoe UI', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .card {
+        background: #1A2038;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 460px;
+        width: 100%;
+        text-align: center;
+    }
+    h1 { font-size: 20px; margin-bottom: 8px; }
+    p { font-size: 13px; color: #8B97C2; margin-bottom: 24px; line-height: 1.6; }
+    button {
+        width: 100%;
+        padding: 13px;
+        background: #4F8EF7;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    button:hover { background: #2563EB; }
+    button.secondary {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #8B97C2;
+    }
+    #status {
+        margin-top: 16px;
+        font-size: 12px;
+        color: #10D99A;
+        min-height: 18px;
+    }
+    #status.error { color: #F05252; }
+</style>
+</head>
+<body>
+    <div class="card">
+        <h1>Muat Sample Data INVENZ</h1>
+        <p>
+            Klik tombol di bawah untuk mengisi database dengan data contoh:
+            produk <strong>Susu</strong> (Indomilk, Frisian Flag, Ultra Milk),
+            <strong>Parfum</strong> (Casablanca, Vitalis, Kahf, HMNS), dan
+            <strong>Mie Instan</strong> (Indomie, Sarimi, Supermi, Mie Sedaap).
+            Termasuk contoh invoice masuk, transaksi stock out, dan beberapa
+            barang yang sudah/akan kadaluarsa untuk demo.
+        </p>
+        <button id="btnSeed">Muat Sample Data & Buka Dashboard</button>
+        <button class="secondary" id="btnClear">Kosongkan Semua Data</button>
+        <div id="status"></div>
+    </div>
+
+    <script src="js/seedSampleData.js" defer></script>
+    <script>
+        document.getElementById("btnSeed").addEventListener("click", () => {
+            const statusEl = document.getElementById("status");
+            try {
+                // seedSampleData.js langsung jalan begitu dimuat (IIFE),
+                // jadi di sini kita cukup pastikan sudah login lalu redirect.
+                if (!localStorage.getItem("isLoggedIn")) {
+                    localStorage.setItem("isLoggedIn", "true");
+                    localStorage.setItem("loggedUser", "Admin Demo");
+                    localStorage.setItem("loggedRole", "owner");
+                }
+                statusEl.textContent = "✅ Data sample berhasil dimuat. Membuka dashboard...";
+                statusEl.classList.remove("error");
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
+            } catch (e) {
+                statusEl.textContent = "❌ Gagal memuat data: " + e.message;
+                statusEl.classList.add("error");
+            }
+        });
+
+        document.getElementById("btnClear").addEventListener("click", () => {
+            if (!confirm("Semua data invoices, linkedData, dan stock out akan dihapus. Lanjutkan?")) return;
+            ["invoices", "linkedData", "stockOuts_v2", "invenz_payment_methods", "invenz_retur_items", "globalStock"]
+                .forEach((k) => localStorage.removeItem(k));
+            document.getElementById("status").textContent = "🗑️ Semua data berhasil dikosongkan.";
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
+        });
+    </script>
+</body>
+</html>
