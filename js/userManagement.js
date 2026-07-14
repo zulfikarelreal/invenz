@@ -1,15 +1,5 @@
 "use strict";
-// ===== USERMANAGEMENT.JS — v2 (5 Roles) =====
-
-const UM_KEY = "invenz_users";
-
-const ROLE_LABELS = {
-  owner: "Owner",
-  admin: "Administrator",
-  kepala_toko: "Kepala Toko",
-  kasir: "Kasir",
-  gudang: "Staf Gudang",
-};
+// ===== USERMANAGEMENT.JS — v2 (Supabase) =====
 
 const ROLE_CLASS = {
   owner: "role-owner",
@@ -19,70 +9,9 @@ const ROLE_CLASS = {
   gudang: "role-gudang",
 };
 
-// ── Built-in accounts (tidak bisa dihapus) ──
-const BUILTIN = [
-  {
-    id: "builtin_owner",
-    username: "owner",
-    nama: "Owner INVENZ",
-    role: "owner",
-    aktif: true,
-    isBuiltin: true,
-  },
-  {
-    id: "builtin_admin",
-    username: "admin",
-    nama: "Administrator",
-    role: "admin",
-    aktif: true,
-    isBuiltin: true,
-  },
-  {
-    id: "builtin_invenz",
-    username: "invenz",
-    nama: "Invenz Demo",
-    role: "admin",
-    aktif: true,
-    isBuiltin: true,
-  },
-];
-
-function loadUsers() {
-  try {
-    const raw = localStorage.getItem(UM_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(list) {
-  localStorage.setItem(UM_KEY, JSON.stringify(list));
-}
-
-function getAllUsers() {
-  const custom = loadUsers();
-  const customFiltered = custom.filter(
-    (u) => !BUILTIN.some((b) => b.username === u.username),
-  );
-  return [...BUILTIN, ...customFiltered];
-}
-
-function generateId() {
-  return "usr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-}
-
-function hashPassword(pw) {
-  let h = 0;
-  for (let i = 0; i < pw.length; i++) {
-    h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
-  }
-  return "h_" + Math.abs(h).toString(36);
-}
-
 // ── INIT ──
-const loggedUser = localStorage.getItem("loggedUser") || "Admin";
-const loggedRole = localStorage.getItem("loggedRole") || "owner";
+const loggedUser = INVENZ.user;
+const loggedRole = INVENZ.role;
 
 // Sidebar info
 document.querySelectorAll("[data-bind-user]").forEach((el) => {
@@ -117,28 +46,29 @@ function closeSidebar() {
 
 // Logout
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("loggedUser");
-  localStorage.removeItem("loggedRole");
-  window.location.href = "login.html";
+  INVENZ.logout();
 });
 
 // ── RENDER TABLE ──
-function renderTable(filterRole = "all", filterSearch = "") {
+async function renderTable(filterRole = "all", filterSearch = "") {
   const tbody = document.getElementById("userTableBody");
-  let users = getAllUsers();
-
-  if (filterRole !== "all") users = users.filter((u) => u.role === filterRole);
+  
+  let query = sb.from("app_users").select("*").order("created_at");
+  if (filterRole !== "all") query = query.eq("role", filterRole);
+  
+  const { data: usersData, error } = await query;
+  let users = usersData || [];
+  
   if (filterSearch) {
     const kw = filterSearch.toLowerCase();
     users = users.filter(
       (u) =>
-        u.nama.toLowerCase().includes(kw) ||
-        u.username.toLowerCase().includes(kw),
+        (u.nama || "").toLowerCase().includes(kw) ||
+        (u.username || "").toLowerCase().includes(kw),
     );
   }
 
-  updateStats(getAllUsers());
+  updateStats(users);
 
   if (!users.length) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Tidak ada akun ditemukan</td></tr>`;
@@ -150,14 +80,14 @@ function renderTable(filterRole = "all", filterSearch = "") {
     const isMe = u.username === loggedUser;
     const tr = document.createElement("tr");
 
-    const canEdit = !u.isBuiltin;
-    const canDelete = !u.isBuiltin && !isMe;
+    const canEdit = !u.is_builtin;
+    const canDelete = !u.is_builtin && !isMe;
 
     tr.innerHTML = `
       <td style="color:var(--text2);font-size:11px">${i + 1}</td>
       <td>
         <div class="user-cell">
-          <div class="user-avatar-sm">${u.nama.charAt(0).toUpperCase()}</div>
+          <div class="user-avatar-sm">${(u.nama || "?").charAt(0).toUpperCase()}</div>
           <div>
             <div class="user-cell-name">${u.nama}</div>
             <div class="user-cell-user">@${u.username}</div>
@@ -167,7 +97,7 @@ function renderTable(filterRole = "all", filterSearch = "") {
       <td><span class="role-badge ${ROLE_CLASS[u.role] || "role-admin"}">${ROLE_LABELS[u.role] || u.role}</span></td>
       <td>
         ${
-          u.isBuiltin
+          u.is_builtin
             ? `<span class="builtin-badge">Built-in</span>`
             : `<label class="toggle-wrap">
                <input type="checkbox" ${u.aktif ? "checked" : ""}
@@ -255,12 +185,12 @@ document.getElementById("searchUser")?.addEventListener("input", function () {
 });
 
 // ── TOGGLE AKTIF ──
-window.toggleAktif = function (id, val) {
-  const list = loadUsers();
-  const idx = list.findIndex((u) => u.id === id);
-  if (idx === -1) return;
-  list[idx].aktif = val;
-  saveUsers(list);
+window.toggleAktif = async function (id, val) {
+  const { error } = await sb.from("app_users").update({ aktif: val }).eq("id", id);
+  if (error) {
+    showToast("Gagal update status", "danger");
+    return;
+  }
   renderTable(activeFilter, searchKw);
   showToast(
     val ? "Akun diaktifkan" : "Akun dinonaktifkan",
@@ -288,9 +218,8 @@ window.openAddModal = function () {
   el("fNama").focus();
 };
 
-window.openEditModal = function (id) {
-  const all = getAllUsers();
-  const u = all.find((x) => x.id === id);
+window.openEditModal = async function (id) {
+  const { data: u } = await sb.from("app_users").select("*").eq("id", id).single();
   if (!u) return;
   _editId = id;
   const el = (id) => document.getElementById(id);
@@ -326,7 +255,7 @@ document.getElementById("modalUserOverlay")?.addEventListener("click", (e) => {
 
 document.getElementById("btnSimpanUser")?.addEventListener("click", saveUser);
 
-function saveUser() {
+async function saveUser() {
   const el = (id) => document.getElementById(id);
   const nama = el("fNama").value.trim();
   const username = el("fUsername").value.trim().toLowerCase();
@@ -351,8 +280,6 @@ function saveUser() {
     return;
   }
 
-  const list = loadUsers();
-
   if (_editId === null) {
     if (!pass) {
       errEl.textContent = "Password wajib diisi untuk akun baru.";
@@ -366,36 +293,44 @@ function saveUser() {
       errEl.textContent = "Konfirmasi password tidak cocok.";
       return;
     }
-    const allNames = getAllUsers().map((u) => u.username);
-    if (allNames.includes(username)) {
+    const { data: existing } = await sb.from("app_users").select("id").eq("username", username).maybeSingle();
+    if (existing) {
       errEl.textContent = "Username sudah digunakan.";
       return;
     }
-    list.push({
-      id: generateId(),
+    
+    const { error } = await sb.from("app_users").insert({
       username,
       nama,
       role,
       aktif: true,
-      passwordHash: hashPassword(pass),
-      createdAt: new Date().toISOString(),
+      password_hash: hashPassword(pass),
+      is_builtin: false
     });
+    
+    if (error) {
+      errEl.textContent = "Gagal menyimpan: " + error.message;
+      return;
+    }
   } else {
-    const idx = list.findIndex((u) => u.id === _editId);
-    if (idx === -1) return;
-    const others = getAllUsers()
-      .filter((u) => u.id !== _editId)
-      .map((u) => u.username);
-    if (others.includes(username)) {
+    const { data: existing } = await sb.from("app_users").select("id").eq("username", username).neq("id", _editId).maybeSingle();
+    if (existing) {
       errEl.textContent = "Username sudah digunakan.";
       return;
     }
-    list[idx].nama = nama;
-    list[idx].username = username;
-    list[idx].role = role;
+    
+    const { error } = await sb.from("app_users").update({
+      nama,
+      username,
+      role
+    }).eq("id", _editId);
+    
+    if (error) {
+      errEl.textContent = "Gagal menyimpan: " + error.message;
+      return;
+    }
   }
 
-  saveUsers(list);
   closeUserModal();
   renderTable(activeFilter, searchKw);
   showToast(
@@ -407,10 +342,9 @@ function saveUser() {
 // ── MODAL GANTI PASSWORD ──
 let _passUserId = null;
 
-window.openPassModal = function (id) {
+window.openPassModal = async function (id) {
   _passUserId = id;
-  const all = getAllUsers();
-  const u = all.find((x) => x.id === id);
+  const { data: u } = await sb.from("app_users").select("nama").eq("id", id).single();
   const el = (id) => document.getElementById(id);
   el("passModalName").textContent = u ? u.nama : "";
   el("fNewPass").value = "";
@@ -436,7 +370,7 @@ document.getElementById("modalPassOverlay")?.addEventListener("click", (e) => {
     closePassModal();
 });
 
-document.getElementById("btnSimpanPass")?.addEventListener("click", () => {
+document.getElementById("btnSimpanPass")?.addEventListener("click", async () => {
   const el = (id) => document.getElementById(id);
   const np = el("fNewPass").value;
   const np2 = el("fNewPass2").value;
@@ -450,11 +384,13 @@ document.getElementById("btnSimpanPass")?.addEventListener("click", () => {
     errEl.textContent = "Konfirmasi tidak cocok.";
     return;
   }
-  const list = loadUsers();
-  const idx = list.findIndex((u) => u.id === _passUserId);
-  if (idx === -1) return;
-  list[idx].passwordHash = hashPassword(np);
-  saveUsers(list);
+  
+  const { error } = await sb.from("app_users").update({ password_hash: hashPassword(np) }).eq("id", _passUserId);
+  if (error) {
+    errEl.textContent = "Gagal update: " + error.message;
+    return;
+  }
+  
   closePassModal();
   showToast("Password berhasil diubah", "success");
 });
@@ -462,10 +398,9 @@ document.getElementById("btnSimpanPass")?.addEventListener("click", () => {
 // ── KONFIRMASI HAPUS ──
 let _deleteId = null;
 
-window.confirmDelete = function (id) {
+window.confirmDelete = async function (id) {
   _deleteId = id;
-  const all = getAllUsers();
-  const u = all.find((x) => x.id === id);
+  const { data: u } = await sb.from("app_users").select("nama").eq("id", id).single();
   document.getElementById("deleteUserName").textContent = u ? u.nama : "";
   document.getElementById("confirmDeleteOverlay").classList.add("active");
 };
@@ -475,10 +410,15 @@ document.getElementById("btnCancelDelete")?.addEventListener("click", () => {
   document.getElementById("confirmDeleteOverlay").classList.remove("active");
 });
 
-document.getElementById("btnConfirmDelete")?.addEventListener("click", () => {
+document.getElementById("btnConfirmDelete")?.addEventListener("click", async () => {
   if (!_deleteId) return;
-  const list = loadUsers().filter((u) => u.id !== _deleteId);
-  saveUsers(list);
+  
+  const { error } = await sb.from("app_users").delete().eq("id", _deleteId);
+  if (error) {
+    showToast("Gagal hapus: " + error.message, "danger");
+    return;
+  }
+  
   _deleteId = null;
   document.getElementById("confirmDeleteOverlay").classList.remove("active");
   renderTable(activeFilter, searchKw);

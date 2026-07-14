@@ -3,101 +3,194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Muat Sample Data | Invenz</title>
+<title>Setup & Sample Data | INVENZ</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-        background: #0C0F1A;
-        color: #E8ECFF;
-        font-family: 'DM Sans', 'Segoe UI', sans-serif;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    .card {
-        background: #1A2038;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 16px;
-        padding: 32px;
-        max-width: 460px;
-        width: 100%;
-        text-align: center;
-    }
-    h1 { font-size: 20px; margin-bottom: 8px; }
-    p { font-size: 13px; color: #8B97C2; margin-bottom: 24px; line-height: 1.6; }
-    button {
-        width: 100%;
-        padding: 13px;
-        background: #4F8EF7;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        margin-bottom: 10px;
-    }
-    button:hover { background: #2563EB; }
-    button.secondary {
-        background: transparent;
-        border: 1px solid rgba(255,255,255,0.15);
-        color: #8B97C2;
-    }
-    #status {
-        margin-top: 16px;
-        font-size: 12px;
-        color: #10D99A;
-        min-height: 18px;
-    }
-    #status.error { color: #F05252; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --brand: #4F8EF7; --brand-dark: #2563EB; --accent: #00E5C4;
+    --bg: #0A0D18; --surface: #151A2B; --surface2: #1A2038; --surface3: #212A47;
+    --border: rgba(255,255,255,0.08); --border-md: rgba(255,255,255,0.14);
+    --text: #E9EEFF; --text2: #8F9BC4; --text3: #545F86;
+    --success: #17D9A0; --danger: #F0555A;
+    --font: 'DM Sans', sans-serif; --font-mono: 'DM Mono', monospace; --font-display: 'Syne', sans-serif;
+}
+body { background: var(--bg); font-family: var(--font); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 32px; max-width: 520px; width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,0.4); }
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.brand-mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--brand), var(--accent)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--bg); }
+.brand-name { font-family: var(--font-display); font-weight: 800; font-size: 18px; letter-spacing: 3px; }
+h1 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.desc { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 24px; }
+
+/* Credentials box */
+.creds-box { background: var(--surface2); border: 1px solid var(--border-md); border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; }
+.creds-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+.cred-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.cred-row:last-child { border-bottom: none; }
+.cred-label { font-size: 12px; color: var(--text3); }
+.cred-val { font-family: var(--font-mono); font-size: 12px; color: var(--text); background: var(--surface3); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+
+/* Buttons */
+.btn-group { display: flex; flex-direction: column; gap: 10px; }
+button { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: var(--brand); color: #fff; box-shadow: 0 6px 22px rgba(79,142,247,0.3); }
+.btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-secondary { background: transparent; color: var(--text2); border: 1px solid var(--border-md); }
+.btn-secondary:hover { background: var(--surface2); color: var(--text); }
+.btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(240,85,90,0.3); }
+.btn-danger:hover { background: rgba(240,85,90,0.1); }
+
+#status { margin-top: 16px; font-size: 13px; min-height: 20px; line-height: 1.5; padding: 10px 14px; border-radius: 8px; display: none; }
+#status.show { display: block; }
+#status.info { background: rgba(79,142,247,0.1); color: var(--brand); border: 1px solid rgba(79,142,247,0.2); }
+#status.success { background: rgba(23,217,160,0.1); color: var(--success); border: 1px solid rgba(23,217,160,0.2); }
+#status.error { background: rgba(240,85,90,0.1); color: var(--danger); border: 1px solid rgba(240,85,90,0.2); }
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.hint { font-size: 11.5px; color: var(--text3); text-align: center; margin-top: 12px; }
+.hint a { color: var(--brand); text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Muat Sample Data INVENZ</h1>
-        <p>
-            Klik tombol di bawah untuk mengisi database dengan data contoh:
-            produk <strong>Susu</strong> (Indomilk, Frisian Flag, Ultra Milk),
-            <strong>Parfum</strong> (Casablanca, Vitalis, Kahf, HMNS), dan
-            <strong>Mie Instan</strong> (Indomie, Sarimi, Supermi, Mie Sedaap).
-            Termasuk contoh invoice masuk, transaksi stock out, dan beberapa
-            barang yang sudah/akan kadaluarsa untuk demo.
-        </p>
-        <button id="btnSeed">Muat Sample Data & Buka Dashboard</button>
-        <button class="secondary" id="btnClear">Kosongkan Semua Data</button>
-        <div id="status"></div>
+<div class="card">
+    <div class="brand">
+        <div class="brand-mark">I</div>
+        <span class="brand-name">INVENZ</span>
     </div>
 
-    <script src="js/seedSampleData.js" defer></script>
-    <script>
-        document.getElementById("btnSeed").addEventListener("click", () => {
-            const statusEl = document.getElementById("status");
-            try {
-                // seedSampleData.js langsung jalan begitu dimuat (IIFE),
-                // jadi di sini kita cukup pastikan sudah login lalu redirect.
-                if (!localStorage.getItem("isLoggedIn")) {
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("loggedUser", "Admin Demo");
-                    localStorage.setItem("loggedRole", "owner");
-                }
-                statusEl.textContent = "✅ Data sample berhasil dimuat. Membuka dashboard...";
-                statusEl.classList.remove("error");
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
-            } catch (e) {
-                statusEl.textContent = "❌ Gagal memuat data: " + e.message;
-                statusEl.classList.add("error");
-            }
-        });
+    <h1>Setup Awal & Sample Data</h1>
+    <p class="desc">
+        Klik <strong>"Seed Users & Data"</strong> untuk mendaftarkan akun default dan mengisi database dengan data contoh.
+        Cukup dijalankan <strong>sekali</strong> saat pertama kali setup.
+    </p>
 
-        document.getElementById("btnClear").addEventListener("click", () => {
-            if (!confirm("Semua data invoices, linkedData, dan stock out akan dihapus. Lanjutkan?")) return;
-            ["invoices", "linkedData", "stockOuts_v2", "invenz_payment_methods", "invenz_retur_items", "globalStock"]
-                .forEach((k) => localStorage.removeItem(k));
-            document.getElementById("status").textContent = "🗑️ Semua data berhasil dikosongkan.";
-            setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
-        });
-    </script>
+    <!-- Akun yang bisa dipakai login -->
+    <div class="creds-box">
+        <div class="creds-title">🔐 Akun Login Tersedia</div>
+        <div class="cred-row">
+            <span class="cred-label">Username</span>
+            <span class="cred-label">Password</span>
+            <span class="cred-label">Role</span>
+        </div>
+        <div class="cred-row">
+            <span class="cred-val">owner</span>
+            <span class="cred-val">owner123</span>
+            <span class="cred-val" style="color:var(--accent)">Owner</span>
+        </div>
+        <div class="cred-row">
+            <span class="cred-val">admin</span>
+            <span class="cred-val">admin123</span>
+            <span class="cred-val" style="color:var(--brand)">Admin</span>
+        </div>
+        <div class="cred-row">
+            <span class="cred-val">invenz</span>
+            <span class="cred-val">invenz123</span>
+            <span class="cred-val" style="color:var(--brand)">Admin</span>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-primary" id="btnSeed">⚡ Seed Users & Data Sample → Buka Dashboard</button>
+        <button class="btn-secondary" id="btnSeedUsersOnly">👤 Seed Users Saja (Tanpa Sample Data)</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="divider"></div>
+
+    <div class="btn-group">
+        <button class="btn-danger" id="btnClear">🗑️ Kosongkan Semua Data (Reset)</button>
+    </div>
+
+    <p class="hint">
+        Sudah setup? <a href="login.html">Pergi ke halaman Login</a> ·
+        <a href="dashboard.html">Langsung ke Dashboard</a>
+    </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/seedSampleData.js"></script>
+<script>
+    const statusEl = document.getElementById("status");
+
+    function showStatus(msg, type = "info") {
+        statusEl.textContent = msg;
+        statusEl.className = "show " + type;
+    }
+
+    // Seed users + sample data
+    document.getElementById("btnSeed").addEventListener("click", async function() {
+        this.disabled = true;
+        showStatus("⏳ Memproses seeding data ke Supabase...", "info");
+        try {
+            await seedSupabaseData();
+            // Set session agar langsung bisa akses dashboard
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("loggedUser", "Owner INVENZ");
+            localStorage.setItem("loggedRole", "owner");
+            showStatus("✅ Berhasil! User & data sample sudah dimuat. Membuka dashboard...", "success");
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 1800);
+        } catch (e) {
+            showStatus("❌ Gagal: " + e.message, "error");
+            this.disabled = false;
+        }
+    });
+
+    // Seed users only (tanpa sample data)
+    document.getElementById("btnSeedUsersOnly").addEventListener("click", async function() {
+        this.disabled = true;
+        showStatus("⏳ Mendaftarkan akun ke Supabase...", "info");
+        try {
+            function _hashPw(pw) {
+                let h = 0;
+                for (let i = 0; i < pw.length; i++) h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+                return "h_" + Math.abs(h).toString(36);
+            }
+            const defaultUsers = [
+                { username: "owner",  nama: "Owner INVENZ",  role: "owner", password: "owner123",  aktif: true, is_builtin: true },
+                { username: "admin",  nama: "Administrator", role: "admin", password: "admin123",  aktif: true, is_builtin: true },
+                { username: "invenz", nama: "Invenz Demo",   role: "admin", password: "invenz123", aktif: true, is_builtin: true },
+            ];
+            for (const u of defaultUsers) {
+                const { error } = await sb.from("app_users").upsert({
+                    username: u.username, nama: u.nama, role: u.role,
+                    password_hash: _hashPw(u.password), aktif: u.aktif, is_builtin: u.is_builtin
+                }, { onConflict: "username" });
+                if (error) throw error;
+            }
+            // Seed default payment methods juga
+            await sb.from("payment_methods").upsert({ id: "pay_default_cash", nama: "Cash", keterangan: "Pembayaran tunai", aktif: true, is_default: true }, { onConflict: "id" });
+            await sb.from("payment_methods").upsert({ id: "pay_default_qris", nama: "QRIS", keterangan: "Scan QR Code",     aktif: true, is_default: true }, { onConflict: "id" });
+            showStatus("✅ Akun berhasil didaftarkan! Silakan login dengan kredensial di atas.", "success");
+            this.disabled = false;
+        } catch (e) {
+            showStatus("❌ Gagal mendaftarkan akun: " + e.message, "error");
+            this.disabled = false;
+        }
+    });
+
+    // Clear all data
+    document.getElementById("btnClear").addEventListener("click", async function() {
+        if (!confirm("PERINGATAN: Semua data di Supabase (termasuk invoices, stok, user non-builtin) akan dihapus permanen.\n\nLanjutkan?")) return;
+        this.disabled = true;
+        showStatus("⏳ Menghapus semua data dari Supabase...", "info");
+        try {
+            await clearSupabaseData();
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("loggedUser");
+            localStorage.removeItem("loggedRole");
+            showStatus("🗑️ Semua data berhasil dikosongkan. Silakan seed ulang jika diperlukan.", "success");
+            this.disabled = false;
+        } catch (e) {
+            showStatus("❌ Gagal mengosongkan data: " + e.message, "error");
+            this.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>

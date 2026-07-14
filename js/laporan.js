@@ -1,10 +1,7 @@
 "use strict";
 
-// ===== AUTH =====
-if (!localStorage.getItem("isLoggedIn")) window.location.href = "login.html";
-
 // ===== USER INFO =====
-const loggedUser = localStorage.getItem("loggedUser") || "Admin";
+const loggedUser = INVENZ.user;
 document.getElementById("sidebarUsername").textContent = loggedUser;
 document.getElementById("sidebarAvatar").textContent = loggedUser
   .charAt(0)
@@ -25,16 +22,8 @@ function closeSidebar() {
 }
 
 // ===== LOGOUT =====
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-});
+document.getElementById("logoutBtn").addEventListener("click", () => INVENZ.logout());
 
-// ============================================================
-// ===== STORAGE KEYS =========================================
-// ============================================================
-const STOCKOUT_KEY = "stockOuts_v2";
 
 // ============================================================
 // ===== CUSTOM RANGE STATE ===================================
@@ -215,18 +204,61 @@ function fmtPct(n) {
 // ============================================================
 // ===== DATA LOADERS =========================================
 // ============================================================
-function loadInvoices() {
+async function loadInvoices() {
   try {
-    return Object.values(JSON.parse(localStorage.getItem("invoices") || "{}"));
-  } catch {
+    const { data, error } = await sb.from("invoices").select("*, invoice_items(*)");
+    if (error) throw error;
+    return (data || []).map(inv => ({
+      invoice: inv.invoice_no,
+      tanggal: inv.tanggal,
+      supplier: inv.supplier || "—",
+      total: inv.total || 0,
+      totalHarga: parseFloat(inv.total_harga) || 0,
+      items: (inv.invoice_items || []).map(item => ({
+        sku: item.sku || "—",
+        nama: item.nama || "—",
+        merk: item.merk || "—",
+        kategori: item.kategori || "—",
+        lokasi: item.lokasi || "—",
+        expired: item.expired || "—",
+        hargaHPP: parseFloat(item.harga_hpp) || 0,
+        hargaJual: parseFloat(item.harga_jual) || 0,
+        stok: parseInt(item.stok) || 0
+      }))
+    }));
+  } catch (e) {
+    console.error("Gagal load invoices di laporan:", e);
     return [];
   }
 }
 
-function loadStockOuts() {
+async function loadStockOuts() {
   try {
-    return JSON.parse(localStorage.getItem(STOCKOUT_KEY) || "[]");
-  } catch {
+    const { data, error } = await sb.from("stock_outs").select("*, stock_out_items(*)");
+    if (error) throw error;
+    return (data || []).map(so => ({
+      id: so.id,
+      invoice: so.invoice_no,
+      tanggal: so.tanggal,
+      penerima: so.penerima,
+      telepon: so.telepon || "",
+      paymentId: so.payment_id,
+      paymentNama: so.payment_nama || "",
+      items: (so.stock_out_items || []).map(item => ({
+        invoiceAsal: item.invoice_asal,
+        sku: item.sku || "—",
+        nama: item.nama || "—",
+        kategori: item.kategori || "—",
+        merk: item.merk || "—",
+        lokasi: item.lokasi || "—",
+        hargaHPP: parseFloat(item.harga_hpp) || 0,
+        hargaJual: parseFloat(item.harga_jual) || 0,
+        jumlahKeluar: parseInt(item.jumlah_keluar) || 0,
+        sisaStok: parseInt(item.sisa_stok) || 0
+      }))
+    }));
+  } catch (e) {
+    console.error("Gagal load stock_outs di laporan:", e);
     return [];
   }
 }
@@ -293,9 +325,9 @@ function getMonthLabel(dateStr) {
 // Store computed data globally for PDF/Print use
 let _computedData = null;
 
-function computeData(range) {
-  const allInvoices = loadInvoices();
-  const allStockOuts = loadStockOuts();
+async function computeData(range) {
+  const allInvoices = await loadInvoices();
+  const allStockOuts = await loadStockOuts();
 
   const filteredInvoices = allInvoices.filter((inv) =>
     inRange(inv.tanggal, range),
@@ -388,14 +420,14 @@ function computeData(range) {
 // ============================================================
 // ===== MAIN RENDER ==========================================
 // ============================================================
-function renderAll() {
+async function renderAll() {
   const range = getDateRange(filterPeriode.value);
   const periodTxt = customRangeActive
     ? rangeBadgeText.textContent || "Custom Range"
     : PERIODE_LABELS[filterPeriode.value] || "All Time";
   document.getElementById("periodText").textContent = periodTxt;
 
-  const d = computeData(range);
+  const d = await computeData(range);
   _computedData = { ...d, periodTxt, range };
 
   const {

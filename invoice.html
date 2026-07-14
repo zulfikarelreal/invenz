@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,12 @@
     <link rel="stylesheet" href="css/customDropdown.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
     <title>Detail Invoice | Invenz</title>
     <style>
         /* ===== CUSTOM DROPDOWN DARK OVERRIDE ===== */
@@ -15,46 +21,85 @@
             background: var(--bg3) !important;
             border-color: var(--border-md) !important;
         }
+
         .cd-input {
             background: transparent !important;
             color: var(--text) !important;
             font-family: var(--font) !important;
         }
-        .cd-input::placeholder { color: var(--text3) !important; }
-        .cd-arrow { color: var(--text2) !important; }
+
+        .cd-input::placeholder {
+            color: var(--text3) !important;
+        }
+
+        .cd-arrow {
+            color: var(--text2) !important;
+        }
+
         .cd-wrapper.open .cd-input-row {
             border-color: var(--brand) !important;
             background: var(--surface2) !important;
         }
-        .cd-wrapper.open .cd-arrow { color: var(--brand) !important; }
+
+        .cd-wrapper.open .cd-arrow {
+            color: var(--brand) !important;
+        }
+
         .cd-dropdown {
             background: var(--surface) !important;
             border-color: var(--brand) !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
         }
+
         .cd-search-box {
             background: var(--bg3) !important;
             border-bottom-color: var(--border) !important;
         }
-        .cd-search { color: var(--text) !important; }
-        .cd-search::placeholder { color: var(--text3) !important; }
-        .cd-search-box i { color: var(--text3) !important; }
-        .cd-list li { color: var(--text2) !important; border-left-color: transparent !important; }
+
+        .cd-search {
+            color: var(--text) !important;
+        }
+
+        .cd-search::placeholder {
+            color: var(--text3) !important;
+        }
+
+        .cd-search-box i {
+            color: var(--text3) !important;
+        }
+
+        .cd-list li {
+            color: var(--text2) !important;
+            border-left-color: transparent !important;
+        }
+
         .cd-list li:hover {
             background: var(--surface2) !important;
             border-left-color: var(--brand) !important;
             color: var(--brand) !important;
         }
+
         .cd-list li.selected {
             background: var(--surface3) !important;
             border-left-color: var(--brand) !important;
             color: var(--brand) !important;
         }
-        .cd-empty, .cd-no-result { color: var(--text3) !important; }
-        .cd-list::-webkit-scrollbar-track { background: var(--bg3) !important; }
-        .cd-list::-webkit-scrollbar-thumb { background: var(--surface3) !important; }
+
+        .cd-empty,
+        .cd-no-result {
+            color: var(--text3) !important;
+        }
+
+        .cd-list::-webkit-scrollbar-track {
+            background: var(--bg3) !important;
+        }
+
+        .cd-list::-webkit-scrollbar-thumb {
+            background: var(--surface3) !important;
+        }
     </style>
 </head>
+
 <body>
 
     <!-- Navbar -->
@@ -92,14 +137,15 @@
                     <th>Expired</th>
                     <th>Harga HPP</th>
                     <th>Harga Jual</th>
-                    <th>Qty / Stok</th>
+                    <th>Stok Awal</th> <!-- BARU -->
+                    <th>Sisa Stok</th> <!-- rename dari "Qty / Stok" -->
                     <th>Subtotal</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="itemTableBody">
                 <tr class="empty-row">
-                    <td colspan="12">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>
+                    <td colspan="13">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>
                 </tr>
             </tbody>
         </table>
@@ -131,9 +177,7 @@
                 <div class="form-row">
                     <label>Kode SKU <span class="req">*</span></label>
                     <div class="sku-row">
-                        <input type="text" id="inputSKU"
-                               placeholder="Ketik SKU atau scan barcode"
-                               autocomplete="off">
+                        <input type="text" id="inputSKU" placeholder="Ketik SKU atau scan barcode" autocomplete="off">
                         <button class="btn-scan-sku" id="btnScanSKU" title="Scan Barcode SKU">
                             <i class="bx bx-scan-barcode"></i>
                         </button>
@@ -144,7 +188,9 @@
                 <div class="scanner-panel hidden" id="scannerSKUPanel">
                     <div class="scan-box">
                         <video id="cameraStreamSKU" autoplay playsinline></video>
-                        <div class="scan-frame"><div class="scan-line"></div></div>
+                        <div class="scan-frame">
+                            <div class="scan-line"></div>
+                        </div>
                         <div class="scan-placeholder" id="scanPlaceholderSKU">
                             <i class="bx bx-barcode-reader"></i>
                             <p>Kamera belum aktif</p>
@@ -188,7 +234,7 @@
                     <div class="cd-wrapper" id="cdNama">
                         <div class="cd-input-row">
                             <input class="cd-input" id="inputNama" type="text"
-                                   placeholder="Pilih atau ketik nama barang" autocomplete="off">
+                                placeholder="Pilih atau ketik nama barang" autocomplete="off">
                             <i class="bx bx-chevron-down cd-arrow"></i>
                         </div>
                         <div class="cd-dropdown">
@@ -208,8 +254,8 @@
                         <label>Merk <span class="req">*</span></label>
                         <div class="cd-wrapper" id="cdMerk">
                             <div class="cd-input-row">
-                                <input class="cd-input" id="inputMerk" type="text"
-                                       placeholder="Pilih merk" autocomplete="off">
+                                <input class="cd-input" id="inputMerk" type="text" placeholder="Pilih merk"
+                                    autocomplete="off">
                                 <i class="bx bx-chevron-down cd-arrow"></i>
                             </div>
                             <div class="cd-dropdown">
@@ -226,8 +272,8 @@
                         <label>Kategori <span class="req">*</span></label>
                         <div class="cd-wrapper" id="cdKategori">
                             <div class="cd-input-row">
-                                <input class="cd-input" id="inputKategori" type="text"
-                                       placeholder="Pilih kategori" autocomplete="off">
+                                <input class="cd-input" id="inputKategori" type="text" placeholder="Pilih kategori"
+                                    autocomplete="off">
                                 <i class="bx bx-chevron-down cd-arrow"></i>
                             </div>
                             <div class="cd-dropdown">
@@ -247,8 +293,8 @@
                     <label>Lokasi Inventori <span class="req">*</span></label>
                     <div class="cd-wrapper" id="cdLokasi">
                         <div class="cd-input-row">
-                            <input class="cd-input" id="inputLokasi" type="text"
-                                   placeholder="Pilih lokasi penyimpanan" autocomplete="off">
+                            <input class="cd-input" id="inputLokasi" type="text" placeholder="Pilih lokasi penyimpanan"
+                                autocomplete="off">
                             <i class="bx bx-chevron-down cd-arrow"></i>
                         </div>
                         <div class="cd-dropdown">
@@ -319,8 +365,9 @@
         </div>
     </div>
 
-    <script src="js/auth.js"></script>
+    <!-- <script src="js/auth.js"></script> -->
     <script src="js/customDropdown.js"></script>
     <script src="js/invoice.js"></script>
 </body>
+
 </html>

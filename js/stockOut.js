@@ -1,10 +1,8 @@
+// ===== STOCKOUT.JS — Supabase version =====
 "use strict";
 
-// ===== AUTH =====
-if (!localStorage.getItem("isLoggedIn")) window.location.href = "login.html";
-
 // ===== USER INFO =====
-const loggedUser = localStorage.getItem("loggedUser") || "Admin";
+const loggedUser = INVENZ.user;
 document.getElementById("sidebarUsername").textContent = loggedUser;
 document.getElementById("sidebarAvatar").textContent = loggedUser.charAt(0).toUpperCase();
 
@@ -23,16 +21,8 @@ function closeSidebar() {
 }
 
 // ===== LOGOUT =====
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-});
+document.getElementById("logoutBtn").addEventListener("click", () => INVENZ.logout());
 
-// ============================================================
-// ===== STORAGE KEY ==========================================
-// ============================================================
-const STOCKOUT_KEY = "stockOuts_v2";
 
 // ============================================================
 // ===== CUSTOM RANGE STATE ===================================
@@ -71,10 +61,7 @@ filterWaktuSO.addEventListener("change", () => {
 });
 
 btnApplyRangeSO.addEventListener("click", () => {
-  if (!customFromSO.value || !customToSO.value) {
-    alert("Pilih tanggal dari dan sampai terlebih dahulu.");
-    return;
-  }
+  if (!customFromSO.value || !customToSO.value) { alert("Pilih tanggal dari dan sampai terlebih dahulu."); return; }
   const f = new Date(customFromSO.value + "T00:00:00");
   const t = new Date(customToSO.value + "T23:59:59");
   if (f > t) { alert("Tanggal 'Dari' tidak boleh lebih besar dari 'Sampai'."); return; }
@@ -105,16 +92,16 @@ function getDateRangeSO(filter) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   switch (filter) {
-    case "today": return { from: today, to: new Date() };
-    case "7d": return { from: new Date(today - 6 * 864e5), to: new Date() };
+    case "today":     return { from: today, to: new Date() };
+    case "7d":        return { from: new Date(today - 6 * 864e5), to: new Date() };
     case "thismonth": return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: new Date() };
-    case "30d": return { from: new Date(today - 29 * 864e5), to: new Date() };
+    case "30d":       return { from: new Date(today - 29 * 864e5), to: new Date() };
     case "lastmonth": return { from: new Date(now.getFullYear(), now.getMonth() - 1, 1), to: new Date(now.getFullYear(), now.getMonth(), 0) };
-    case "3m": return { from: new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()), to: new Date() };
-    case "6m": return { from: new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()), to: new Date() };
-    case "ytd": return { from: new Date(now.getFullYear(), 0, 1), to: new Date() };
-    case "1y": return { from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), to: new Date() };
-    case "lastyear": return { from: new Date(now.getFullYear() - 1, 0, 1), to: new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59) };
+    case "3m":        return { from: new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()), to: new Date() };
+    case "6m":        return { from: new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()), to: new Date() };
+    case "ytd":       return { from: new Date(now.getFullYear(), 0, 1), to: new Date() };
+    case "1y":        return { from: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), to: new Date() };
+    case "lastyear":  return { from: new Date(now.getFullYear() - 1, 0, 1), to: new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59) };
     case "custom":
       if (soCustomRangeActive && soCustomRangeFrom && soCustomRangeTo) return { from: soCustomRangeFrom, to: soCustomRangeTo };
       return null;
@@ -129,54 +116,37 @@ function isInRangeSO(tanggalStr, range) {
 }
 
 // ============================================================
-// ===== HELPERS ==============================================
+// ===== CACHE DATA ============================================
 // ============================================================
-function getPenerima() {
-  try {
-    const d = JSON.parse(localStorage.getItem("linkedData") || "{}");
-    return d.penerima || [];
-  } catch { return []; }
-}
+let _allStockOuts = []; // [{id, invoice_no, tanggal, penerima, telepon, payment_id, payment_nama, items:[]}]
+let _payments = [];
+let _penerima = [];
 
-function getPenerimaByNama(nama) {
-  return getPenerima().find((p) => p.nama === nama) || null;
-}
+async function loadAllData() {
+  // Load stock_outs + items
+  const { data: soData, error: soErr } = await sb
+    .from("stock_outs")
+    .select("*, stock_out_items(*)")
+    .order("created_at", { ascending: false });
 
-function getPayments() {
-  const DEFAULT = [
-    { id: "pay_default_cash", nama: "Cash", aktif: true, isDefault: true },
-    { id: "pay_default_qris", nama: "QRIS", aktif: true, isDefault: true },
-  ];
-  try {
-    const raw = localStorage.getItem("invenz_payment_methods");
-    const list = raw ? JSON.parse(raw) : DEFAULT;
-    return list.filter((p) => p.aktif);
-  } catch { return DEFAULT; }
-}
+  if (!soErr && soData) {
+    _allStockOuts = soData.map((so) => ({
+      ...so,
+      items: so.stock_out_items || [],
+    }));
+  }
 
-function generateInvoiceNumber() {
-  const list = loadStockOuts();
-  let max = 0;
-  list.forEach((so) => {
-    const m = (so.invoice || "").match(/^INV-OUT-(\d+)$/i);
-    if (m) max = Math.max(max, parseInt(m[1]));
-  });
-  return `INV-OUT-${max + 1}`;
+  // Load payment methods
+  const { data: pmData } = await sb.from("payment_methods").select("*").eq("aktif", true).order("nama");
+  _payments = pmData || [];
+
+  // Load penerima
+  const { data: pnData } = await sb.from("penerima").select("*").order("nama");
+  _penerima = pnData || [];
 }
 
 // ============================================================
-// ===== STORAGE ==============================================
-// ============================================================
-function loadStockOuts() {
-  try { return JSON.parse(localStorage.getItem(STOCKOUT_KEY) || "[]"); }
-  catch { return []; }
-}
-function saveStockOuts(list) {
-  localStorage.setItem(STOCKOUT_KEY, JSON.stringify(list));
-}
-
-// ============================================================
-// ===== FORMAT ===============================================
+// ===== FORMAT ================================================
 // ============================================================
 function formatRp(num) {
   if (!num || num === 0) return "Rp 0";
@@ -199,8 +169,8 @@ function updateStats(filteredList) {
 
   filteredList.forEach((so) => {
     (so.items || []).forEach((it) => {
-      const qty = parseInt(it.jumlahKeluar) || 0;
-      const harga = parseFloat(it.hargaJual || it.hargaHPP || 0);
+      const qty = parseInt(it.jumlah_keluar) || 0;
+      const harga = parseFloat(it.harga_jual || it.harga_hpp || 0);
       totalBarang += qty;
       totalNilai += harga * qty;
       if (it.nama) namaSet.add(it.nama.toLowerCase());
@@ -218,15 +188,14 @@ function updateStats(filteredList) {
 // ============================================================
 function renderTable() {
   const tbody = document.getElementById("tableBody");
-  const allList = loadStockOuts();
   const range = getDateRangeSO(filterWaktuSO.value);
   const keyword = searchSO.value.toLowerCase().trim();
 
-  let filtered = allList.filter((so) => isInRangeSO(so.tanggal, range));
+  let filtered = _allStockOuts.filter((so) => isInRangeSO(so.tanggal, range));
 
   if (keyword) {
     filtered = filtered.filter((so) =>
-      (so.invoice || "").toLowerCase().includes(keyword) ||
+      (so.invoice_no || "").toLowerCase().includes(keyword) ||
       (so.penerima || "").toLowerCase().includes(keyword) ||
       (so.telepon || "").toLowerCase().includes(keyword)
     );
@@ -241,20 +210,20 @@ function renderTable() {
 
   tbody.innerHTML = "";
   filtered.forEach((so, i) => {
-    const totalItem = (so.items || []).reduce((s, it) => s + (parseInt(it.jumlahKeluar) || 0), 0);
-    const totalHarga = (so.items || []).reduce((s, it) => s + parseFloat(it.hargaJual || it.hargaHPP || 0) * (parseInt(it.jumlahKeluar) || 0), 0);
-    const badgeClass = getPaymentBadgeClass(so.paymentId);
+    const totalItem  = (so.items || []).reduce((s, it) => s + (parseInt(it.jumlah_keluar) || 0), 0);
+    const totalHarga = (so.items || []).reduce((s, it) => s + parseFloat(it.harga_jual || it.harga_hpp || 0) * (parseInt(it.jumlah_keluar) || 0), 0);
+    const badgeClass = getPaymentBadgeClass(so.payment_id);
 
     const tr = document.createElement("tr");
     tr.className = "clickable-row";
     tr.dataset.id = so.id;
     tr.innerHTML = `
       <td>${i + 1}</td>
-      <td><span class="invoice-link">${so.invoice}</span></td>
+      <td><span class="invoice-link">${so.invoice_no}</span></td>
       <td>${formatDate(so.tanggal)}</td>
       <td><strong>${so.penerima || "—"}</strong></td>
       <td>${so.telepon || '<span style="color:#bbb">—</span>'}</td>
-      <td><span class="payment-chip ${badgeClass}">${getPaymentIcon(so.paymentId)} ${so.paymentNama || "—"}</span></td>
+      <td><span class="payment-chip ${badgeClass}">${getPaymentIcon(so.payment_id)} ${so.payment_nama || "—"}</span></td>
       <td>${totalItem} item</td>
       <td class="col-harga">${formatRp(totalHarga)}</td>
       <td>
@@ -308,6 +277,7 @@ function openModal() {
     wrapper.classList.remove("open");
   }
   ddPenerima = new CustomDropdown("cdPenerima", "penerima", { icon: "bx-user" });
+  ddPenerima.setOptions(_penerima.map((p) => p.nama));
 
   const penerimaInput = document.getElementById("inputPenerima");
   penerimaInput.addEventListener("change", onPenerimaChange);
@@ -319,7 +289,7 @@ function openModal() {
 
 function onPenerimaChange(e) {
   const nama = e.target.value.trim();
-  const found = getPenerimaByNama(nama);
+  const found = _penerima.find((p) => p.nama === nama);
   const hintEl = document.getElementById("phonAutofillHint");
   const telEl = document.getElementById("inputTelepon");
   if (found && found.telepon) {
@@ -339,7 +309,7 @@ function closeModal() {
 function renderPaymentOptions() {
   const container = document.getElementById("paymentOptions");
   const emptyHint = document.getElementById("paymentEmptyHint");
-  const payments = getPayments();
+  const payments = _payments;
   if (!payments.length) {
     container.innerHTML = "";
     emptyHint.style.display = "flex";
@@ -361,56 +331,59 @@ function renderPaymentOptions() {
   });
 }
 
-function simpanInvoice() {
-  const invoice = document.getElementById("invoiceAutoPreview").textContent.trim();
-  const tanggal = document.getElementById("inputTanggal").value;
+function generateInvoiceNumber() {
+  let max = 0;
+  _allStockOuts.forEach((so) => {
+    const m = (so.invoice_no || "").match(/^INV-OUT-(\d+)$/i);
+    if (m) max = Math.max(max, parseInt(m[1]));
+  });
+  return `INV-OUT-${max + 1}`;
+}
+
+async function simpanInvoice() {
+  const invoice  = document.getElementById("invoiceAutoPreview").textContent.trim();
+  const tanggal  = document.getElementById("inputTanggal").value;
   const penerima = ddPenerima ? ddPenerima.getValue() : document.getElementById("inputPenerima").value.trim();
-  const telepon = document.getElementById("inputTelepon").value.trim();
-  const errEl = document.getElementById("errorMsg");
+  const telepon  = document.getElementById("inputTelepon").value.trim();
+  const errEl    = document.getElementById("errorMsg");
   const payRadio = document.querySelector('input[name="paymentMethod"]:checked');
 
   errEl.textContent = "";
-  if (!invoice) { errEl.textContent = "Nomor invoice tidak valid."; return; }
-  if (!tanggal) { errEl.textContent = "Tanggal keluar harus diisi."; return; }
+  if (!invoice)  { errEl.textContent = "Nomor invoice tidak valid."; return; }
+  if (!tanggal)  { errEl.textContent = "Tanggal keluar harus diisi."; return; }
   if (!penerima) { errEl.textContent = "Nama customer harus diisi."; return; }
   if (!payRadio) { errEl.textContent = "Pilih metode pembayaran."; return; }
 
-  const existing = loadStockOuts();
-  if (existing.find((s) => s.invoice === invoice)) { errEl.textContent = "Nomor invoice sudah ada, coba lagi."; return; }
+  // Cek duplikat
+  const { data: dup } = await sb.from("stock_outs").select("id").eq("invoice_no", invoice).maybeSingle();
+  if (dup) { errEl.textContent = "Nomor invoice sudah ada, coba lagi."; return; }
 
-  autoAddPenerima(penerima, telepon);
+  // Auto-add penerima ke master
+  await autoAddPenerima(penerima, telepon);
 
-  const newSO = {
-    id: "so_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-    invoice,
-    tanggal,
-    penerima,
-    telepon: telepon || "",
-    paymentId: payRadio.value,
-    paymentNama: payRadio.dataset.nama,
-    items: [],
-    createdAt: new Date().toISOString(),
-  };
+  const { data: newSO, error } = await sb.from("stock_outs").insert({
+    invoice_no: invoice,
+    tanggal: tanggal,
+    penerima: penerima,
+    telepon: telepon || null,
+    payment_id: payRadio.value,
+    payment_nama: payRadio.dataset.nama,
+  }).select().single();
 
-  existing.push(newSO);
-  saveStockOuts(existing);
+  if (error) { errEl.textContent = "Gagal menyimpan: " + error.message; return; }
+
   closeModal();
   window.location.href = `invoiceKeluar.html?id=${newSO.id}`;
 }
 
-function autoAddPenerima(nama, telepon) {
+async function autoAddPenerima(nama, telepon) {
   if (!nama) return;
-  try {
-    const ld = JSON.parse(localStorage.getItem("linkedData") || "{}");
-    if (!ld.penerima) ld.penerima = [];
-    const idx = ld.penerima.findIndex((p) => p.nama.toLowerCase() === nama.toLowerCase());
-    if (idx === -1) {
-      ld.penerima.push({ nama, keterangan: "", telepon: telepon || "" });
-    } else if (telepon && !ld.penerima[idx].telepon) {
-      ld.penerima[idx].telepon = telepon;
-    }
-    localStorage.setItem("linkedData", JSON.stringify(ld));
-  } catch (e) { /* ignore */ }
+  const existing = _penerima.find((p) => p.nama.toLowerCase() === nama.toLowerCase());
+  if (!existing) {
+    await sb.from("penerima").insert({ nama, telepon: telepon || null, keterangan: null });
+  } else if (telepon && !existing.telepon) {
+    await sb.from("penerima").update({ telepon }).eq("id", existing.id);
+  }
 }
 
 // ============================================================
@@ -423,30 +396,48 @@ function openConfirmDelete(id) {
   document.getElementById("confirmOverlay").classList.add("active");
 }
 
-function executeDelete() {
+async function executeDelete() {
   if (!_pendingDeleteId) return;
-  let list = loadStockOuts();
-  const so = list.find((s) => s.id === _pendingDeleteId);
-  if (so && so.items && so.items.length) { kembalikanStok(so.items); }
-  list = list.filter((s) => s.id !== _pendingDeleteId);
-  saveStockOuts(list);
+  // Kembalikan stok ke invoice_items sebelum hapus
+  const so = _allStockOuts.find((s) => s.id === _pendingDeleteId);
+  if (so && so.items && so.items.length) {
+    await kembalikanStok(so.items);
+  }
+  // Hapus stock_out (cascade ke stock_out_items)
+  await sb.from("stock_outs").delete().eq("id", _pendingDeleteId);
+
+  _allStockOuts = _allStockOuts.filter((s) => s.id !== _pendingDeleteId);
   _pendingDeleteId = null;
   document.getElementById("confirmOverlay").classList.remove("active");
   renderTable();
 }
 
-function kembalikanStok(items) {
-  try {
-    const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-    items.forEach((item) => {
-      if (!item.invoiceAsal) return;
-      const inv = invoices[item.invoiceAsal];
-      if (!inv || !inv.items) return;
-      const found = inv.items.find((i) => i.nama === item.nama && i.kategori === item.kategori);
-      if (found) { found.stok = (parseInt(found.stok) || 0) + (parseInt(item.jumlahKeluar) || 0); }
-    });
-    localStorage.setItem("invoices", JSON.stringify(invoices));
-  } catch (e) { /* ignore */ }
+async function kembalikanStok(items) {
+  for (const item of items) {
+    if (!item.invoice_asal) continue;
+    // Cari invoice_items berdasarkan invoice_no
+    const { data: inv } = await sb
+      .from("invoices")
+      .select("id")
+      .eq("invoice_no", item.invoice_asal)
+      .maybeSingle();
+    if (!inv) continue;
+
+    const { data: invItems } = await sb
+      .from("invoice_items")
+      .select("id, stok, sku, nama")
+      .eq("invoice_id", inv.id);
+
+    if (!invItems) continue;
+    const found = invItems.find((i) =>
+      item.sku && item.sku !== "—" ? i.sku === item.sku : i.nama === item.nama
+    );
+    if (found) {
+      await sb.from("invoice_items")
+        .update({ stok: (parseInt(found.stok) || 0) + (parseInt(item.jumlah_keluar) || 0) })
+        .eq("id", found.id);
+    }
+  }
 }
 
 // ============================================================
@@ -468,4 +459,7 @@ document.getElementById("confirmOverlay").addEventListener("click", function (e)
 });
 
 // ===== INIT =====
-renderTable();
+(async function init() {
+  await loadAllData();
+  renderTable();
+})();

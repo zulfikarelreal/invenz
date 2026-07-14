@@ -8,6 +8,9 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
     <title>Linked Data | Invenz</title>
 </head>
 <body>
@@ -351,13 +354,13 @@
         </div>
     </div>
 
-    <script src="js/auth.js"></script>
+    <!-- <script src="js/auth.js"></script> -->
 
     <!-- ===== SIDEBAR ROLE SETUP ===== -->
     <script>
     (function() {
-        const role = localStorage.getItem("loggedRole") || "owner";
-        const user = localStorage.getItem("loggedUser") || "Admin";
+        const role = INVENZ.role || "owner";
+        const user = INVENZ.user || "Admin";
 
         const ROLE_LABELS = {
             owner: "Owner", admin: "Administrator",

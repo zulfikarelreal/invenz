@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        alert("JS ERROR: " + message + "\nLine: " + lineno + "\nSource: " + source);
+        return false;
+    };
+    window.onunhandledrejection = function(event) {
+        alert("UNHANDLED REJECTION: " + (event.reason ? event.reason.message || event.reason : event));
+    };
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
 <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/auth.js"></script>
 <title>Masuk | INVENZ</title>
 <style>
 /* ============================================================
@@ -608,46 +620,70 @@ body {
     renderBarcode();
 
     /* ===== VALID USERS (Built-in) ===== */
-    function hashPassword(pw) {
-        let h = 0;
-        for (let i = 0; i < pw.length; i++) {
-            h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
-        }
-        return "h_" + Math.abs(h).toString(36);
-    }
-
+    // Akun bawaan — selalu bisa login meski Supabase belum ada data
     const BUILTIN_USERS = [
-        { username: "owner",  password: "owner123",   role: "owner",       nama: "Owner INVENZ" },
-        { username: "admin",  password: "admin123",   role: "admin",       nama: "Administrator" },
-        { username: "invenz", password: "invenz123",  role: "admin",       nama: "Invenz Demo" },
+        { username: "owner",  password: "owner123",  role: "owner", nama: "Owner INVENZ" },
+        { username: "admin",  password: "admin123",  role: "admin", nama: "Administrator" },
+        { username: "invenz", password: "invenz123", role: "admin", nama: "Invenz Demo" },
     ];
 
-    const ROLE_LABELS = {
-        owner:       "Owner",
-        admin:       "Administrator",
-        kepala_toko: "Kepala Toko",
-        kasir:       "Kasir",
-        gudang:      "Staf Gudang",
-    };
-
-    function findUser(username, password) {
+    async function findUser(username, password) {
         const uname = username.trim().toLowerCase();
+        const ph    = hashPassword(password);
 
+        // ── 1. Coba dari Supabase app_users ──
+        try {
+            const { data, error } = await sb
+                .from("app_users")
+                .select("*")
+                .eq("username", uname)
+                .maybeSingle();
+
+            if (!error && data) {
+                // User ditemukan di DB
+                if (data.aktif === false) {
+                    return { __inactive: true };
+                }
+                if (data.password_hash === ph) {
+                    return data; // ✅ password hash cocok
+                }
+                // Coba cocokkan password plain dengan builtin
+                const bi = BUILTIN_USERS.find(u => u.username === uname && u.password === password);
+                if (bi) return data;
+                return null; // user ada tapi password salah
+            }
+            // error atau data null → lanjut ke builtin
+        } catch (e) {
+            console.warn("Supabase query error, fallback ke builtin:", e.message);
+        }
+
+        // ── 2. Fallback: BUILTIN_USERS ──
         const builtin = BUILTIN_USERS.find(
             u => u.username === uname && u.password === password
         );
-        if (builtin) return { ...builtin, isBuiltin: true };
-
-        try {
-            const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
-            const ph = hashPassword(password);
-            const found = customUsers.find(
-                u => u.username.toLowerCase() === uname
-                    && u.passwordHash === ph
-                    && u.aktif !== false
-            );
-            if (found) return found;
-        } catch (_) {}
+        if (builtin) {
+            // Seed ke Supabase supaya login berikutnya langsung dari DB
+            try {
+                await sb.from("app_users").upsert({
+                    username: builtin.username,
+                    nama:     builtin.nama,
+                    role:     builtin.role,
+                    password_hash: ph,
+                    aktif:     true,
+                    is_builtin: true
+                }, { onConflict: "username" });
+            } catch (err) {
+                console.warn("Gagal upsert builtin user ke Supabase:", err.message);
+            }
+            return {
+                id: "builtin_" + builtin.username,
+                username: builtin.username,
+                nama:     builtin.nama,
+                role:     builtin.role,
+                aktif:    true,
+                is_builtin: true
+            };
+        }
 
         return null;
     }
@@ -658,9 +694,9 @@ body {
 
     document.getElementById("eyeToggle").addEventListener("click", () => {
         const pw = document.getElementById("password");
-        const icon = document.getElementById("eyeIcon");
-        if (pw.type === "password") { pw.type = "text"; icon.className = "bx bx-hide"; }
-        else { pw.type = "password"; icon.className = "bx bx-show"; }
+        const icon = document.querySelector("#eyeToggle i");
+        if (pw.type === "password") { pw.type = "text"; if (icon) icon.className = "bx bx-hide"; }
+        else { pw.type = "password"; if (icon) icon.className = "bx bx-eye"; }
     });
 
     document.querySelectorAll(".field-wrap input").forEach(input => {
@@ -694,9 +730,9 @@ body {
 
         await new Promise(r => setTimeout(r, 800));
 
-        const user = findUser(username, password);
+        const user = await findUser(username, password);
 
-        if (user) {
+        if (user && !user.__inactive) {
             const roleName = ROLE_LABELS[user.role] || user.role;
             rolePreviewText.textContent = `Masuk sebagai ${roleName} · ${user.nama || username}`;
             rolePreview.classList.add("show");
@@ -720,15 +756,8 @@ body {
             btnLoader.style.display = "none";
             loginBtn.disabled = false;
 
-            let inactiveMsg = false;
-            try {
-                const customUsers = JSON.parse(localStorage.getItem("invenz_users") || "[]");
-                const uname = username.trim().toLowerCase();
-                const found = customUsers.find(u => u.username.toLowerCase() === uname);
-                if (found && found.aktif === false) inactiveMsg = true;
-            } catch (_) {}
-
-            errorText.textContent = inactiveMsg
+            const isInactive = user && user.__inactive;
+            errorText.textContent = isInactive
                 ? "Akun ini telah dinonaktifkan. Hubungi administrator."
                 : "Username atau password salah. Silakan coba lagi.";
             errorMessage.classList.add("show");

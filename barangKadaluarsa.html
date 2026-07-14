@@ -6,6 +6,9 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
     <title>Barang Kadaluarsa | Invenz</title>
     <style>
 /* ================================================================
@@ -794,7 +797,7 @@ tbody tr.row-retur { background: rgba(79,142,247,0.04); opacity: 0.65; }
 <!-- ===== TOAST ===== -->
 <div class="toast" id="toast"><i class="bx bx-check-circle"></i> <span id="toastMsg"></span></div>
 
-<script src="js/auth.js"></script>
+<!-- ===== SCRIPTS ===== -->
 <script>
 "use strict";
 
@@ -802,8 +805,8 @@ tbody tr.row-retur { background: rgba(79,142,247,0.04); opacity: 0.65; }
    ROLE & SIDEBAR SETUP
 ================================================================ */
 (function () {
-    const role = localStorage.getItem("loggedRole") || "owner";
-    const user = localStorage.getItem("loggedUser") || "Admin";
+    const role = INVENZ.role || "owner";
+    const user = INVENZ.user;
     const ROLE_LABELS = { owner:"Owner", admin:"Administrator", kepala_toko:"Kepala Toko", kasir:"Kasir", gudang:"Staf Gudang" };
     const ROLE_CLASSES = { owner:"role-owner", admin:"role-admin", kepala_toko:"role-kepala", kasir:"role-kasir", gudang:"role-gudang" };
     document.getElementById("sidebarUsername").textContent = user;
@@ -827,26 +830,26 @@ document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
 overlay.addEventListener("click", closeSidebar);
 function closeSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("loggedUser");
-    localStorage.removeItem("loggedRole");
-    window.location.href = "login.html";
-});
+document.getElementById("logoutBtn").addEventListener("click", () => INVENZ.logout());
 
 /* ================================================================
    RETUR STORAGE KEY
+==============================================/* ================================================================
+   RETUR STORAGE KEY (SUPABASE)
 ================================================================ */
-const RETUR_KEY = "invenz_retur_items"; // Set of "invoiceId::sku::nama"
+async function loadReturSet() {
+    try {
+        const { data, error } = await sb.from("retur_items").select("invoice_no, sku, nama");
+        if (error) throw error;
+        return new Set(data.map(r => itemKey(r.invoice_no, r.sku, r.nama)));
+    }
+    catch (e) {
+        console.error("Gagal load retur_items:", e);
+        return new Set();
+    }
+}
 
-function loadReturSet() {
-    try { return new Set(JSON.parse(localStorage.getItem(RETUR_KEY) || "[]")); }
-    catch { return new Set(); }
-}
-function saveReturSet(s) {
-    localStorage.setItem(RETUR_KEY, JSON.stringify([...s]));
-}
-function itemKey(inv, sku, nama) { return `${inv}::${sku}::${nama}`; }
+function itemKey(inv, sku, nama) { return `${inv}::${sku || '-'}::${nama}`; }
 
 /* ================================================================
    DATA LOADING
@@ -855,22 +858,36 @@ function today() {
     const d = new Date(); d.setHours(0,0,0,0); return d;
 }
 
-function getExpiredItems() {
-    const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-    const retur    = loadReturSet();
-    const result   = [];
+async function getExpiredItems() {
+    try {
+        const { data: items, error } = await sb
+            .from("invoice_items")
+            .select(`
+                *,
+                invoices (
+                    invoice_no,
+                    tanggal
+                )
+            `)
+            .not("expired", "is", null);
 
-    Object.values(invoices).forEach(inv => {
-        if (!inv.items) return;
-        inv.items.forEach(item => {
+        if (error) throw error;
+
+        const retur = await loadReturSet();
+        const result = [];
+
+        (items || []).forEach(item => {
             if (!item.expired || item.expired === "-" || item.expired === "") return;
             const expDate = new Date(item.expired);
             expDate.setHours(0,0,0,0);
             const t = today();
             const diffDays = Math.ceil((expDate - t) / (1000*60*60*24));
 
+            const invNo = item.invoices?.invoice_no || "—";
+            const invTanggal = item.invoices?.tanggal || "";
+
             let status;
-            if (retur.has(itemKey(inv.invoice, item.sku || item.nama, item.nama))) {
+            if (retur.has(itemKey(invNo, item.sku || item.nama, item.nama))) {
                 status = "retur";
             } else if (diffDays <= 0) {
                 status = "expired";
@@ -881,8 +898,8 @@ function getExpiredItems() {
             }
 
             result.push({
-                invoiceAsal : inv.invoice,
-                tanggal     : inv.tanggal,
+                invoiceAsal : invNo,
+                tanggal     : invTanggal,
                 sku         : item.sku || "-",
                 nama        : item.nama,
                 kategori    : item.kategori || "-",
@@ -890,14 +907,17 @@ function getExpiredItems() {
                 lokasi      : item.lokasi || "-",
                 expired     : item.expired,
                 stok        : parseInt(item.stok) || 0,
-                hargaHPP    : parseFloat(item.hargaHPP) || 0,
+                hargaHPP    : parseFloat(item.harga_hpp) || 0,
                 status,
                 diffDays,
             });
         });
-    });
 
-    return result;
+        return result;
+    } catch (e) {
+        console.error("Gagal load expired items:", e);
+        return [];
+    }
 }
 
 /* ================================================================
@@ -909,8 +929,8 @@ let allItems   = [];
 /* ================================================================
    RENDER
 ================================================================ */
-function render() {
-    allItems = getExpiredItems();
+async function render() {
+    allItems = await getExpiredItems();
     const kw   = (document.getElementById("searchBox").value||"").toLowerCase();
     const kat  = document.getElementById("filterKategori").value;
     const sup  = document.getElementById("filterSupplier").value;
@@ -966,10 +986,10 @@ function render() {
         return;
     }
 
+    const returSet = await loadReturSet();
     filtered.forEach((item, idx) => {
-        const retur = loadReturSet();
         const key = itemKey(item.invoiceAsal, item.sku, item.nama);
-        const isRetur = retur.has(key);
+        const isRetur = returSet.has(key);
 
         const rowClass = isRetur ? "row-retur" : item.status === "expired" ? "row-expired" : "row-soon";
         const expDate  = new Date(item.expired);
@@ -1009,9 +1029,9 @@ function render() {
             <td>
                 <div class="actions-cell">
                     ${isRetur
-                        ? `<button class="btn-restore" data-key="${key}"><i class="bx bx-revision"></i> Pulihkan</button>
+                        ? `<button class="btn-restore" data-key="${key}" data-inv="${item.invoiceAsal}" data-sku="${item.sku}" data-nama="${item.nama}"><i class="bx bx-revision"></i> Pulihkan</button>
                            <button class="btn-hapus" data-key="${key}" data-inv="${item.invoiceAsal}" data-sku="${item.sku}" data-nama="${item.nama}"><i class="bx bx-trash"></i></button>`
-                        : `<button class="btn-retur" data-key="${key}"><i class="bx bx-layer-minus"></i> Retur</button>`
+                        : `<button class="btn-retur" data-key="${key}" data-inv="${item.invoiceAsal}" data-sku="${item.sku}" data-nama="${item.nama}"><i class="bx bx-layer-minus"></i> Retur</button>`
                     }
                 </div>
             </td>`;
@@ -1021,10 +1041,10 @@ function render() {
 
     // Bind events
     tbody.querySelectorAll(".btn-retur").forEach(btn => {
-        btn.addEventListener("click", () => openConfirm("retur", btn.dataset.key));
+        btn.addEventListener("click", () => openConfirm("retur", btn.dataset.key, btn.dataset.inv, btn.dataset.sku, btn.dataset.nama));
     });
     tbody.querySelectorAll(".btn-restore").forEach(btn => {
-        btn.addEventListener("click", () => openConfirm("restore", btn.dataset.key));
+        btn.addEventListener("click", () => openConfirm("restore", btn.dataset.key, btn.dataset.inv, btn.dataset.sku, btn.dataset.nama));
     });
     tbody.querySelectorAll(".btn-hapus").forEach(btn => {
         btn.addEventListener("click", () => openConfirm("hapus", btn.dataset.key, btn.dataset.inv, btn.dataset.sku, btn.dataset.nama));
@@ -1117,46 +1137,71 @@ document.getElementById("confirmOverlay").addEventListener("click", e => {
     }
 });
 
-document.getElementById("btnConfirm").addEventListener("click", () => {
+document.getElementById("btnConfirm").addEventListener("click", async () => {
     if (!_pendingAction) return;
-    const { action, key } = _pendingAction;
-    const retur = loadReturSet();
+    const { action, key, inv, sku, nama } = _pendingAction;
 
-    if (action === "retur") {
-        retur.add(key);
-        saveReturSet(retur);
-        showToast("Barang berhasil diretur dan disembunyikan dari stok.", "success");
-    } else if (action === "restore") {
-        retur.delete(key);
-        saveReturSet(retur);
-        showToast("Barang dipulihkan ke stok.", "success");
-    } else if (action === "hapus") {
-        retur.delete(key);
-        saveReturSet(retur);
-        showToast("Barang dihapus dari daftar retur.", "info");
+    try {
+        if (action === "retur") {
+            const { error } = await sb.from("retur_items").insert({
+                invoice_no: inv,
+                sku: sku || "-",
+                nama: nama
+            });
+            if (error) throw error;
+            showToast("Barang berhasil diretur dan disembunyikan dari stok.", "success");
+        } else if (action === "restore" || action === "hapus") {
+            const { error } = await sb.from("retur_items")
+                .delete()
+                .eq("invoice_no", inv)
+                .eq("sku", sku || "-")
+                .eq("nama", nama);
+            if (error) throw error;
+            showToast(action === "restore" ? "Barang dipulihkan ke stok." : "Barang dihapus dari daftar retur.", "success");
+        }
+    } catch (e) {
+        console.error("Gagal melakukan aksi:", e);
+        showToast("Operasi gagal: " + e.message, "warn");
     }
 
     document.getElementById("confirmOverlay").classList.remove("active");
     _pendingAction = null;
-    render();
+    await render();
 });
 
 /* ================================================================
    RETUR ALL EXPIRED
 ================================================================ */
-document.getElementById("btnReturAll").addEventListener("click", () => {
+document.getElementById("btnReturAll").addEventListener("click", async () => {
     const expiredItems = allItems.filter(i => i.status === "expired");
     if (!expiredItems.length) { showToast("Tidak ada barang expired untuk di-retur.", "warn"); return; }
 
-    const retur = loadReturSet();
-    let count = 0;
-    expiredItems.forEach(i => {
-        const k = itemKey(i.invoiceAsal, i.sku, i.nama);
-        if (!retur.has(k)) { retur.add(k); count++; }
-    });
-    saveReturSet(retur);
-    showToast(`${count} barang expired berhasil di-retur.`, "success");
-    render();
+    try {
+        const returSet = await loadReturSet();
+        const toInsert = [];
+        expiredItems.forEach(i => {
+            const k = itemKey(i.invoiceAsal, i.sku, i.nama);
+            if (!returSet.has(k)) {
+                toInsert.push({
+                    invoice_no: i.invoiceAsal,
+                    sku: i.sku || "-",
+                    nama: i.nama
+                });
+            }
+        });
+
+        if (toInsert.length > 0) {
+            const { error } = await sb.from("retur_items").upsert(toInsert, { onConflict: "invoice_no,sku,nama" });
+            if (error) throw error;
+            showToast(`${toInsert.length} barang expired berhasil di-retur.`, "success");
+        } else {
+            showToast("Semua barang expired sudah di-retur.", "info");
+        }
+    } catch (e) {
+        console.error("Gagal retur semua:", e);
+        showToast("Operasi gagal: " + e.message, "warn");
+    }
+    await render();
 });
 
 /* ================================================================

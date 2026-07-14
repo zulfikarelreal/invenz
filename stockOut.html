@@ -8,6 +8,9 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
     <title>Stock Out | Invenz</title>
 </head>
 <body>
@@ -368,8 +371,8 @@
 
 <script>
 (function() {
-    const role = localStorage.getItem("loggedRole") || "owner";
-    const user = localStorage.getItem("loggedUser") || "Admin";
+    const role = INVENZ.role || "owner";
+    const user = INVENZ.user || "Admin";
     document.getElementById("sidebarAvatar").textContent = user.charAt(0).toUpperCase();
     document.getElementById("sidebarUsername").textContent = user;
     document.getElementById("navAvatar").textContent = user.charAt(0).toUpperCase();
@@ -382,7 +385,7 @@
 })();
 </script>
 
-<script src="js/auth.js"></script>
+<!-- <script src="js/auth.js"></script> -->
 <script src="js/customDropdown.js"></script>
 <script src="js/stockOut.js"></script>
 </body>

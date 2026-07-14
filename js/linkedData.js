@@ -1,11 +1,7 @@
-// ===== AUTH =====
-if (!localStorage.getItem("isLoggedIn")) window.location.href = "login.html";
-
-const loggedUser = localStorage.getItem("loggedUser") || "Admin";
+// ===== AUTH & USER INFO (dihandle oleh auth.js via INVENZ global) =====
+const loggedUser = INVENZ.user;
 document.getElementById("sidebarUsername").textContent = loggedUser;
-document.getElementById("sidebarAvatar").textContent = loggedUser
-  .charAt(0)
-  .toUpperCase();
+document.getElementById("sidebarAvatar").textContent = loggedUser.charAt(0).toUpperCase();
 
 // ===== SIDEBAR =====
 const sidebar = document.getElementById("sidebar");
@@ -22,11 +18,7 @@ function closeSidebar() {
 }
 
 // ===== LOGOUT =====
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-});
+document.getElementById("logoutBtn").addEventListener("click", () => INVENZ.logout());
 
 // ===== TAB SWITCHING =====
 document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -42,184 +34,36 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document
       .querySelector(`[data-content="${target}"]`)
       .classList.add("active");
-    if (target === "barang") {
-      repairBarangFromInvoices();
-      renderTable("barang");
+    if (target === "payment") {
+      renderPaymentTable();
+    } else {
+      renderTable(target);
     }
   });
 });
 
-// ===== STORAGE =====
-const STORAGE_KEY = "linkedData";
-
-function getLinkedData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      kategori: parsed.kategori || [],
-      merk: parsed.merk || [],
-      supplier: parsed.supplier || [],
-      barang: parsed.barang || [],
-      lokasi: parsed.lokasi || [],
-      penerima: parsed.penerima || [],
-      sku: parsed.sku || [],
-    };
-  } catch {
-    return {
-      kategori: [],
-      merk: [],
-      supplier: [],
-      barang: [],
-      lokasi: [],
-      penerima: [],
-      sku: [],
-    };
-  }
-}
-
-function saveLinkedData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
 // ============================================================
-// ===== DEDUPLICATE & CLEANUP ================================
-// ============================================================
-
-/**
- * Hapus entry duplikat di linkedData.barang:
- * - Jika ada 2+ entry dengan nama sama, prioritaskan yang punya SKU.
- * - Entry tanpa SKU yang namanya sudah ada di entry ber-SKU → hapus.
- */
-function cleanupDuplicateBarang(allData) {
-  if (!allData.barang || !allData.barang.length) return;
-
-  const skuMap = {}; // sku  → index (entry lengkap)
-  const namaMap = {}; // nama → sku (nama-ke-sku, untuk deteksi duplikat)
-  const toRemove = new Set();
-
-  // Pass 1: index semua entry ber-SKU
-  allData.barang.forEach((b, i) => {
-    if (b.sku) {
-      skuMap[b.sku] = i;
-      namaMap[(b.nama || "").toLowerCase()] = b.sku;
-    }
-  });
-
-  // Pass 2: tandai entry tanpa SKU yang namanya sudah ada di entry ber-SKU
-  allData.barang.forEach((b, i) => {
-    if (!b.sku) {
-      const key = (b.nama || "").toLowerCase();
-      if (namaMap[key]) {
-        // Ada entry ber-SKU dengan nama sama → hapus entry tanpa SKU ini
-        toRemove.add(i);
-      }
-    }
-  });
-
-  if (toRemove.size > 0) {
-    allData.barang = allData.barang.filter((_, i) => !toRemove.has(i));
-  }
-
-  // Pass 3: deduplicate by SKU (keep last / paling baru)
-  const seen = new Map();
-  const deduped = [];
-  allData.barang.forEach((b) => {
-    if (!b.sku) {
-      deduped.push(b); // tanpa SKU tetap masuk (belum bisa dedupe)
-      return;
-    }
-    seen.set(b.sku, b); // overwrite → keep last
-  });
-  seen.forEach((b) => deduped.push(b));
-  allData.barang = deduped;
-}
-
-// ============================================================
-// ===== SINKRONISASI SKU ↔ BARANG ===========================
-// ============================================================
-
-function syncSkuFromBarang(allData) {
-  if (!allData.sku) allData.sku = [];
-  allData.barang.forEach((b) => {
-    if (!b.sku) return;
-    const idx = allData.sku.findIndex((s) => s.sku === b.sku);
-    const obj = {
-      sku: b.sku,
-      nama: b.nama,
-      merk: b.merk || "",
-      kategori: b.kategori || "",
-    };
-    if (idx === -1) allData.sku.push(obj);
-    else allData.sku[idx] = { ...allData.sku[idx], ...obj };
-  });
-}
-
-/**
- * Scan semua invoice items dan upsert ke linkedData.barang & .sku.
- * Primary key: SKU. Entry tanpa SKU yang namanya clash → dihapus (cleanup).
- */
-function repairBarangFromInvoices() {
-  let invoices = {};
-  try {
-    invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  } catch {}
-
-  const allData = getLinkedData();
-
-  Object.values(invoices).forEach((inv) => {
-    if (!inv.items) return;
-    inv.items.forEach((item) => {
-      if (!item.sku || !item.nama) return;
-      const sku = (item.sku || "").trim();
-      const nama = (item.nama || "").trim();
-      const merk = (item.merk || "").trim();
-      const kategori = (item.kategori || "").trim();
-
-      // upsert barang by SKU
-      const bIdx = allData.barang.findIndex((b) => b.sku === sku);
-      const obj = { sku, nama, merk, kategori };
-      if (bIdx === -1) allData.barang.push(obj);
-      else allData.barang[bIdx] = { ...allData.barang[bIdx], ...obj };
-
-      // merk & kategori master
-      if (
-        merk &&
-        !allData.merk.find((m) => m.nama.toLowerCase() === merk.toLowerCase())
-      )
-        allData.merk.push({ nama: merk });
-      if (
-        kategori &&
-        !allData.kategori.find(
-          (k) => k.nama.toLowerCase() === kategori.toLowerCase(),
-        )
-      )
-        allData.kategori.push({ nama: kategori });
-    });
-  });
-
-  // Bersihkan duplikat nama-saja yang terbentuk dari bug lama
-  cleanupDuplicateBarang(allData);
-
-  syncSkuFromBarang(allData);
-  saveLinkedData(allData);
-}
-
 // ===== STATE =====
+// ============================================================
 let currentType = null;
-let editIndex = null;
-let deleteIndex = null;
+let editId = null; // UUID string
+let deleteId = null; // UUID string
 let deleteType = null;
-let editBarangIdx = null;
+let editBarangId = null; // UUID string
 
+// Data cache untuk barang modal (merk & kategori)
+let _cachedMerk = [];
+let _cachedKategori = [];
+
+// ============================================================
 // ===== ELEMEN MODAL UMUM =====
+// ============================================================
 const modalOverlay = document.getElementById("modalOverlay");
 const confirmOverlay = document.getElementById("confirmOverlay");
 const modalTitle = document.getElementById("modalTitle");
 const modalForm = document.getElementById("modalForm");
 const errorMsg = document.getElementById("errorMsg");
 
-// ===== FORM TEMPLATES (non-barang) =====
 const formTemplates = {
   kategori: () =>
     `<label>Nama Kategori *</label><input type="text" id="f_nama" placeholder="Contoh: Elektronik">`,
@@ -246,25 +90,35 @@ const modalTitles = {
   penerima: ["Tambah Penerima/Tujuan", "Edit Penerima/Tujuan"],
 };
 
-function openModal(type, mode = "add", index = null) {
+async function openModal(type, mode = "add", id = null) {
   currentType = type;
-  editIndex = mode === "edit" ? index : null;
+  editId = mode === "edit" ? id : null;
   modalTitle.textContent = modalTitles[type][mode === "edit" ? 1 : 0];
   modalForm.innerHTML = formTemplates[type]();
   errorMsg.textContent = "";
+
   if (mode === "edit") {
-    const item = getLinkedData()[type][index];
-    document.getElementById("f_nama").value = item.nama || "";
-    if (type === "supplier") {
-      document.getElementById("f_kontak").value = item.kontak || "";
-      document.getElementById("f_alamat").value = item.alamat || "";
-      document.getElementById("f_keterangan").value = item.keterangan || "";
-    }
-    if (type === "penerima") {
-      document.getElementById("f_telepon").value = item.telepon || "";
-      document.getElementById("f_keterangan").value = item.keterangan || "";
+    // Fetch data for edit
+    const { data: item, error } = await sb
+      .from(type)
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (!error && item) {
+      document.getElementById("f_nama").value = item.nama || "";
+      if (type === "supplier") {
+        document.getElementById("f_kontak").value = item.kontak || "";
+        document.getElementById("f_alamat").value = item.alamat || "";
+        document.getElementById("f_keterangan").value = item.keterangan || "";
+      }
+      if (type === "penerima") {
+        document.getElementById("f_telepon").value = item.telepon || "";
+        document.getElementById("f_keterangan").value = item.keterangan || "";
+      }
     }
   }
+  
   modalOverlay.classList.add("active");
   setTimeout(() => {
     const first = modalForm.querySelector("input,textarea");
@@ -277,10 +131,10 @@ function closeModal() {
   modalForm.innerHTML = "";
   errorMsg.textContent = "";
   currentType = null;
-  editIndex = null;
+  editId = null;
 }
 
-function doSimpan() {
+async function doSimpan() {
   if (!currentType) return;
   const namaEl = document.getElementById("f_nama");
   if (!namaEl) {
@@ -292,24 +146,32 @@ function doSimpan() {
     errorMsg.textContent = "Nama harus diisi!";
     return;
   }
-  const allData = getLinkedData();
+  
   const item = { nama };
   if (currentType === "supplier") {
     item.kontak = (document.getElementById("f_kontak")?.value || "").trim();
     item.alamat = (document.getElementById("f_alamat")?.value || "").trim();
-    item.keterangan = (
-      document.getElementById("f_keterangan")?.value || ""
-    ).trim();
+    item.keterangan = (document.getElementById("f_keterangan")?.value || "").trim();
   }
   if (currentType === "penerima") {
     item.telepon = (document.getElementById("f_telepon")?.value || "").trim();
-    item.keterangan = (
-      document.getElementById("f_keterangan")?.value || ""
-    ).trim();
+    item.keterangan = (document.getElementById("f_keterangan")?.value || "").trim();
   }
-  if (editIndex !== null) allData[currentType][editIndex] = item;
-  else allData[currentType].push(item);
-  saveLinkedData(allData);
+
+  let err = null;
+  if (editId !== null) {
+    const { error } = await sb.from(currentType).update(item).eq("id", editId);
+    err = error;
+  } else {
+    const { error } = await sb.from(currentType).insert(item);
+    err = error;
+  }
+
+  if (err) {
+    errorMsg.textContent = "Gagal menyimpan: " + err.message;
+    return;
+  }
+
   renderTable(currentType);
   closeModal();
 }
@@ -334,50 +196,64 @@ document.addEventListener("keydown", (e) => {
 const modalBarangOverlay = document.getElementById("modalBarangOverlay");
 const errorMsgBarang = document.getElementById("errorMsgBarang");
 
-function populateSelects() {
-  const data = getLinkedData();
+async function populateSelects() {
   const merkSel = document.getElementById("fBarangMerk");
   const katSel = document.getElementById("fBarangKategori");
   const prevMerk = merkSel.value;
   const prevKat = katSel.value;
+  
   merkSel.innerHTML = '<option value="">-- Pilih Merk --</option>';
   katSel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
-  data.merk.forEach((m) => {
+  
+  const { data: merkData } = await sb.from("merk").select("nama").order("nama");
+  const { data: katData } = await sb.from("kategori").select("nama").order("nama");
+  
+  _cachedMerk = merkData || [];
+  _cachedKategori = katData || [];
+  
+  _cachedMerk.forEach((m) => {
     const o = document.createElement("option");
     o.value = o.textContent = m.nama;
     merkSel.appendChild(o);
   });
-  data.kategori.forEach((k) => {
+  _cachedKategori.forEach((k) => {
     const o = document.createElement("option");
     o.value = o.textContent = k.nama;
     katSel.appendChild(o);
   });
+  
   if (prevMerk) merkSel.value = prevMerk;
   if (prevKat) katSel.value = prevKat;
+  
   const hint = document.getElementById("hintMerkKategori");
   hint.style.display =
-    data.merk.length === 0 || data.kategori.length === 0 ? "flex" : "none";
+    _cachedMerk.length === 0 || _cachedKategori.length === 0 ? "flex" : "none";
 }
 
-function openModalBarang(mode = "add", index = null) {
-  editBarangIdx = mode === "edit" ? index : null;
+async function openModalBarang(mode = "add", id = null) {
+  editBarangId = mode === "edit" ? id : null;
   document.getElementById("modalBarangTitle").innerHTML =
     mode === "edit"
       ? '<i class="bx bx-edit"></i> Edit Barang'
       : '<i class="bx bx-package"></i> Tambah Barang';
-  populateSelects();
+      
+  await populateSelects();
+  
   errorMsgBarang.textContent = "";
   document.getElementById("fBarangSKU").value = "";
   document.getElementById("fBarangNama").value = "";
   document.getElementById("fBarangMerk").value = "";
   document.getElementById("fBarangKategori").value = "";
   closeScannerBarang();
+  
   if (mode === "edit") {
-    const item = getLinkedData().barang[index];
-    document.getElementById("fBarangSKU").value = item.sku || "";
-    document.getElementById("fBarangNama").value = item.nama || "";
-    document.getElementById("fBarangMerk").value = item.merk || "";
-    document.getElementById("fBarangKategori").value = item.kategori || "";
+    const { data: item } = await sb.from("barang").select("*").eq("id", id).single();
+    if (item) {
+      document.getElementById("fBarangSKU").value = item.sku || "";
+      document.getElementById("fBarangNama").value = item.nama || "";
+      document.getElementById("fBarangMerk").value = item.merk || "";
+      document.getElementById("fBarangKategori").value = item.kategori || "";
+    }
   }
   modalBarangOverlay.classList.add("active");
   setTimeout(() => document.getElementById("fBarangSKU").focus(), 50);
@@ -387,7 +263,7 @@ function closeModalBarang() {
   closeScannerBarang();
   modalBarangOverlay.classList.remove("active");
   errorMsgBarang.textContent = "";
-  editBarangIdx = null;
+  editBarangId = null;
 }
 
 document
@@ -400,39 +276,49 @@ modalBarangOverlay.addEventListener("click", (e) => {
   if (e.target === modalBarangOverlay) closeModalBarang();
 });
 
-document.getElementById("btnSimpanBarang").addEventListener("click", () => {
+document.getElementById("btnSimpanBarang").addEventListener("click", async () => {
   const sku = document.getElementById("fBarangSKU").value.trim();
   const nama = document.getElementById("fBarangNama").value.trim();
   const merk = document.getElementById("fBarangMerk").value;
   const kategori = document.getElementById("fBarangKategori").value;
+  
   if (!sku || !nama || !merk || !kategori) {
     errorMsgBarang.textContent = "Semua field wajib diisi!";
     return;
   }
 
-  const allData = getLinkedData();
-
   // Cek duplikat SKU saat tambah baru
-  if (editBarangIdx === null) {
-    const dupSKU = allData.barang.some((b) => b.sku === sku);
-    if (dupSKU) {
+  if (editBarangId === null) {
+    const { data: existing } = await sb.from("barang").select("id").eq("sku", sku).maybeSingle();
+    if (existing) {
       errorMsgBarang.textContent = "SKU sudah ada!";
+      return;
+    }
+  } else {
+    // Pastikan tidak ada bentrok SKU (kecuali id yang sama)
+    const { data: existing } = await sb.from("barang").select("id").eq("sku", sku).neq("id", editBarangId).maybeSingle();
+    if (existing) {
+      errorMsgBarang.textContent = "SKU sudah digunakan barang lain!";
       return;
     }
   }
 
   const item = { sku, nama, merk, kategori };
+  let err = null;
+  
+  if (editBarangId !== null) {
+    const { error } = await sb.from("barang").update(item).eq("id", editBarangId);
+    err = error;
+  } else {
+    const { error } = await sb.from("barang").insert(item);
+    err = error;
+  }
 
-  if (editBarangIdx !== null) allData.barang[editBarangIdx] = item;
-  else allData.barang.push(item);
+  if (err) {
+    errorMsgBarang.textContent = "Gagal simpan barang: " + err.message;
+    return;
+  }
 
-  // Bersihkan duplikat nama-saja setelah upsert
-  cleanupDuplicateBarang(allData);
-
-  // Sinkronisasi sku[] dari barang[]
-  syncSkuFromBarang(allData);
-
-  saveLinkedData(allData);
   renderTable("barang");
   closeModalBarang();
 });
@@ -611,12 +497,10 @@ document.getElementById("btnUseScanBarang").addEventListener("click", () => {
   handleSKULookupBarang(val);
 });
 
-function handleSKULookupBarang(sku) {
+async function handleSKULookupBarang(sku) {
   if (!sku) return;
-  const allData = getLinkedData();
-  const found =
-    allData.barang.find((b) => b.sku === sku) ||
-    allData.sku.find((s) => s.sku === sku);
+  const { data: found } = await sb.from("barang").select("*").eq("sku", sku).maybeSingle();
+  
   if (found) {
     document.getElementById("fBarangNama").value = found.nama || "";
     document.getElementById("fBarangMerk").value = found.merk || "";
@@ -732,46 +616,44 @@ document.getElementById("btnPrintBarcode").addEventListener("click", () => {
 // ============================================================
 // ===== HAPUS ================================================
 // ============================================================
-function openConfirmDelete(type, index) {
+function openConfirmDelete(type, id) {
   deleteType = type;
-  deleteIndex = index;
+  deleteId = id;
   confirmOverlay.classList.add("active");
 }
 
-document.getElementById("confirmYes").addEventListener("click", () => {
+document.getElementById("confirmYes").addEventListener("click", async () => {
   if (
     typeof _pendingDeletePaymentId !== "undefined" &&
     _pendingDeletePaymentId
   ) {
-    executeDeletePayment();
+    await executeDeletePayment();
     return;
   }
-  if (deleteType !== null && deleteIndex !== null) {
-    const allData = getLinkedData();
-    // Jika hapus barang, juga hapus dari sku[]
-    if (deleteType === "barang") {
-      const deletedSKU = (allData.barang[deleteIndex] || {}).sku;
-      if (deletedSKU)
-        allData.sku = allData.sku.filter((s) => s.sku !== deletedSKU);
+  
+  if (deleteType !== null && deleteId !== null) {
+    const { error } = await sb.from(deleteType).delete().eq("id", deleteId);
+    if (error) {
+      alert("Gagal menghapus: " + error.message);
+    } else {
+      renderTable(deleteType);
     }
-    allData[deleteType].splice(deleteIndex, 1);
-    saveLinkedData(allData);
-    renderTable(deleteType);
   }
+  
   deleteType = null;
-  deleteIndex = null;
+  deleteId = null;
   confirmOverlay.classList.remove("active");
 });
 
 document.getElementById("confirmNo").addEventListener("click", () => {
   deleteType = null;
-  deleteIndex = null;
+  deleteId = null;
   confirmOverlay.classList.remove("active");
 });
 confirmOverlay.addEventListener("click", (e) => {
   if (e.target === confirmOverlay) {
     deleteType = null;
-    deleteIndex = null;
+    deleteId = null;
     confirmOverlay.classList.remove("active");
   }
 });
@@ -787,20 +669,26 @@ const tableConfig = {
   penerima: { colspan: 5, cols: ["nama", "telepon", "keterangan"] },
 };
 
-function renderTable(type) {
+async function renderTable(type) {
   if (type === "barang") {
     renderTableBarang();
     return;
   }
+  
   const config = tableConfig[type];
   const tbodyId = "table" + type.charAt(0).toUpperCase() + type.slice(1);
   const tbody = document.getElementById(tbodyId);
   if (!tbody) return;
-  const data = getLinkedData()[type];
-  if (!data || data.length === 0) {
+  
+  const { data, error } = await sb.from(type).select("*").order("nama");
+  if (error || !data || data.length === 0) {
+    if (error) {
+      alert("Error loading " + type + ": " + error.message);
+    }
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${config.colspan}">Belum ada data ${type}</td></tr>`;
     return;
   }
+  
   tbody.innerHTML = "";
   data.forEach((item, idx) => {
     const tr = document.createElement("tr");
@@ -809,32 +697,35 @@ function renderTable(type) {
       .join("");
     tr.innerHTML = `<td>${idx + 1}</td>${dataCols}
       <td><div class="action-buttons">
-        <button class="btn-edit"><i class="bx bx-edit"></i> Edit</button>
-        <button class="btn-delete"><i class="bx bx-trash"></i> Hapus</button>
+        <button class="btn-edit" data-id="${item.id}"><i class="bx bx-edit"></i> Edit</button>
+        <button class="btn-delete" data-id="${item.id}"><i class="bx bx-trash"></i> Hapus</button>
       </div></td>`;
+      
     tr.querySelector(".btn-edit").addEventListener("click", () =>
-      openModal(type, "edit", idx),
+      openModal(type, "edit", item.id),
     );
     tr.querySelector(".btn-delete").addEventListener("click", () =>
-      openConfirmDelete(type, idx),
+      openConfirmDelete(type, item.id),
     );
     tbody.appendChild(tr);
   });
 }
 
-function renderTableBarang() {
+async function renderTableBarang() {
   const tbody = document.getElementById("tableBarang");
-  repairBarangFromInvoices();
-  const data = getLinkedData().barang;
-
-  if (!data || data.length === 0) {
+  
+  const { data, error } = await sb.from("barang").select("*").order("nama");
+  
+  if (error || !data || data.length === 0) {
+    if (error) {
+      alert("Error loading barang: " + error.message);
+    }
     tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Belum ada data barang</td></tr>`;
     return;
   }
 
   tbody.innerHTML = "";
   data.forEach((item, idx) => {
-    // Hanya tampilkan entry yang punya SKU (entry tanpa SKU sudah dibersihkan oleh cleanup)
     const skuDisplay = item.sku || "-";
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -850,8 +741,8 @@ function renderTableBarang() {
       <td>${item.kategori || "-"}</td>
       <td>
         <div class="action-buttons">
-          <button class="btn-edit-barang"><i class="bx bx-edit"></i> Edit</button>
-          <button class="btn-delete"><i class="bx bx-trash"></i> Hapus</button>
+          <button class="btn-edit-barang" data-id="${item.id}"><i class="bx bx-edit"></i> Edit</button>
+          <button class="btn-delete" data-id="${item.id}"><i class="bx bx-trash"></i> Hapus</button>
         </div>
       </td>`;
 
@@ -861,10 +752,10 @@ function renderTableBarang() {
       );
     }
     tr.querySelector(".btn-edit-barang").addEventListener("click", () =>
-      openModalBarang("edit", idx),
+      openModalBarang("edit", item.id),
     );
     tr.querySelector(".btn-delete").addEventListener("click", () =>
-      openConfirmDelete("barang", idx),
+      openConfirmDelete("barang", item.id),
     );
     tbody.appendChild(tr);
   });
@@ -889,72 +780,30 @@ document
 // Tombol Sync manual
 const btnSync = document.getElementById("btnSyncBarang");
 if (btnSync) {
-  btnSync.addEventListener("click", () => {
-    repairBarangFromInvoices();
-    renderTableBarang();
-    btnSync.textContent = "✓ Tersinkronisasi";
-    setTimeout(() => {
-      btnSync.innerHTML = '<i class="bx bx-sync"></i> Sync dari Invoice';
-    }, 1500);
-  });
+  btnSync.style.display = 'none'; // Sembunyikan karena sudah tidak relevan
 }
 
 // ============================================================
 // ===== INIT =================================================
 // ============================================================
 ["kategori", "merk", "supplier", "lokasi", "penerima"].forEach(renderTable);
-
-repairBarangFromInvoices();
 renderTableBarang();
 
 /* ─────────────────────────────────────────────
    PAYMENT MODULE
    ───────────────────────────────────────────── */
-const PAYMENT_KEY = "invenz_payment_methods";
 
-const DEFAULT_PAYMENTS = [
-  {
-    id: "pay_default_cash",
-    nama: "Cash",
-    keterangan: "Pembayaran tunai",
-    aktif: true,
-    isDefault: true,
-  },
-  {
-    id: "pay_default_qris",
-    nama: "QRIS",
-    keterangan: "Scan QR Code (GoPay, OVO, Dana, ShopeePay, dll.)",
-    aktif: true,
-    isDefault: true,
-  },
-];
-
-function loadPayments() {
-  try {
-    const r = localStorage.getItem(PAYMENT_KEY);
-    return r ? JSON.parse(r) : null;
-  } catch {
-    return null;
-  }
-}
-function savePayments(list) {
-  localStorage.setItem(PAYMENT_KEY, JSON.stringify(list));
-}
-function getPaymentMethods() {
-  return (loadPayments() || DEFAULT_PAYMENTS).filter((p) => p.aktif);
+async function getPaymentMethods() {
+  const { data } = await sb.from("payment_methods").select("*").eq("aktif", true).order("nama");
+  return data || [];
 }
 
-function initPayments() {
-  if (!loadPayments()) savePayments(DEFAULT_PAYMENTS);
-  renderPaymentTable();
-  bindPaymentEvents();
-}
-
-function renderPaymentTable() {
+async function renderPaymentTable() {
   const tbody = document.getElementById("tablePayment");
   if (!tbody) return;
-  const list = loadPayments() || DEFAULT_PAYMENTS;
-  if (!list.length) {
+  const { data: list, error } = await sb.from("payment_methods").select("*").order("nama");
+  
+  if (error || !list || !list.length) {
     tbody.innerHTML =
       '<tr class="empty-row"><td colspan="5">Belum ada metode pembayaran</td></tr>';
     return;
@@ -964,13 +813,13 @@ function renderPaymentTable() {
       (p, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${p.nama}${p.isDefault ? '<span class="badge-default">Default</span>' : ""}</td>
+      <td>${p.nama}${p.is_default ? '<span class="badge-default">Default</span>' : ""}</td>
       <td>${p.keterangan || '<span style="color:#aaa">—</span>'}</td>
       <td><span class="badge-status ${p.aktif ? "aktif" : "nonaktif"}">${p.aktif ? "Aktif" : "Non-aktif"}</span></td>
       <td class="actions-cell">
         <button class="btn-action btn-edit" onclick="openEditPayment('${p.id}')"><i class="bx bx-edit"></i></button>
         ${
-          p.isDefault
+          p.is_default
             ? `<button class="btn-action btn-delete" disabled style="opacity:.35;cursor:not-allowed"><i class="bx bx-trash"></i></button>`
             : `<button class="btn-action btn-delete" onclick="confirmDeletePayment('${p.id}')"><i class="bx bx-trash"></i></button>`
         }
@@ -993,8 +842,8 @@ function openAddPayment() {
   document.getElementById("fPaymentNama").focus();
 }
 
-function openEditPayment(id) {
-  const item = (loadPayments() || []).find((p) => p.id === id);
+async function openEditPayment(id) {
+  const { data: item } = await sb.from("payment_methods").select("*").eq("id", id).single();
   if (!item) return;
   document.getElementById("modalPaymentTitle").innerHTML =
     '<i class="bx bx-edit"></i> Edit Metode Pembayaran';
@@ -1014,38 +863,42 @@ function closePaymentModal() {
   document.getElementById("modalPaymentOverlay").classList.remove("active");
 }
 
-function savePayment() {
+async function savePayment() {
   const nama = document.getElementById("fPaymentNama").value.trim();
   const keterangan = document.getElementById("fPaymentKeterangan").value.trim();
   const aktif = document.getElementById("fPaymentAktif").checked;
   const editId = document.getElementById("btnSimpanPayment").dataset.editId;
   const errEl = document.getElementById("errorMsgPayment");
+  
   if (!nama) {
     errEl.textContent = "Nama metode tidak boleh kosong.";
     return;
   }
-  let list = loadPayments() || [];
-  const dup = list.find(
-    (p) => p.nama.toLowerCase() === nama.toLowerCase() && p.id !== editId,
-  );
-  if (dup) {
-    errEl.textContent = "Metode pembayaran dengan nama ini sudah ada.";
+  
+  let err = null;
+  if (editId) {
+    const { data: dup } = await sb.from("payment_methods").select("id").eq("nama", nama).neq("id", editId).maybeSingle();
+    if (dup) {
+      errEl.textContent = "Metode pembayaran dengan nama ini sudah ada.";
+      return;
+    }
+    const { error } = await sb.from("payment_methods").update({ nama, keterangan, aktif }).eq("id", editId);
+    err = error;
+  } else {
+    const { data: dup } = await sb.from("payment_methods").select("id").eq("nama", nama).maybeSingle();
+    if (dup) {
+      errEl.textContent = "Metode pembayaran dengan nama ini sudah ada.";
+      return;
+    }
+    const { error } = await sb.from("payment_methods").insert({ id: "pay_" + Date.now(), nama, keterangan, aktif, is_default: false });
+    err = error;
+  }
+
+  if (err) {
+    errEl.textContent = "Gagal menyimpan: " + err.message;
     return;
   }
-  if (editId) {
-    list = list.map((p) =>
-      p.id === editId ? { ...p, nama, keterangan, aktif } : p,
-    );
-  } else {
-    list.push({
-      id: "pay_" + Date.now(),
-      nama,
-      keterangan,
-      aktif,
-      isDefault: false,
-    });
-  }
-  savePayments(list);
+  
   closePaymentModal();
   renderPaymentTable();
 }
@@ -1056,12 +909,11 @@ function confirmDeletePayment(id) {
   document.getElementById("confirmOverlay").classList.add("active");
 }
 
-function executeDeletePayment() {
+async function executeDeletePayment() {
   if (!_pendingDeletePaymentId) return;
-  const stockOuts = JSON.parse(
-    localStorage.getItem("invenz_stockouts") || "[]",
-  );
-  if (stockOuts.some((so) => so.paymentId === _pendingDeletePaymentId)) {
+  
+  const { data: check } = await sb.from("stock_outs").select("id").eq("payment_id", _pendingDeletePaymentId).limit(1);
+  if (check && check.length > 0) {
     alert(
       "Metode ini sudah digunakan dalam transaksi Stock Out dan tidak dapat dihapus. Nonaktifkan saja jika tidak ingin ditampilkan.",
     );
@@ -1069,10 +921,14 @@ function executeDeletePayment() {
     document.getElementById("confirmOverlay").classList.remove("active");
     return;
   }
-  let list = loadPayments() || [];
-  list = list.filter((p) => p.id !== _pendingDeletePaymentId);
-  savePayments(list);
-  renderPaymentTable();
+  
+  const { error } = await sb.from("payment_methods").delete().eq("id", _pendingDeletePaymentId);
+  if (error) {
+    alert("Gagal menghapus: " + error.message);
+  } else {
+    renderPaymentTable();
+  }
+  
   _pendingDeletePaymentId = null;
   document.getElementById("confirmOverlay").classList.remove("active");
 }
@@ -1107,7 +963,18 @@ function bindPaymentEvents() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  initPayments();
-});
-if (document.readyState !== "loading") initPayments();
+function initLinkedData() {
+  const activeTabBtn = document.querySelector(".tab-btn.active");
+  const activeTab = activeTabBtn ? activeTabBtn.dataset.tab : "kategori";
+  if (activeTab === "payment") {
+    renderPaymentTable();
+  } else {
+    renderTable(activeTab);
+  }
+  bindPaymentEvents();
+}
+
+document.addEventListener("DOMContentLoaded", initLinkedData);
+if (document.readyState !== "loading") {
+  initLinkedData();
+}

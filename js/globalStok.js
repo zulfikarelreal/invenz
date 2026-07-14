@@ -1,38 +1,30 @@
 "use strict";
-const RETUR_KEY_GS = "invenz_retur_items";
 
-function loadReturSetGS() {
+async function loadReturSetGS() {
   try {
-    return new Set(JSON.parse(localStorage.getItem(RETUR_KEY_GS) || "[]"));
-  } catch {
+    const { data, error } = await sb.from("retur_items").select("invoice_no, sku, nama");
+    if (error) throw error;
+    return new Set(data.map(r => `${r.invoice_no}::${r.sku || '-'}::${r.nama}`));
+  } catch (e) {
+    console.error("Gagal load retur_items:", e);
     return new Set();
   }
 }
 
 function itemReturKeyGS(invoiceId, sku, nama) {
-  return `${invoiceId}::${sku}::${nama}`;
+  return `${invoiceId}::${sku || '-'}::${nama}`;
 }
 
 // ============================================================
-// ===== AUTH CHECK ===========================================
+// ===== AUTH CHECK (handled by auth.js via INVENZ guard) =====
 // ============================================================
-if (!localStorage.getItem("isLoggedIn")) {
-  window.location.href = "login.html";
-}
 
 // ============================================================
 // ===== USER & ROLE SETUP ====================================
 // ============================================================
-const loggedUser = localStorage.getItem("loggedUser") || "Admin";
-const loggedRole = localStorage.getItem("loggedRole") || "owner";
+const loggedUser = INVENZ.user;
+const loggedRole = INVENZ.role;
 
-const ROLE_LABELS = {
-  owner: "Owner",
-  admin: "Administrator",
-  kepala_toko: "Kepala Toko",
-  kasir: "Kasir",
-  gudang: "Staf Gudang",
-};
 const ROLE_CLASSES = {
   owner: "role-owner",
   admin: "role-admin",
@@ -82,14 +74,11 @@ function closeSidebar() {
 }
 
 // ============================================================
-// ===== LOGOUT ===============================================
-// ============================================================
+// ===== LOGOUT =====
 document.getElementById("logoutBtn").addEventListener("click", function () {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("loggedUser");
-  localStorage.removeItem("loggedRole");
-  window.location.href = "login.html";
+  INVENZ.logout();
 });
+
 
 // ============================================================
 // ===== CUSTOM RANGE STATE ===================================
@@ -226,42 +215,54 @@ function isInRange(tanggalStr, range) {
 // ============================================================
 var allRows = [];
 
-function loadGlobalStok() {
-  var invoices = {};
+async function loadGlobalStok() {
   try {
-    invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  } catch (e) {}
+    const { data: items, error: err } = await sb.from("invoice_items").select(`
+        *,
+        invoices (
+            id,
+            invoice_no,
+            tanggal,
+            supplier
+        )
+    `);
+    if (err) throw err;
 
-  allRows = [];
+    allRows = [];
 
-  var returSet = loadReturSetGS();
- 
-  Object.values(invoices).forEach(function (inv) {
-    if (!inv.items || inv.items.length === 0) return;
-    inv.items.forEach(function (item) {
- 
+    const returSet = await loadReturSetGS();
+
+    (items || []).forEach(function (item) {
+      const invId  = item.invoices?.id || "";
+      const invNo  = item.invoices?.invoice_no || "—";
+      const invTanggal = item.invoices?.tanggal || "";
+      const invSupplier = item.invoices?.supplier || "—";
+
       // Sembunyikan item yang di-retur
-      var rk = itemReturKeyGS(inv.invoice, item.sku || item.nama, item.nama);
+      const rk = itemReturKeyGS(invNo, item.sku || item.nama, item.nama);
       if (returSet.has(rk)) return;
- 
+
       allRows.push({
-        invoice  : inv.invoice   || "—",
-        tanggal  : inv.tanggal   || "",
-        supplier : inv.supplier  || "—",
+        invoiceId: invId,
+        invoice  : invNo,
+        tanggal  : invTanggal,
+        supplier : invSupplier,
         sku      : item.sku      || "—",
         nama     : item.nama     || "—",
         merk     : item.merk     || "—",
         kategori : item.kategori || "—",
         expired  : item.expired  || "—",
         stok     : item.stok     || 0,
-        hpp      : item.hargaHPP  || 0,
-        jual     : item.hargaJual || 0,
+        hpp      : item.harga_hpp  || 0,
+        jual     : item.harga_jual || 0,
         lokasi   : item.lokasi    || "—",
       });
     });
-  });
 
-  applyFilterAndRender();
+    applyFilterAndRender();
+  } catch (e) {
+    console.error("Gagal load global stok:", e);
+  }
 }
 
 // ============================================================
@@ -350,13 +351,15 @@ function renderRows(rows) {
     }
 
     var tr = document.createElement("tr");
+    // Gunakan invoiceId (UUID) sebagai param, tampilkan invoice_no
+    var invHref = r.invoiceId
+      ? 'invoice.html?id=' + encodeURIComponent(r.invoiceId)
+      : '#';
     tr.innerHTML =
       "<td>" +
       (idx + 1) +
       "</td>" +
-      '<td><a href="invoice.html?id=' +
-      encodeURIComponent(r.invoice) +
-      '" class="invoice-link">' +
+      '<td><a href="' + invHref + '" class="invoice-link">' +
       r.invoice +
       "</a></td>" +
       '<td><button class="sku-btn"><i class="bx bx-barcode" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>' +
@@ -402,10 +405,8 @@ function renderRows(rows) {
 
 // ============================================================
 // ===== FILTER & SEARCH EVENTS ===============================
+// (listener sudah di-bind di atas, tidak perlu duplikat)
 // ============================================================
-filterWaktuEl.addEventListener("change", function () {
-  if (filterWaktuEl.value !== "custom") applyFilterAndRender();
-});
 
 document
   .getElementById("searchInput")
@@ -515,11 +516,13 @@ document
 // ============================================================
 // ===== AUTO-REFRESH SAAT TAB KEMBALI AKTIF ==================
 // ============================================================
-window.addEventListener("focus", function () {
-  loadGlobalStok();
+window.addEventListener("focus", async function () {
+  await loadGlobalStok();
 });
 
 // ============================================================
 // ===== INIT =================================================
 // ============================================================
-loadGlobalStok();
+(async function init() {
+  await loadGlobalStok();
+})();

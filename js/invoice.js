@@ -1,7 +1,8 @@
-// ===== INVOICE.JS — REVISI: + Stat Jenis Barang, + Edit Item, + Fix Sync GlobalStok + SKU↔LinkedData Sync =====
+// ===== INVOICE.JS — Supabase version =====
+"use strict";
 
 const params = new URLSearchParams(window.location.search);
-const invoiceId = params.get("id");
+const invoiceId = params.get("id"); // ini adalah UUID dari tabel invoices
 const backBtn = document.getElementById("backBtn");
 const navInvoiceId = document.getElementById("navInvoiceId");
 const invoiceInfo = document.getElementById("invoiceInfo");
@@ -23,7 +24,9 @@ const autofillNotice = document.getElementById("autofillNotice");
 
 let rowCount = 0;
 let rowToDelete = null;
-let editRowIndex = null;
+let editRowIndex = null; // index dalam _currentItems
+let _invoiceData = null; // data invoice header
+let _currentItems = [];  // items dari Supabase
 
 // ========================================================
 // ===== SCANNER STATE ====================================
@@ -36,13 +39,9 @@ function loadZXing() {
   if (zxingLoadPromise) return zxingLoadPromise;
   zxingLoadPromise = new Promise((resolve, reject) => {
     const s = document.createElement("script");
-    s.src =
-      "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
+    s.src = "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
     s.onload = resolve;
-    s.onerror = () => {
-      zxingLoadPromise = null;
-      reject(new Error("ZXing gagal dimuat"));
-    };
+    s.onerror = () => { zxingLoadPromise = null; reject(new Error("ZXing gagal dimuat")); };
     document.head.appendChild(s);
   });
   return zxingLoadPromise;
@@ -51,25 +50,10 @@ function loadZXing() {
 function stopSKUScanner() {
   SKU_SCAN.active = false;
   SKU_SCAN.done = false;
-  if (SKU_SCAN.reader) {
-    try {
-      SKU_SCAN.reader.reset();
-    } catch (_) {}
-    SKU_SCAN.reader = null;
-  }
-  if (SKU_SCAN.stream) {
-    try {
-      SKU_SCAN.stream.getTracks().forEach((t) => t.stop());
-    } catch (_) {}
-    SKU_SCAN.stream = null;
-  }
+  if (SKU_SCAN.reader) { try { SKU_SCAN.reader.reset(); } catch (_) { } SKU_SCAN.reader = null; }
+  if (SKU_SCAN.stream) { try { SKU_SCAN.stream.getTracks().forEach((t) => t.stop()); } catch (_) { } SKU_SCAN.stream = null; }
   const video = document.getElementById("cameraStreamSKU");
-  if (video) {
-    try {
-      video.pause();
-      video.srcObject = null;
-    } catch (_) {}
-  }
+  if (video) { try { video.pause(); video.srcObject = null; } catch (_) { } }
   const ph = document.getElementById("scanPlaceholderSKU");
   if (ph) ph.style.display = "flex";
   setSKUScanStatus("");
@@ -91,30 +75,22 @@ function setSKUScanStatus(state, msg = "") {
     if (panel) panel.appendChild(el);
     else return;
   }
-  if (!state) {
-    el.style.display = "none";
-    return;
-  }
+  if (!state) { el.style.display = "none"; return; }
   el.style.display = "flex";
   el.setAttribute("data-state", state);
-  el.innerHTML =
-    state === "loading"
-      ? `<span class="spin"></span><span>${msg}</span>`
-      : state === "scanning"
-        ? `<i class="bx bx-scan"></i><span>${msg}</span>`
-        : `<i class="bx bx-error-circle"></i><span>${msg}</span>`;
+  el.innerHTML = state === "loading"
+    ? `<span class="spin"></span><span>${msg}</span>`
+    : state === "scanning"
+      ? `<i class="bx bx-scan"></i><span>${msg}</span>`
+      : `<i class="bx bx-error-circle"></i><span>${msg}</span>`;
 }
 
 // ========================================================
 // ===== CUSTOM DROPDOWNS =================================
 // ========================================================
 const ddNama = new CustomDropdown("cdNama", "barang", { icon: "bx-package" });
-const ddKategori = new CustomDropdown("cdKategori", "kategori", {
-  icon: "bx-category",
-});
-const ddMerk = new CustomDropdown("cdMerk", "merk", {
-  icon: "bx-purchase-tag",
-});
+const ddKategori = new CustomDropdown("cdKategori", "kategori", { icon: "bx-category" });
+const ddMerk = new CustomDropdown("cdMerk", "merk", { icon: "bx-purchase-tag" });
 const ddLokasi = new CustomDropdown("cdLokasi", "lokasi", { icon: "bx-map" });
 
 // ========================================================
@@ -125,134 +101,63 @@ function formatRp(num) {
   return "Rp " + parseInt(num).toLocaleString("id-ID");
 }
 
-function getLinkedData() {
-  try {
-    const d = JSON.parse(localStorage.getItem("linkedData") || "{}");
-    return {
-      supplier: d.supplier || [],
-      barang: d.barang || [],
-      kategori: d.kategori || [],
-      merk: d.merk || [],
-      lokasi: d.lokasi || [],
-      penerima: d.penerima || [],
-      sku: d.sku || [],
-    };
-  } catch {
-    return {
-      supplier: [],
-      barang: [],
-      kategori: [],
-      merk: [],
-      lokasi: [],
-      penerima: [],
-      sku: [],
-    };
-  }
-}
-
-/**
- * autoAddToLinkedData — HANYA untuk kategori, merk, lokasi.
- * JANGAN dipanggil dengan key "barang" karena akan membuat entry
- * duplikat tanpa SKU. Gunakan syncItemToLinkedData() untuk barang.
- */
-function autoAddToLinkedData(key, value) {
-  if (!value || value === "-") return;
-  if (key === "barang") return;
-  const ex = JSON.parse(localStorage.getItem("linkedData") || "{}");
-  if (!ex[key]) ex[key] = [];
-  const exists = ex[key].some(
-    (i) => (typeof i === "string" ? i : i.nama) === value,
-  );
-  if (!exists) {
-    ex[key].push({ nama: value });
-    localStorage.setItem("linkedData", JSON.stringify(ex));
-  }
-}
-
-// ──────────────────────────────────────────────────────────
-// ===== SINKRONISASI SKU ↔ LINKEDDATA.BARANG ==============
-// ──────────────────────────────────────────────────────────
-
-function syncItemToLinkedData(item) {
-  if (!item || !item.sku || !item.nama) return;
-
-  const ex = JSON.parse(localStorage.getItem("linkedData") || "{}");
-  if (!ex.barang) ex.barang = [];
-  if (!ex.sku) ex.sku = [];
-
-  const sku = (item.sku || "").trim();
-  const nama = (item.nama || "").trim();
-  const merk = (item.merk || "").trim();
-  const kategori = (item.kategori || "").trim();
-
-  ex.barang = ex.barang.filter((b) => {
-    if (b.nama && b.nama.toLowerCase() === nama.toLowerCase() && !b.sku)
-      return false;
-    return true;
-  });
-
-  const bIdx = ex.barang.findIndex((b) => b.sku === sku);
-  const barangObj = { sku, nama, merk, kategori };
-  if (bIdx === -1) ex.barang.push(barangObj);
-  else ex.barang[bIdx] = { ...ex.barang[bIdx], ...barangObj };
-
-  const sIdx = ex.sku.findIndex((s) => s.sku === sku);
-  if (sIdx === -1) ex.sku.push(barangObj);
-  else ex.sku[sIdx] = { ...ex.sku[sIdx], ...barangObj };
-
-  if (!ex.merk) ex.merk = [];
-  if (!ex.kategori) ex.kategori = [];
-  if (merk && !ex.merk.find((m) => m.nama.toLowerCase() === merk.toLowerCase()))
-    ex.merk.push({ nama: merk });
-  if (
-    kategori &&
-    !ex.kategori.find((k) => k.nama.toLowerCase() === kategori.toLowerCase())
-  )
-    ex.kategori.push({ nama: kategori });
-
-  localStorage.setItem("linkedData", JSON.stringify(ex));
-}
-
-function findSKUInLinkedData(sku) {
-  const d = getLinkedData();
-  return (
-    d.barang.find((b) => b.sku === sku) ||
-    d.sku.find((s) => s.sku === sku) ||
-    null
-  );
-}
-
 // ========================================================
-// ===== GLOBAL STOCK SYNC ================================
+// ===== SUPABASE DATA LOADERS ============================
 // ========================================================
-function rebuildGlobalStock() {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const gs = {};
-  Object.values(invoices).forEach((inv) => {
-    if (!inv.items) return;
-    inv.items.forEach((item) => {
-      const key = item.sku || item.nama;
-      if (!gs[key]) {
-        gs[key] = {
-          sku: item.sku || "",
-          nama: item.nama,
-          merk: item.merk,
-          kategori: item.kategori,
-          lokasi: item.lokasi || "-",
-          hargaHPP: item.hargaHPP,
-          hargaJual: item.hargaJual,
-          totalStok: parseInt(item.stok) || 0,
-        };
-      } else {
-        gs[key].hargaHPP = item.hargaHPP;
-        gs[key].hargaJual = item.hargaJual;
-        gs[key].lokasi = item.lokasi || gs[key].lokasi || "-";
-        gs[key].totalStok =
-          (parseInt(gs[key].totalStok) || 0) + (parseInt(item.stok) || 0);
-      }
-    });
-  });
-  localStorage.setItem("globalStock", JSON.stringify(gs));
+async function loadMasterData() {
+  const [barang, kategori, merk, lokasi] = await Promise.all([
+    sb.from("barang").select("nama").order("nama"),
+    sb.from("kategori").select("nama").order("nama"),
+    sb.from("merk").select("nama").order("nama"),
+    sb.from("lokasi").select("nama").order("nama"),
+  ]);
+  ddNama.setOptions((barang.data || []).map(x => x.nama));
+  ddKategori.setOptions((kategori.data || []).map(x => x.nama));
+  ddMerk.setOptions((merk.data || []).map(x => x.nama));
+  ddLokasi.setOptions((lokasi.data || []).map(x => x.nama));
+}
+
+async function loadInvoiceItems() {
+  const { data, error } = await sb
+    .from("invoice_items")
+    .select("*")
+    .eq("invoice_id", invoiceId)
+    .order("id");
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+
+async function findSKUInSupabase(sku) {
+  if (!sku) return null;
+  const { data } = await sb.from("barang").select("*").eq("sku", sku).maybeSingle();
+  return data;
+}
+
+async function upsertBarang(item) {
+  if (!item.sku || !item.nama) return;
+  // Upsert ke barang (katalog SKU)
+  await sb.from("barang").upsert(
+    { sku: item.sku, nama: item.nama, merk: item.merk || null, kategori: item.kategori || null },
+    { onConflict: "sku" }
+  );
+  // Upsert merk & kategori ke master
+  if (item.merk) await sb.from("merk").upsert({ nama: item.merk }, { onConflict: "nama", ignoreDuplicates: true });
+  if (item.kategori) await sb.from("kategori").upsert({ nama: item.kategori }, { onConflict: "nama", ignoreDuplicates: true });
+  if (item.lokasi) await sb.from("lokasi").upsert({ nama: item.lokasi }, { onConflict: "nama", ignoreDuplicates: true });
+}
+
+async function updateInvoiceTotals() {
+  const items = _currentItems;
+  const total = items.reduce((s, i) => s + (parseInt(i.stok) || 0), 0);
+  const totalHarga = items.reduce((s, i) => s + (parseFloat(i.harga_hpp) || 0) * (parseInt(i.stok) || 0), 0);
+  await sb.from("invoices").update({ total, total_harga: totalHarga }).eq("id", invoiceId);
+  // Update UI
+  const t = document.getElementById("infoTotal");
+  if (t) t.textContent = total;
+  const h = document.getElementById("infoHarga");
+  if (h) h.textContent = formatRp(totalHarga);
+  updateTotalHargaDisplay();
+  updateStatJenis();
 }
 
 // ========================================================
@@ -260,7 +165,7 @@ function rebuildGlobalStock() {
 // ========================================================
 function updateSubtotalPreview() {
   subtotalVal.textContent = formatRp(
-    (parseInt(inputStok.value) || 0) * (parseFloat(inputHargaHPP.value) || 0),
+    (parseInt(inputStok.value) || 0) * (parseFloat(inputHargaHPP.value) || 0)
   );
 }
 inputStok.addEventListener("input", updateSubtotalPreview);
@@ -269,9 +174,9 @@ inputHargaHPP.addEventListener("input", updateSubtotalPreview);
 // ========================================================
 // ===== SKU AUTOFILL =====================================
 // ========================================================
-function handleSKULookup(sku) {
+async function handleSKULookup(sku) {
   if (!sku) return;
-  const found = findSKUInLinkedData(sku);
+  const found = await findSKUInSupabase(sku);
   if (found) {
     ddNama.setValue(found.nama || "");
     ddMerk.setValue(found.merk || "");
@@ -295,13 +200,9 @@ document.getElementById("inputSKU").addEventListener("keydown", function (e) {
 // ========================================================
 document.getElementById("btnScanSKU").addEventListener("click", () => {
   const panel = document.getElementById("scannerSKUPanel");
-  panel.classList.contains("hidden")
-    ? panel.classList.remove("hidden")
-    : closeSKUPanel();
+  panel.classList.contains("hidden") ? panel.classList.remove("hidden") : closeSKUPanel();
 });
-document
-  .getElementById("btnCloseScannerSKU")
-  .addEventListener("click", closeSKUPanel);
+document.getElementById("btnCloseScannerSKU").addEventListener("click", closeSKUPanel);
 
 document.getElementById("btnOpenCamSKU").addEventListener("click", async () => {
   stopSKUScanner();
@@ -313,11 +214,7 @@ document.getElementById("btnOpenCamSKU").addEventListener("click", async () => {
     SKU_SCAN.done = false;
     const video = document.getElementById("cameraStreamSKU");
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
     });
     SKU_SCAN.stream = stream;
     SKU_SCAN.active = true;
@@ -337,47 +234,38 @@ document.getElementById("btnOpenCamSKU").addEventListener("click", async () => {
     });
   } catch (err) {
     stopSKUScanner();
-    setSKUScanStatus(
-      "error",
+    setSKUScanStatus("error",
       err.message.includes("getUserMedia") || err.message.includes("Permission")
         ? "Izin kamera ditolak."
-        : "Kamera gagal: " + err.message,
+        : "Kamera gagal: " + err.message
     );
   }
 });
 
-document
-  .getElementById("galleryInputSKU")
-  .addEventListener("change", async function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    this.value = "";
-    setSKUScanStatus("loading", "Membaca barcode dari gambar...");
+document.getElementById("galleryInputSKU").addEventListener("change", async function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  this.value = "";
+  setSKUScanStatus("loading", "Membaca barcode dari gambar...");
+  try {
+    await loadZXing();
+    const reader = new ZXing.BrowserMultiFormatReader();
+    const url = URL.createObjectURL(file);
     try {
-      await loadZXing();
-      const reader = new ZXing.BrowserMultiFormatReader();
-      const url = URL.createObjectURL(file);
-      try {
-        const result = await reader.decodeFromImageUrl(url);
-        document.getElementById("scanResultValSKU").textContent =
-          result.getText();
-        document.getElementById("scanResultSKU").classList.remove("hidden");
-        setSKUScanStatus("");
-      } catch (_) {
-        setSKUScanStatus(
-          "error",
-          "Barcode tidak terbaca. Coba foto lebih dekat & kontras.",
-        );
-      } finally {
-        try {
-          reader.reset();
-        } catch (_) {}
-        URL.revokeObjectURL(url);
-      }
-    } catch (err) {
-      setSKUScanStatus("error", "Error: " + err.message);
+      const result = await reader.decodeFromImageUrl(url);
+      document.getElementById("scanResultValSKU").textContent = result.getText();
+      document.getElementById("scanResultSKU").classList.remove("hidden");
+      setSKUScanStatus("");
+    } catch (_) {
+      setSKUScanStatus("error", "Barcode tidak terbaca. Coba foto lebih dekat & kontras.");
+    } finally {
+      try { reader.reset(); } catch (_) { }
+      URL.revokeObjectURL(url);
     }
-  });
+  } catch (err) {
+    setSKUScanStatus("error", "Error: " + err.message);
+  }
+});
 
 document.getElementById("btnUseScanSKU").addEventListener("click", () => {
   const val = document.getElementById("scanResultValSKU").textContent;
@@ -390,82 +278,61 @@ document.getElementById("btnUseScanSKU").addEventListener("click", () => {
 // ========================================================
 // ===== INIT =============================================
 // ========================================================
-function init() {
+async function init() {
   if (!invoiceId) {
     invoiceInfo.innerHTML = '<p style="color:red">Invoice tidak ditemukan.</p>';
     return;
   }
-  navInvoiceId.textContent = invoiceId;
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const data = invoices[invoiceId];
-  if (data) {
-    renderInfo(data);
-    if (data.items?.length) {
-      itemTableBody.querySelector(".empty-row")?.remove();
-      data.items.forEach((item, idx) => tambahBaris(item, false, idx));
-    }
-  } else {
-    invoiceInfo.innerHTML = `<div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${invoiceId}</span></div>`;
+
+  // Load invoice header
+  const { data: invData, error: invErr } = await sb
+    .from("invoices")
+    .select("*")
+    .eq("id", invoiceId)
+    .maybeSingle();
+
+  if (invErr || !invData) {
+    invoiceInfo.innerHTML = `<div class="info-item"><span class="info-label">Invoice</span><span class="info-value">Tidak ditemukan</span></div>`;
+    return;
   }
+
+  _invoiceData = invData;
+  navInvoiceId.textContent = invData.invoice_no;
+  renderInfo(invData);
+
+  // Load items
+  _currentItems = await loadInvoiceItems();
+  renderSemuaBaris();
   updateTotalHargaDisplay();
   updateStatJenis();
+
+  // Load master data untuk dropdown
+  await loadMasterData();
 }
 
 function renderInfo(data) {
   invoiceInfo.innerHTML = `
-    <div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${data.invoice}</span></div>
+    <div class="info-item"><span class="info-label">Invoice</span><span class="info-value">${data.invoice_no}</span></div>
     <div class="info-item"><span class="info-label">Tanggal Masuk</span><span class="info-value">${data.tanggal}</span></div>
-    <div class="info-item"><span class="info-label">Nama Supplier</span><span class="info-value">${data.supplier}</span></div>
+    <div class="info-item"><span class="info-label">Nama Supplier</span><span class="info-value">${data.supplier || "—"}</span></div>
     <div class="info-item"><span class="info-label">Total Qty</span><span class="info-value" id="infoTotal">${data.total || 0}</span></div>
     <div class="info-item"><span class="info-label">Jenis Barang</span><span class="info-value" id="infoJenis">0</span></div>
-    <div class="info-item"><span class="info-label">Total Harga</span><span class="info-value" id="infoHarga" style="color:skyblue">${formatRp(data.totalHarga || 0)}</span></div>
+    <div class="info-item"><span class="info-label">Total Harga</span><span class="info-value" id="infoHarga" style="color:skyblue">${formatRp(data.total_harga || 0)}</span></div>
   `;
 }
 
 function updateStatJenis() {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const inv = invoices[invoiceId];
   const namaSet = new Set();
-  if (inv && inv.items)
-    inv.items.forEach((item) => {
-      if (item.nama) namaSet.add(item.nama.toLowerCase());
-    });
+  _currentItems.forEach((item) => { if (item.nama) namaSet.add(item.nama.toLowerCase()); });
   const el = document.getElementById("infoJenis");
   if (el) el.textContent = namaSet.size;
 }
 
-function updateTotal() {
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  if (!invoices[invoiceId]) return;
-  const items = invoices[invoiceId].items;
-  const total = items.reduce((s, i) => s + (parseInt(i.stok) || 0), 0);
-  const totalH = items.reduce(
-    (s, i) => s + (parseFloat(i.hargaHPP) || 0) * (parseInt(i.stok) || 0),
-    0,
-  );
-  invoices[invoiceId].total = total;
-  invoices[invoiceId].totalHarga = totalH;
-  localStorage.setItem("invoices", JSON.stringify(invoices));
-  const t = document.getElementById("infoTotal");
-  if (t) t.textContent = total;
-  const h = document.getElementById("infoHarga");
-  if (h) h.textContent = formatRp(totalH);
-  updateTotalHargaDisplay();
-  updateStatJenis();
-  rebuildGlobalStock();
-}
-
 function updateTotalHargaDisplay() {
-  const data = (JSON.parse(localStorage.getItem("invoices") || "{}") || {})[
-    invoiceId
-  ];
-  if (!data) return;
-  totalHargaDisplay.textContent = formatRp(
-    (data.items || []).reduce(
-      (s, i) => s + (parseFloat(i.hargaHPP) || 0) * (parseInt(i.stok) || 0),
-      0,
-    ),
+  const totalH = _currentItems.reduce(
+    (s, i) => s + (parseFloat(i.harga_hpp) || 0) * (parseInt(i.stok) || 0), 0
   );
+  totalHargaDisplay.textContent = formatRp(totalH);
 }
 
 // ========================================================
@@ -477,10 +344,6 @@ openTambahBtn.addEventListener("click", () => {
 });
 
 function bukaModal(item = null) {
-  ddNama.refresh();
-  ddKategori.refresh();
-  ddMerk.refresh();
-  ddLokasi.refresh();
   subtotalVal.textContent = "Rp 0";
   autofillNotice.classList.add("hidden");
   errorMsg.textContent = "";
@@ -502,12 +365,13 @@ function bukaModal(item = null) {
     ddMerk.setValue(item.merk || "");
     ddKategori.setValue(item.kategori || "");
     ddLokasi.setValue(item.lokasi || "");
-    document.getElementById("inputExpired").value =
-      item.expired !== "-" ? item.expired || "" : "";
-    inputHargaHPP.value = item.hargaHPP || "";
-    inputHargaJual.value = item.hargaJual || "";
+    document.getElementById("inputExpired").value = item.expired && item.expired !== "-" ? item.expired : "";
+    inputHargaHPP.value = item.harga_hpp || "";
+    inputHargaJual.value = item.harga_jual || "";
     inputStok.value = item.stok || "";
     updateSubtotalPreview();
+  } else {
+    clearForm();
   }
 
   modalOverlay.classList.add("active");
@@ -515,9 +379,7 @@ function bukaModal(item = null) {
 
 document.getElementById("modalCloseX").addEventListener("click", tutupModal);
 batalBtn.addEventListener("click", tutupModal);
-modalOverlay.addEventListener("click", (e) => {
-  if (e.target === modalOverlay) tutupModal();
-});
+modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) tutupModal(); });
 simpanBtn.addEventListener("click", simpanItem);
 
 function tutupModal() {
@@ -528,12 +390,10 @@ function tutupModal() {
 }
 
 function clearForm() {
-  ["inputSKU", "inputExpired", "inputHargaHPP", "inputHargaJual"].forEach(
-    (id) => {
-      const el = document.getElementById(id);
-      if (el) el.value = "";
-    },
-  );
+  ["inputSKU", "inputExpired", "inputHargaHPP", "inputHargaJual"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
   inputStok.value = "";
   subtotalVal.textContent = "Rp 0";
   errorMsg.textContent = "";
@@ -544,61 +404,61 @@ function clearForm() {
   ddLokasi.clear();
 }
 
-function simpanItem() {
+async function simpanItem() {
   const sku = document.getElementById("inputSKU").value.trim();
   const nama = ddNama.getValue();
   const merk = ddMerk.getValue();
   const kategori = ddKategori.getValue();
   const lokasi = ddLokasi.getValue();
-  const expired = document.getElementById("inputExpired").value || "-";
-  const hargaHPP = inputHargaHPP.value.trim();
-  const hargaJual = inputHargaJual.value.trim() || "0";
-  const stok = inputStok.value.trim();
+  const expired = document.getElementById("inputExpired").value || null;
+  const harga_hpp = parseFloat(inputHargaHPP.value.trim()) || 0;
+  const harga_jual = parseFloat(inputHargaJual.value.trim()) || 0;
+  const stok = parseInt(inputStok.value.trim()) || 0;
 
-  if (!sku || !nama || !merk || !kategori || !lokasi || !stok || !hargaHPP) {
-    errorMsg.textContent =
-      "Semua field bertanda * wajib diisi, termasuk Lokasi Inventori!";
+  if (!sku || !nama || !merk || !kategori || !lokasi || !stok || !harga_hpp) {
+    errorMsg.textContent = "Semua field bertanda * wajib diisi, termasuk Lokasi Inventori!";
     return;
   }
-  if (parseInt(stok) < 1) {
+  if (stok < 1) {
     errorMsg.textContent = "Stok minimal 1!";
     return;
   }
 
-  autoAddToLinkedData("kategori", kategori);
-  autoAddToLinkedData("merk", merk);
-  autoAddToLinkedData("lokasi", lokasi);
-
-  const item = {
-    sku,
+  const itemPayload = {
+    invoice_id: invoiceId,
+    sku: sku || null,
     nama,
     merk,
     kategori,
     lokasi,
-    expired,
-    hargaHPP,
-    hargaJual,
+    expired: expired || null,
+    harga_hpp,
+    harga_jual,
     stok,
   };
 
-  syncItemToLinkedData(item);
-
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  if (!invoices[invoiceId])
-    invoices[invoiceId] = { invoice: invoiceId, items: [] };
+  // Upsert ke katalog barang & master data
+  await upsertBarang({ sku, nama, merk, kategori, lokasi });
 
   if (editRowIndex !== null) {
-    invoices[invoiceId].items[editRowIndex] = item;
-    localStorage.setItem("invoices", JSON.stringify(invoices));
-    updateTotal();
-    renderSemuaBaris();
+    // EDIT: jangan update stok_awal, biarkan tetap seperti histori awal
+    const itemId = _currentItems[editRowIndex].id;
+    const { error } = await sb.from("invoice_items").update(itemPayload).eq("id", itemId);
+    if (error) { errorMsg.textContent = "Gagal update: " + error.message; return; }
+    _currentItems[editRowIndex] = { ..._currentItems[editRowIndex], ...itemPayload };
   } else {
-    invoices[invoiceId].items.push(item);
-    localStorage.setItem("invoices", JSON.stringify(invoices));
-    updateTotal();
-    tambahBaris(item, true, invoices[invoiceId].items.length - 1);
+    // TAMBAH BARU: stok_awal = stok yang diinput sekarang
+    const { data: newItem, error } = await sb
+      .from("invoice_items")
+      .insert({ ...itemPayload, stok_awal: stok })
+      .select()
+      .single();
+    if (error) { errorMsg.textContent = "Gagal simpan: " + error.message; return; }
+    _currentItems.push(newItem);
   }
 
+  await updateInvoiceTotals();
+  renderSemuaBaris();
   tutupModal();
 }
 
@@ -608,17 +468,14 @@ function simpanItem() {
 function renderSemuaBaris() {
   itemTableBody.innerHTML = "";
   rowCount = 0;
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-  const inv = invoices[invoiceId];
-  if (!inv || !inv.items || inv.items.length === 0) {
+  if (!_currentItems || _currentItems.length === 0) {
     const tr = document.createElement("tr");
     tr.className = "empty-row";
-    tr.innerHTML =
-      '<td colspan="12">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>';
+    tr.innerHTML = '<td colspan="12">Belum ada barang — klik "+ Tambah Barang" untuk menambah</td>';
     itemTableBody.appendChild(tr);
     return;
   }
-  inv.items.forEach((item, idx) => tambahBaris(item, false, idx));
+  _currentItems.forEach((item, idx) => tambahBaris(item, false, idx));
 }
 
 // ========================================================
@@ -627,8 +484,8 @@ function renderSemuaBaris() {
 function tambahBaris(item, removeEmpty = true, itemIndex) {
   if (removeEmpty) itemTableBody.querySelector(".empty-row")?.remove();
   rowCount++;
-  const subtotal =
-    (parseFloat(item.hargaHPP) || 0) * (parseInt(item.stok) || 0);
+  const subtotal = (parseFloat(item.harga_hpp) || 0) * (parseInt(item.stok) || 0);
+  const stokAwal = item.stok_awal ?? item.stok; // fallback kalau data lama belum ada stok_awal
   const tr = document.createElement("tr");
   tr.dataset.itemIndex = itemIndex;
 
@@ -640,13 +497,14 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
       </button>
     </td>
     <td>${item.nama}</td>
-    <td>${item.merk}</td>
-    <td>${item.kategori}</td>
+    <td>${item.merk || "—"}</td>
+    <td>${item.kategori || "—"}</td>
     <td>${item.lokasi || "-"}</td>
     <td>${item.expired && item.expired !== "-" ? item.expired : '<span class="no-expired">—</span>'}</td>
-    <td>${formatRp(item.hargaHPP || 0)}</td>
-    <td>${formatRp(item.hargaJual || 0)}</td>
-    <td>${item.stok}</td>
+    <td>${formatRp(item.harga_hpp || 0)}</td>
+    <td>${formatRp(item.harga_jual || 0)}</td>
+    <td style="color:var(--text2);font-weight:600">${stokAwal}</td>
+    <td style="font-weight:700;color:${item.stok < stokAwal ? 'var(--warning)' : 'var(--text)'}">${item.stok}</td>
     <td style="font-weight:700;color:skyblue">${formatRp(subtotal)}</td>
     <td>
       <div style="display:flex;gap:4px;justify-content:center;align-items:center">
@@ -655,20 +513,15 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
       </div>
     </td>
   `;
+  // ... sisanya tetap sama (event listener sku-badge-btn, btn-edit-item, btn-hapus)
 
   tr.querySelector(".sku-badge-btn").addEventListener("click", () => {
-    openBarcodePopup({
-      sku: item.sku,
-      nama: item.nama,
-      merk: item.merk,
-      kategori: item.kategori,
-    });
+    openBarcodePopup({ sku: item.sku, nama: item.nama, merk: item.merk, kategori: item.kategori });
   });
 
   tr.querySelector(".btn-edit-item").addEventListener("click", () => {
     editRowIndex = parseInt(tr.dataset.itemIndex);
-    const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-    const currentItem = invoices[invoiceId]?.items?.[editRowIndex];
+    const currentItem = _currentItems[editRowIndex];
     if (currentItem) bukaModal(currentItem);
   });
 
@@ -693,8 +546,6 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
     <div style="background:#131929;border:1px solid rgba(255,255,255,0.10);border-radius:18px;
                 box-shadow:0 24px 64px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);
                 padding:0;width:min(400px,100%);display:flex;flex-direction:column;overflow:hidden">
-
-      <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:center;position:relative;
                   padding:18px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.07)">
         <div style="display:flex;align-items:center;gap:9px">
@@ -705,60 +556,27 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
           style="position:absolute;right:16px;top:50%;transform:translateY(-50%);
                  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
                  border-radius:8px;cursor:pointer;width:30px;height:30px;
-                 display:flex;align-items:center;justify-content:center;
-                 color:#8B97C2;transition:all 0.15s"
-          onmouseover="this.style.background='rgba(240,82,82,0.15)';this.style.borderColor='rgba(240,82,82,0.3)';this.style.color='#F05252'"
-          onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='#8B97C2'">
+                 display:flex;align-items:center;justify-content:center;color:#8B97C2">
           <i class="bx bx-x" style="font-size:18px"></i>
         </button>
       </div>
-
-      <!-- Info Section -->
-      <div id="invBcInfo"
-        style="margin:16px 20px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-               border-radius:10px;overflow:hidden"></div>
-
-      <!-- Barcode Canvas -->
-      <div style="margin:16px 20px 0;background:#ffffff;border-radius:10px;padding:18px 16px;
-                  display:flex;justify-content:center;align-items:center;overflow:hidden;
-                  box-shadow:0 2px 12px rgba(0,0,0,0.3)">
+      <div id="invBcInfo" style="margin:16px 20px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden"></div>
+      <div style="margin:16px 20px 0;background:#ffffff;border-radius:10px;padding:18px 16px;display:flex;justify-content:center;align-items:center;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.3)">
         <svg id="invBcSvg" style="max-width:100%;height:auto;display:block"></svg>
       </div>
-
-      <!-- Action Buttons -->
       <div style="display:flex;gap:10px;padding:16px 20px 20px">
-        <button id="invBcDownload"
-          style="flex:1;padding:10px 12px;font-size:13px;font-weight:600;
-                 border-radius:9px;border:none;
-                 background:linear-gradient(135deg,#4F8EF7,#2563EB);color:#fff;
-                 box-shadow:0 4px 16px rgba(79,142,247,0.35);cursor:pointer;
-                 display:flex;align-items:center;justify-content:center;gap:7px;
-                 font-family:inherit;transition:all 0.15s"
-          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(79,142,247,0.45)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(79,142,247,0.35)'">
+        <button id="invBcDownload" style="flex:1;padding:10px 12px;font-size:13px;font-weight:600;border-radius:9px;border:none;background:linear-gradient(135deg,#4F8EF7,#2563EB);color:#fff;box-shadow:0 4px 16px rgba(79,142,247,0.35);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit">
           <i class="bx bx-download" style="font-size:17px"></i> Download PNG
         </button>
-        <button id="invBcPrint"
-          style="flex:1;padding:10px 12px;font-size:13px;font-weight:600;
-                 border-radius:9px;border:1px solid rgba(255,255,255,0.12);
-                 background:rgba(255,255,255,0.07);color:#E8ECFF;
-                 cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
-                 font-family:inherit;transition:all 0.15s"
-          onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.2)'"
-          onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.borderColor='rgba(255,255,255,0.12)'">
+        <button id="invBcPrint" style="flex:1;padding:10px 12px;font-size:13px;font-weight:600;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#E8ECFF;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit">
           <i class="bx bx-printer" style="font-size:17px"></i> Print
         </button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
 
-  // Event listeners — masing-masing SATU kali saja
-  document
-    .getElementById("invBcClose")
-    .addEventListener("click", closeInvBarcodePopup);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeInvBarcodePopup();
-  });
+  document.getElementById("invBcClose").addEventListener("click", closeInvBarcodePopup);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeInvBarcodePopup(); });
 
   document.getElementById("invBcDownload").addEventListener("click", () => {
     const svg = document.getElementById("invBcSvg");
@@ -791,8 +609,7 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
     const item = overlay._currentItem;
     const svgStr = new XMLSerializer().serializeToString(svg);
     const win = window.open("", "_blank", "width=420,height=320");
-    win.document
-      .write(`<!DOCTYPE html><html><head><title>Print Barcode — ${item.sku}</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>Print Barcode — ${item.sku}</title>
       <style>body{margin:0;padding:24px;font-family:Poppins,sans-serif;display:flex;flex-direction:column;align-items:center}
       .n{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px}
       .m{font-size:12px;color:#555;text-align:center;margin-bottom:12px}
@@ -805,36 +622,18 @@ function tambahBaris(item, removeEmpty = true, itemIndex) {
   });
 })();
 
-// ========================================================
-// ===== JSBARCODE LOADER =================================
-// ========================================================
 let _jsBarcodePending = false;
 function ensureJsBarcode(cb) {
-  if (window.JsBarcode) {
-    cb();
-    return;
-  }
-  if (_jsBarcodePending) {
-    setTimeout(() => ensureJsBarcode(cb), 200);
-    return;
-  }
+  if (window.JsBarcode) { cb(); return; }
+  if (_jsBarcodePending) { setTimeout(() => ensureJsBarcode(cb), 200); return; }
   _jsBarcodePending = true;
   const s = document.createElement("script");
-  s.src =
-    "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js";
-  s.onload = () => {
-    _jsBarcodePending = false;
-    cb();
-  };
-  s.onerror = () => {
-    _jsBarcodePending = false;
-  };
+  s.src = "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js";
+  s.onload = () => { _jsBarcodePending = false; cb(); };
+  s.onerror = () => { _jsBarcodePending = false; };
   document.head.appendChild(s);
 }
 
-// ========================================================
-// ===== OPEN BARCODE POPUP ===============================
-// ========================================================
 function openBarcodePopup(item) {
   const overlay = document.getElementById("invoiceBarcodOverlay");
   overlay._currentItem = item;
@@ -846,41 +645,21 @@ function openBarcodePopup(item) {
     { label: "KATEGORI", value: item.kategori || "—", isSku: false },
   ];
 
-  document.getElementById("invBcInfo").innerHTML = rows
-    .map(
-      (r, i) => `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;
-                ${i < rows.length - 1 ? "border-bottom:1px solid rgba(255,255,255,0.06)" : ""}">
-      <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:#4D5A80;
-                   min-width:64px;text-transform:uppercase;font-family:'DM Mono',monospace">
-        ${r.label}
-      </span>
-      ${
-        r.isSku
-          ? `<span style="font-size:13px;font-weight:700;color:#4F8EF7;
-                        background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.35);
-                        padding:2px 10px;border-radius:6px;font-family:'DM Mono',monospace;
-                        letter-spacing:0.5px">${r.value}</span>`
-          : `<span style="font-size:13px;font-weight:500;color:#E8ECFF">${r.value}</span>`
-      }
-    </div>`,
-    )
-    .join("");
+  document.getElementById("invBcInfo").innerHTML = rows.map((r, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;${i < rows.length - 1 ? "border-bottom:1px solid rgba(255,255,255,0.06)" : ""}">
+      <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:#4D5A80;min-width:64px;text-transform:uppercase;font-family:'DM Mono',monospace">${r.label}</span>
+      ${r.isSku
+      ? `<span style="font-size:13px;font-weight:700;color:#4F8EF7;background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.35);padding:2px 10px;border-radius:6px;font-family:'DM Mono',monospace;letter-spacing:0.5px">${r.value}</span>`
+      : `<span style="font-size:13px;font-weight:500;color:#E8ECFF">${r.value}</span>`}
+    </div>`).join("");
 
   overlay.style.display = "flex";
 
   ensureJsBarcode(() => {
     try {
       JsBarcode("#invBcSvg", item.sku, {
-        format: "CODE128",
-        width: 2,
-        height: 80,
-        displayValue: true,
-        fontSize: 14,
-        margin: 12,
-        background: "#ffffff",
-        lineColor: "#000000",
-        fontOptions: "bold",
+        format: "CODE128", width: 2, height: 80, displayValue: true,
+        fontSize: 14, margin: 12, background: "#ffffff", lineColor: "#000000", fontOptions: "bold",
       });
     } catch (_) {
       document.getElementById("invBcSvg").innerHTML =
@@ -898,16 +677,19 @@ function closeInvBarcodePopup() {
 // ========================================================
 // ===== HAPUS BARIS ======================================
 // ========================================================
-confirmYes.addEventListener("click", () => {
+confirmYes.addEventListener("click", async () => {
   if (rowToDelete) {
     const idx = parseInt(rowToDelete.dataset.itemIndex);
-    const invoices = JSON.parse(localStorage.getItem("invoices") || "{}");
-    if (invoices[invoiceId]?.items?.[idx] !== undefined) {
-      invoices[invoiceId].items.splice(idx, 1);
-      localStorage.setItem("invoices", JSON.stringify(invoices));
+    const itemId = _currentItems[idx]?.id;
+    if (itemId) {
+      const { error } = await sb.from("invoice_items").delete().eq("id", itemId);
+      if (error) { alert("Gagal hapus: " + error.message); }
+      else {
+        _currentItems.splice(idx, 1);
+        await updateInvoiceTotals();
+        renderSemuaBaris();
+      }
     }
-    updateTotal();
-    renderSemuaBaris();
     rowToDelete = null;
   }
   confirmOverlay.classList.remove("active");

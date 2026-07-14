@@ -7,6 +7,9 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
     <title>Dashboard | Invenz</title>
     <style>
 /* ================================================
@@ -1402,10 +1405,10 @@ td.empty-state { padding:32px; }
 </div>
 
 <script>
-/* ===== SIDEBAR ROLE SETUP ===== */
+/* ===== SIDEBAR ROLE & ADMIN MENU SETUP (uses INVENZ from auth.js) ===== */
 (function() {
-    const role = localStorage.getItem("loggedRole") || "owner";
-    const user = localStorage.getItem("loggedUser") || "Admin";
+    const role = INVENZ.role || "owner";
+    const user = INVENZ.user || "Admin";
 
     const ROLE_LABELS = {
         owner: "Owner", admin: "Administrator",
@@ -1424,6 +1427,7 @@ td.empty-state { padding:32px; }
         const el = document.getElementById(id);
         if (el) { el.textContent = user.charAt(0).toUpperCase(); }
     });
+    const navUser = document.getElementById("navUser");
     if (navUser) navUser.title = user;
 
     const uroleEl = document.getElementById("sidebarUrole");
@@ -1439,42 +1443,15 @@ td.empty-state { padding:32px; }
     }
 })();
 
-/* ===== AUTH ===== */
-if (!localStorage.getItem("isLoggedIn")) {
-    if (!localStorage.getItem("invoices")) {
-        const suppliers = ["PT Maju Jaya","CV Sentosa","UD Prima","Toko Abadi","PT Nusantara"];
-        const kategori  = ["Elektronik","Pakaian","Makanan","Minuman","Peralatan","Kosmetik"];
-        const merks     = ["Samsung","Unilever","Indofood","Nike","Philips","Garnier"];
-        const invoices  = {};
-        const now = new Date();
-        for (let i = 0; i < 12; i++) {
-            const d = new Date(now); d.setDate(d.getDate() - i);
-            const invNo = `INV-${String(2024000+i+1).padStart(6,'0')}`;
-            const batchItems = [];
-            for (let j = 0; j < 3; j++) {
-                batchItems.push({
-                    nama: `Produk ${String.fromCharCode(65+((i*3+j)%26))}${i+1}`,
-                    kategori: kategori[(i*3+j)%kategori.length],
-                    merk: merks[(i+j)%merks.length],
-                    stok: Math.floor(Math.random()*200)+10,
-                });
-            }
-            const total = batchItems.reduce((s,x)=>s+(parseInt(x.stok)||0),0);
-            invoices[invNo] = { invoice:invNo, supplier:suppliers[i%suppliers.length], tanggal:d.toLocaleDateString("id-ID"), total, items:batchItems, _date:d.toISOString() };
-        }
-        localStorage.setItem("invoices", JSON.stringify(invoices));
-    }
-    localStorage.setItem("isLoggedIn","1");
-    localStorage.setItem("loggedUser","Admin");
-    localStorage.setItem("loggedRole","owner");
-}
-
 /* ===== CLOCK ===== */
 function updateClock() {
     const now = new Date();
-    document.getElementById("clockDisplay").textContent = now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
-    document.getElementById("dateDisplay").textContent  = now.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-    document.getElementById("lastUpdate").textContent   = now.toLocaleTimeString("id-ID");
+    const clockEl = document.getElementById("clockDisplay");
+    const dateEl  = document.getElementById("dateDisplay");
+    const lastEl  = document.getElementById("lastUpdate");
+    if (clockEl) clockEl.textContent = now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+    if (dateEl)  dateEl.textContent  = now.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    if (lastEl)  lastEl.textContent  = now.toLocaleTimeString("id-ID");
 }
 updateClock(); setInterval(updateClock, 1000);
 
@@ -1488,401 +1465,9 @@ function closeSidebar(){ sidebar.classList.remove("open"); overlay.classList.rem
 
 /* ===== LOGOUT ===== */
 document.getElementById("logoutBtn").addEventListener("click",()=>{
-    localStorage.removeItem("isLoggedIn"); localStorage.removeItem("loggedUser"); localStorage.removeItem("loggedRole");
-    window.location.href = "login.html";
+    INVENZ.logout();
 });
-
-/* ===== LOAD DATA ===== */
-const invoices    = JSON.parse(localStorage.getItem("invoices") || "{}");
-const invoiceList = Object.values(invoices).sort((a,b)=> new Date(b._date||0)-new Date(a._date||0));
-const allItems    = [];
-invoiceList.forEach(inv => { if (inv.items && Array.isArray(inv.items)) allItems.push(...inv.items); });
-
-/* ===== STATS ===== */
-const totalStok      = allItems.reduce((s,i)=>s+(parseInt(i.stok)||0),0);
-const uniqueKategori = new Set(allItems.map(i=>(i.kategori||"Lainnya").toLowerCase()));
-const uniqueNama     = new Set(allItems.map(i=>i.nama.toLowerCase()));
-
-function animateCount(el, target) {
-    const dur = 900, step = 16;
-    let startTime = null;
-    function tick(ts) {
-        if (!startTime) startTime = ts;
-        const prog = Math.min((ts-startTime)/dur, 1);
-        const ease = 1-Math.pow(1-prog,3);
-        el.textContent = Math.round(ease*target);
-        if (prog < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-}
-
-setTimeout(()=>{
-    animateCount(document.getElementById("statTotalStok"), totalStok);
-    animateCount(document.getElementById("statKategori"),  uniqueKategori.size);
-    animateCount(document.getElementById("statJenis"),     uniqueNama.size);
-    animateCount(document.getElementById("statInvoice"),   invoiceList.length);
-    animateCount(document.getElementById("heroStok"),      totalStok);
-    animateCount(document.getElementById("heroInvoice"),   invoiceList.length);
-    animateCount(document.getElementById("heroJenis"),     uniqueNama.size);
-    animateCount(document.getElementById("donutCenterVal"),totalStok);
-}, 300);
-
-/* ===== CHART DEFAULTS ===== */
-Chart.defaults.color = "#8B97C2";
-Chart.defaults.font.family = "'DM Mono', monospace";
-
-const COLORS = ["#00E5C4","#4F8EF7","#A78BFA","#FBBC05","#F05252","#10D99A","#F97316","#EC4899","#14B8A6","#8B5CF6"];
-
-/* ===== DONUT ===== */
-const kategoriMap = {};
-allItems.forEach(item=>{ const k=item.kategori||"Lainnya"; kategoriMap[k]=(kategoriMap[k]||0)+(parseInt(item.stok)||0); });
-const pieLabels = Object.keys(kategoriMap);
-const pieData   = Object.values(kategoriMap);
-
-document.getElementById("donutTotal").textContent = pieLabels.length+" kategori";
-
-if (pieLabels.length > 0) {
-    const pieChart = new Chart(document.getElementById("pieChart"), {
-        type:"doughnut",
-        data:{ labels:pieLabels, datasets:[{ data:pieData, backgroundColor:COLORS, borderWidth:2, borderColor:"#1A2038", hoverOffset:16 }] },
-        options:{
-            cutout:"68%",
-            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.parsed} unit` } } },
-            animation:{ animateRotate:true, duration:1200 }
-        }
-    });
-    const legendEl = document.getElementById("pieLegend");
-    pieLabels.forEach((lbl, i)=>{
-        const chip = document.createElement("div");
-        chip.className="legend-chip";
-        chip.innerHTML=`<span class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></span>${lbl}`;
-        legendEl.appendChild(chip);
-    });
-} else {
-    document.getElementById("pieChart").style.display="none";
-    document.getElementById("pieEmpty").style.display="block";
-}
-
-/* ===== BAR CHART ===== */
-const merkMap = {};
-allItems.forEach(item=>{ const m=item.merk||"Lainnya"; merkMap[m]=(merkMap[m]||0)+(parseInt(item.stok)||0); });
-const barLabels = Object.keys(merkMap);
-const barData   = Object.values(merkMap);
-
-if (barLabels.length > 0) {
-    new Chart(document.getElementById("barChart"), {
-        type:"bar",
-        data:{
-            labels:barLabels,
-            datasets:[{ label:"Stok", data:barData,
-                backgroundColor: barLabels.map((_,i)=>COLORS[i%COLORS.length]+"BB"),
-                borderColor:     barLabels.map((_,i)=>COLORS[i%COLORS.length]),
-                borderWidth:1.5, borderRadius:6, hoverBackgroundColor: barLabels.map((_,i)=>COLORS[i%COLORS.length]) }]
-        },
-        options:{
-            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`Stok: ${ctx.parsed.y} unit` } } },
-            scales:{
-                y:{ beginAtZero:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#8B97C2"} },
-                x:{ grid:{display:false}, ticks:{color:"#8B97C2"} }
-            },
-            animation:{ duration:1200 }
-        }
-    });
-} else {
-    document.getElementById("barChart").style.display="none";
-    document.getElementById("barEmpty").style.display="block";
-}
-
-/* ===== LINE CHART ===== */
-function buildLineData(days) {
-    const dayMap = {};
-    const now = new Date();
-    for (let d=0; d<days; d++) {
-        const dt = new Date(now); dt.setDate(dt.getDate()-d);
-        const key = dt.toLocaleDateString("id-ID",{day:"numeric",month:"short"});
-        dayMap[key] = 0;
-    }
-    invoiceList.forEach(inv=>{
-        const k = new Date(inv._date||Date.now()).toLocaleDateString("id-ID",{day:"numeric",month:"short"});
-        if (k in dayMap) dayMap[k]+=inv.total||0;
-    });
-    const labels = Object.keys(dayMap).reverse();
-    const data   = labels.map(l=>dayMap[l]);
-    return {labels, data};
-}
-
-let lineChart = null;
-function drawLineChart(days) {
-    const {labels, data} = buildLineData(days);
-    if (lineChart) lineChart.destroy();
-    const ctx = document.getElementById("lineChart");
-    if (!ctx) return;
-    lineChart = new Chart(ctx, {
-        type:"line",
-        data:{
-            labels,
-            datasets:[{
-                label:"Unit Masuk", data,
-                borderColor:"#00E5C4", borderWidth:2.5, tension:0.45,
-                pointRadius:4, pointBackgroundColor:"#00E5C4", pointBorderColor:"#1A2038",
-                pointBorderWidth:2, pointHoverRadius:7, fill:true,
-                backgroundColor:(ctx)=>{
-                    const g=ctx.chart.ctx.createLinearGradient(0,0,0,200);
-                    g.addColorStop(0,"rgba(0,229,196,0.2)"); g.addColorStop(1,"rgba(0,229,196,0.01)"); return g;
-                }
-            },{
-                label:"Target",
-                data: data.map(()=>Math.round(totalStok/Math.max(invoiceList.length,1)*1.1)||20),
-                borderColor:"rgba(79,142,247,0.5)", borderWidth:1.5, borderDash:[5,5],
-                tension:0.3, pointRadius:0, fill:false,
-            }]
-        },
-        options:{
-            interaction:{ mode:"index", intersect:false },
-            plugins:{
-                legend:{ display:true, position:"top", labels:{ font:{size:10}, boxWidth:10, padding:14, color:"#8B97C2" } },
-                tooltip:{ backgroundColor:"#1A2038", borderColor:"rgba(255,255,255,0.1)", borderWidth:1, titleColor:"#E8ECFF", bodyColor:"#8B97C2", padding:12, cornerRadius:8 }
-            },
-            scales:{
-                y:{ beginAtZero:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#8B97C2"} },
-                x:{ grid:{color:"rgba(255,255,255,0.03)"}, ticks:{color:"#8B97C2"} }
-            },
-            animation:{ duration:900 }
-        }
-    });
-}
-drawLineChart(7);
-
-function switchLine(range, btn) {
-    document.querySelectorAll(".chart-tab").forEach(t=>t.classList.remove("active"));
-    btn.classList.add("active");
-    drawLineChart(range==="7d" ? 7 : range==="30d" ? 30 : 90);
-}
-
-/* ===== TOP 5 ITEMS ===== */
-const itemMap = {};
-allItems.forEach(item=>{ const k=item.nama||"?"; itemMap[k]=(itemMap[k]||0)+(parseInt(item.stok)||0); });
-const sortedItems = Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-const maxStok = sortedItems[0]?.[1] || 1;
-const rankClasses = ["gold","silver","bronze","",""];
-const rankIcons   = ["🥇","🥈","🥉","4","5"];
-
-const topList = document.getElementById("topItemsList");
-if (sortedItems.length > 0) {
-    topList.innerHTML = "";
-    sortedItems.forEach(([name,stok],i)=>{
-        const pct = Math.round((stok/maxStok)*100);
-        topList.innerHTML += `
-        <div class="top-item">
-            <span class="top-item-rank ${rankClasses[i]}">${rankIcons[i]}</span>
-            <span class="top-item-name" title="${name}">${name}</span>
-            <div class="top-item-bar-wrap"><div class="top-item-bar" style="width:${pct}%"></div></div>
-            <span class="top-item-val">${stok}</span>
-        </div>`;
-    });
-}
-
-/* ===== ACTIVITY FEED ===== */
-const actColors = ["#00E5C4","#4F8EF7","#FBBC05","#F05252","#A78BFA","#10D99A"];
-const actEl = document.getElementById("activityFeed");
-if (invoiceList.length > 0) {
-    actEl.innerHTML = invoiceList.slice(0,5).map((inv,i)=>`
-    <div class="activity-item">
-        <div class="activity-dot-wrap">
-            <div class="activity-dot" style="background:${actColors[i%actColors.length]}"></div>
-            <div class="activity-line"></div>
-        </div>
-        <div class="activity-body">
-            <div class="activity-text">Invoice <strong>${inv.invoice}</strong> dari <strong>${inv.supplier}</strong> masuk — ${inv.total} unit</div>
-            <div class="activity-time">${inv.tanggal}</div>
-        </div>
-    </div>`).join("");
-} else {
-    actEl.innerHTML = `<div class="empty-state" style="padding:16px 0"><i class="bx bx-pulse"></i><span>Belum ada aktivitas</span></div>`;
-}
-
-/* ===== RECENT TABLE ===== */
-let allRows = [];
-let sortAsc = false;
-
-function renderTable(rows) {
-    const tbody = document.getElementById("recentTableBody");
-    if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="bx bx-receipt"></i><span>Tidak ada invoice</span></td></tr>';
-        return;
-    }
-    tbody.innerHTML = rows.map((inv,idx)=>`
-    <tr>
-        <td style="color:var(--text3);font-family:var(--font-mono)">${idx+1}</td>
-        <td><a href="invoice.html?id=${encodeURIComponent(inv.invoice)}"
-            style="color:var(--aqua);font-weight:600;text-decoration:none;font-family:var(--font-mono);font-size:12px"
-            onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${inv.invoice}</a></td>
-        <td style="color:var(--text)">${inv.supplier}</td>
-        <td style="color:var(--text2);font-family:var(--font-mono);font-size:12px">${inv.tanggal}</td>
-        <td style="color:var(--text)">${inv.total} <span style="color:var(--text3)">unit</span></td>
-        <td><span class="badge badge-green">Masuk</span></td>
-    </tr>`).join("");
-}
-
-allRows = [...invoiceList];
-renderTable(allRows);
-
-function filterTable() {
-    const q = document.getElementById("searchInput").value.toLowerCase();
-    renderTable(invoiceList.filter(inv=> inv.invoice.toLowerCase().includes(q) || inv.supplier.toLowerCase().includes(q)));
-}
-
-function sortTable() {
-    sortAsc = !sortAsc;
-    renderTable([...allRows].sort((a,b)=> sortAsc ? a.total-b.total : b.total-a.total));
-}
-
-/* ===== STOCK TREND LINE CHART (NEW) ===== */
-(function createStockTrendChart() {
-    // Bangun data per bulan dari invoices yang ada, sisanya pakai simulasi progresif
-    const MONTHS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-    const now = new Date();
-    const currentMonth = now.getMonth(); // 0-indexed
-
-    // Hitung stok dari invoice per bulan (pakai _date)
-    const monthlyMap = {};
-    invoiceList.forEach(inv => {
-        const d = new Date(inv._date || Date.now());
-        const key = d.getMonth();
-        monthlyMap[key] = (monthlyMap[key] || 0) + (inv.total || 0);
-    });
-
-    // Buat 7 label bulan terakhir (termasuk bulan ini)
-    const labels = [];
-    const rawData = [];
-    for (let i = 6; i >= 0; i--) {
-        const mIdx = (currentMonth - i + 12) % 12;
-        labels.push(MONTHS[mIdx]);
-        // Bulan yang punya data real → pakai, sisanya simulasi naik bertahap
-        if (monthlyMap[mIdx] !== undefined) {
-            rawData.push(monthlyMap[mIdx]);
-        } else {
-            // Simulasi: kurva naik dari ~60% totalStok hingga totalStok
-            const base = Math.round(totalStok * (0.55 + (6 - i) * 0.07));
-            rawData.push(base);
-        }
-    }
-
-    // Pastikan titik terakhir = totalStok real
-    rawData[rawData.length - 1] = totalStok;
-
-    // Kumulatif: tiap bulan = akumulasi (opsional — pakai data mentah biar lebih realistis)
-    const chartData = rawData;
-
-    // Hitung persen perubahan bulan lalu vs bulan ini
-    const prev = chartData[chartData.length - 2] || 1;
-    const curr = chartData[chartData.length - 1];
-    const pct  = prev > 0 ? (((curr - prev) / prev) * 100).toFixed(1) : 0;
-    const isUp = curr >= prev;
-
-    // Update pill & meta
-    const pill = document.getElementById("stockTrendPill");
-    const pctEl = document.getElementById("stockTrendPct");
-    pctEl.textContent = (isUp ? "+" : "") + pct + "%";
-    if (!isUp) {
-        pill.style.background = "var(--danger-bg)";
-        pill.style.color = "var(--danger)";
-        pill.style.borderColor = "rgba(240,82,82,0.2)";
-        pill.querySelector("i").className = "bx bx-down-arrow-alt";
-    }
-
-    const peakVal = Math.max(...chartData);
-    document.getElementById("trendCurrentVal").textContent = curr.toLocaleString("id-ID");
-    document.getElementById("trendPeakVal").textContent    = peakVal.toLocaleString("id-ID");
-
-    // Gradien warna berdasarkan tren
-    const gradColorTop    = isUp ? "rgba(16,217,154,0.22)"  : "rgba(240,82,82,0.2)";
-    const gradColorBottom = isUp ? "rgba(16,217,154,0.01)"  : "rgba(240,82,82,0.01)";
-    const lineColor       = isUp ? "#10D99A" : "#F05252";
-    const pointColor      = isUp ? "#10D99A" : "#F05252";
-
-    const ctx = document.getElementById("stockTrendChart");
-    if (!ctx) return;
-
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [
-                {
-                    label: "Total Stok",
-                    data: chartData,
-                    borderColor: lineColor,
-                    borderWidth: 2.5,
-                    tension: 0.42,
-                    pointRadius: 5,
-                    pointBackgroundColor: pointColor,
-                    pointBorderColor: "#1A2038",
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 8,
-                    fill: true,
-                    backgroundColor: (ctx) => {
-                        const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 260);
-                        g.addColorStop(0, gradColorTop);
-                        g.addColorStop(1, gradColorBottom);
-                        return g;
-                    }
-                },
-                {
-                    // Garis rata-rata sebagai referensi
-                    label: "Rata-rata",
-                    data: chartData.map(() => Math.round(chartData.reduce((a,b)=>a+b,0)/chartData.length)),
-                    borderColor: "rgba(79,142,247,0.45)",
-                    borderWidth: 1.5,
-                    borderDash: [6, 4],
-                    tension: 0,
-                    pointRadius: 0,
-                    fill: false,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: "top",
-                    labels: { font: { size: 10 }, boxWidth: 10, padding: 14, color: "#8B97C2" }
-                },
-                tooltip: {
-                    backgroundColor: "#1A2038",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    borderWidth: 1,
-                    titleColor: "#E8ECFF",
-                    bodyColor: "#8B97C2",
-                    padding: 12,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString("id-ID")} unit`
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: { color: "rgba(255,255,255,0.04)" },
-                    ticks: {
-                        color: "#8B97C2",
-                        callback: val => val.toLocaleString("id-ID")
-                    }
-                },
-                x: {
-                    grid: { color: "rgba(255,255,255,0.03)" },
-                    ticks: { color: "#8B97C2" }
-                }
-            },
-            animation: { duration: 1400, easing: "easeInOutQuart" }
-        }
-    });
-})();
 </script>
-<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -1,568 +1,439 @@
-/* ============================================================
-   INVENZ — SEED SAMPLE DATA (untuk presentasi/demo)
-   Taruh di: js/seedSampleData.js
+// js/seedSampleData.js
+// Seeding sample data ke Supabase — v2 (diperbaiki)
+//
+// Perubahan dari versi lama:
+// - Setiap langkah insert/upsert sekarang DICEK errornya (dulu banyak yang
+//   diabaikan diam-diam kalau gagal -> data "hilang" tanpa pesan jelas).
+// - Total invoice / total_harga & jumlah keluar / sisa_stok dihitung
+//   otomatis dari item yang benar-benar disimpan, bukan angka hardcode
+//   yang bisa meleset dari isi aslinya.
+// - Data sample jauh lebih lengkap: 6 invoice barang masuk (macam-macam
+//   kategori & bulan berbeda) + 5 transaksi stock out, supaya dashboard,
+//   laporan, dan grafik tren tidak kosong/datar.
+// - Idempotent: aman dijalankan berulang kali (invoice_items di-reset dulu
+//   ke stok penuh sebelum stock_out mengurangi stoknya lagi), jadi tidak
+//   dobel-kurang tiap kali tombol "Seed" diklik ulang.
+// - Menambah 3 akun demo (kepala_toko, kasir, gudang) supaya semua role
+//   bisa dicoba login, selain 3 akun builtin (owner/admin/invenz).
 
-   Isi 3 kategori: Susu, Parfum, Mie Instan — pakai brand &
-   perusahaan Indonesia asli. Otomatis mengisi:
-     - linkedData (kategori, merk, supplier, barang, lokasi, penerima)
-     - invoices (barang masuk)
-     - stockOuts_v2 (contoh transaksi keluar)
-     - invenz_payment_methods (default: Cash & QRIS)
+"use strict";
 
-   CARA PAKAI (paling gampang):
-   1. Taruh file ini di folder js/
-   2. Buka salah satu halaman INVENZ (misal dashboard.html) di browser
-   3. Buka Console (F12 / klik kanan → Inspect → tab Console)
-   4. Ketik/paste:
-        var s = document.createElement('script');
-        s.src = 'js/seedSampleData.js';
-        document.head.appendChild(s);
-   5. Tunggu muncul log "✅ Sample data berhasil dimuat!" di console
-   6. Refresh halaman (F5) — data langsung muncul di semua modul
+// Hash sederhana (sama seperti di auth.js & login.html)
+function _hashPw(pw) {
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) {
+    h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+  }
+  return "h_" + Math.abs(h).toString(36);
+}
 
-   ATAU lebih gampang lagi: pakai file seed.html yang disediakan
-   terpisah, tinggal klik 1 tombol.
+function _daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split("T")[0];
+}
 
-   ⚠️ Ini akan MENIMPA data invoices, linkedData, dan stockOuts_v2
-   yang sudah ada di browser saat ini. Kalau ada data penting,
-   backup dulu manual (Export dari halaman terkait kalau ada, atau
-   copy dari localStorage) sebelum menjalankan ini.
-   ============================================================ */
+// ── Helper upsert dengan pengecekan error + log yang jelas ──
+async function _upsert(table, rows, opts, label) {
+  const { error } = await sb.from(table).upsert(rows, opts);
+  if (error) {
+    console.error(`[seed] Gagal upsert "${label || table}":`, error.message, rows);
+    throw new Error(`Gagal menyimpan ${label || table}: ${error.message}`);
+  }
+}
 
-(function seedInvenzSampleData() {
-  // ============================================================
-  // 1. LINKED DATA — master kategori, merk, supplier, lokasi
-  // ============================================================
-  const linkedData = {
-    kategori: [{ nama: "Susu" }, { nama: "Parfum" }, { nama: "Mie Instan" }],
-    merk: [
-      { nama: "Indomilk" },
-      { nama: "Frisian Flag" },
-      { nama: "Ultra Milk" },
-      { nama: "Casablanca" },
-      { nama: "Vitalis" },
-      { nama: "Kahf" },
-      { nama: "HMNS" },
-      { nama: "Indomie" },
-      { nama: "Sarimi" },
-      { nama: "Supermi" },
-      { nama: "Mie Sedaap" },
-    ],
-    supplier: [
-      {
-        nama: "PT Indolakto",
-        kontak: "021-8990111",
-        alamat: "Jl. Raya Bekasi KM 28, Bekasi",
-        keterangan: "Distributor produk susu Indomilk",
-      },
-      {
-        nama: "PT Frisian Flag Indonesia",
-        kontak: "021-3841919",
-        alamat: "Jl. Raya Bogor KM 26, Jakarta Timur",
-        keterangan: "Produsen susu Frisian Flag",
-      },
-      {
-        nama: "PT Ultra Jaya Milk Industry Tbk",
-        kontak: "022-6031000",
-        alamat: "Jl. Raya Cimareme No. 131, Bandung Barat",
-        keterangan: "Produsen susu Ultra Milk",
-      },
-      {
-        nama: "PT Eagle Indo Pharma",
-        kontak: "021-6191919",
-        alamat: "Jl. Daan Mogot Km 14, Jakarta Barat",
-        keterangan: "Produsen Casablanca & Vitalis",
-      },
-      {
-        nama: "PT Paragon Technology and Innovation",
-        kontak: "021-7563000",
-        alamat: "Jl. Swadarma Raya No. 33, Jakarta Selatan",
-        keterangan: "Produsen Kahf",
-      },
-      {
-        nama: "PT HMNS Grooming Indonesia",
-        kontak: "021-5091234",
-        alamat: "Jakarta Selatan",
-        keterangan: "Produsen parfum lokal HMNS",
-      },
-      {
-        nama: "PT Indofood CBP Sukses Makmur Tbk",
-        kontak: "021-57958822",
-        alamat: "Sudirman Plaza, Jakarta Selatan",
-        keterangan: "Produsen Indomie, Sarimi, Supermi",
-      },
-      {
-        nama: "PT Sayap Mas Utama (Wings Food)",
-        kontak: "021-6190108",
-        alamat: "Jl. Kapuk Kamal Raya, Jakarta Utara",
-        keterangan: "Produsen Mie Sedaap",
-      },
-    ],
-    lokasi: [
-      { nama: "Rak Minuman" },
-      { nama: "Rak Makanan" },
-      { nama: "Rak Pendingin" },
-      { nama: "Rak Kosmetik" },
-    ],
-    penerima: [
-      {
-        nama: "Toko Berkah Jaya",
-        telepon: "081234567890",
-        keterangan: "Pelanggan reguler, ambil mingguan",
-      },
-      {
-        nama: "Minimarket Sumber Rezeki",
-        telepon: "081298765432",
-        keterangan: "Grosir area Bekasi",
-      },
-      {
-        nama: "Divisi Retail",
-        telepon: "",
-        keterangan: "Transfer internal antar cabang",
-      },
-    ],
-    barang: [], // diisi otomatis dari daftar item di bawah
-    sku: [], // diisi otomatis (duplikat barang, sesuai skema app)
-  };
+async function seedSupabaseData() {
+  console.log("=== [seed] Memulai seeding data ke Supabase ===");
 
   // ============================================================
-  // 2. DAFTAR ITEM (dipakai untuk generate invoice + linkedData.barang)
-  //    Tanggal "hari ini" acuan demo: 2026-07-04
+  // 0. USERS — builtin + demo untuk tiap role
   // ============================================================
-  const ITEMS = {
-    susu: [
+  console.log("[seed] (1/9) Users...");
+  const defaultUsers = [
+    { username: "owner", nama: "Owner INVENZ", role: "owner", password: "owner123", is_builtin: true },
+    { username: "admin", nama: "Administrator", role: "admin", password: "admin123", is_builtin: true },
+    { username: "invenz", nama: "Invenz Demo", role: "admin", password: "invenz123", is_builtin: true },
+    { username: "kepala", nama: "Kepala Toko Demo", role: "kepala_toko", password: "kepala123", is_builtin: false },
+    { username: "kasir", nama: "Kasir Demo", role: "kasir", password: "kasir123", is_builtin: false },
+    { username: "gudang", nama: "Staf Gudang Demo", role: "gudang", password: "gudang123", is_builtin: false },
+  ];
+  for (const u of defaultUsers) {
+    await _upsert(
+      "app_users",
       {
-        sku: "SKU-SUSU-001",
-        nama: "Indomilk Susu Kental Manis Cokelat 370g",
-        merk: "Indomilk",
-        kategori: "Susu",
-        lokasi: "Rak Minuman",
-        expired: "2027-01-15",
-        hargaHPP: 9000,
-        hargaJual: 12000,
-        stokAwal: 200,
+        username: u.username,
+        nama: u.nama,
+        role: u.role,
+        password_hash: _hashPw(u.password),
+        aktif: true,
+        is_builtin: u.is_builtin,
       },
-      {
-        sku: "SKU-SUSU-002",
-        nama: "Indomilk Susu Kental Manis Putih 370g",
-        merk: "Indomilk",
-        kategori: "Susu",
-        lokasi: "Rak Minuman",
-        expired: "2026-07-15",
-        hargaHPP: 8800,
-        hargaJual: 11500,
-        stokAwal: 150,
-      },
-      {
-        sku: "SKU-SUSU-003",
-        nama: "Frisian Flag Susu UHT Full Cream 1L",
-        merk: "Frisian Flag",
-        kategori: "Susu",
-        lokasi: "Rak Pendingin",
-        expired: "2026-12-01",
-        hargaHPP: 15000,
-        hargaJual: 19000,
-        stokAwal: 120,
-      },
-      {
-        sku: "SKU-SUSU-004",
-        nama: "Frisian Flag Susu UHT Cokelat 1L",
-        merk: "Frisian Flag",
-        kategori: "Susu",
-        lokasi: "Rak Pendingin",
-        expired: "2026-06-20",
-        hargaHPP: 15000,
-        hargaJual: 19000,
-        stokAwal: 100,
-      },
-      {
-        sku: "SKU-SUSU-005",
-        nama: "Ultra Milk Susu UHT Cokelat 250ml",
-        merk: "Ultra Milk",
-        kategori: "Susu",
-        lokasi: "Rak Pendingin",
-        expired: "2026-11-01",
-        hargaHPP: 4500,
-        hargaJual: 6000,
-        stokAwal: 300,
-      },
-      {
-        sku: "SKU-SUSU-006",
-        nama: "Ultra Milk Susu UHT Full Cream 250ml",
-        merk: "Ultra Milk",
-        kategori: "Susu",
-        lokasi: "Rak Pendingin",
-        expired: "2026-08-01",
-        hargaHPP: 4500,
-        hargaJual: 6000,
-        stokAwal: 250,
-      },
-    ],
-    parfum: [
-      {
-        sku: "SKU-PARF-001",
-        nama: "Casablanca Eau de Cologne Ocean 100ml",
-        merk: "Casablanca",
-        kategori: "Parfum",
-        lokasi: "Rak Kosmetik",
-        expired: "2028-01-01",
-        hargaHPP: 18000,
-        hargaJual: 25000,
-        stokAwal: 60,
-      },
-      {
-        sku: "SKU-PARF-002",
-        nama: "Vitalis Fragrance Mist Pink Blossom 100ml",
-        merk: "Vitalis",
-        kategori: "Parfum",
-        lokasi: "Rak Kosmetik",
-        expired: "2027-06-01",
-        hargaHPP: 15000,
-        hargaJual: 21000,
-        stokAwal: 80,
-      },
-      {
-        sku: "SKU-PARF-003",
-        nama: "Kahf Perfume Dailies Sport 20ml",
-        merk: "Kahf",
-        kategori: "Parfum",
-        lokasi: "Rak Kosmetik",
-        expired: "2028-03-01",
-        hargaHPP: 25000,
-        hargaJual: 35000,
-        stokAwal: 50,
-      },
-      {
-        sku: "SKU-PARF-004",
-        nama: "Kahf Perfume Dailies Fresh 20ml",
-        merk: "Kahf",
-        kategori: "Parfum",
-        lokasi: "Rak Kosmetik",
-        expired: "2028-03-01",
-        hargaHPP: 25000,
-        hargaJual: 35000,
-        stokAwal: 40,
-      },
-      {
-        sku: "SKU-PARF-005",
-        nama: "HMNS Eau de Parfum Alpha 50ml",
-        merk: "HMNS",
-        kategori: "Parfum",
-        lokasi: "Rak Kosmetik",
-        expired: "2028-01-01",
-        hargaHPP: 95000,
-        hargaJual: 135000,
-        stokAwal: 25,
-      },
-      {
-        sku: "SKU-PARF-006",
-        nama: "HMNS Eau de Parfum Nomad 50ml",
-        merk: "HMNS",
-        kategori: "Parfum",
-        lokasi: "Rak Kosmetik",
-        expired: "2028-01-01",
-        hargaHPP: 95000,
-        hargaJual: 135000,
-        stokAwal: 20,
-      },
-    ],
-    mie: [
-      {
-        sku: "SKU-MIE-001",
-        nama: "Indomie Goreng Original 85g",
-        merk: "Indomie",
-        kategori: "Mie Instan",
-        lokasi: "Rak Makanan",
-        expired: "2027-03-01",
-        hargaHPP: 2800,
-        hargaJual: 3500,
-        stokAwal: 500,
-      },
-      {
-        sku: "SKU-MIE-002",
-        nama: "Indomie Kuah Ayam Bawang 75g",
-        merk: "Indomie",
-        kategori: "Mie Instan",
-        lokasi: "Rak Makanan",
-        expired: "2027-02-01",
-        hargaHPP: 2700,
-        hargaJual: 3300,
-        stokAwal: 400,
-      },
-      {
-        sku: "SKU-MIE-003",
-        nama: "Sarimi Ayam Bawang 70g",
-        merk: "Sarimi",
-        kategori: "Mie Instan",
-        lokasi: "Rak Makanan",
-        expired: "2026-07-10",
-        hargaHPP: 2400,
-        hargaJual: 3000,
-        stokAwal: 300,
-      },
-      {
-        sku: "SKU-MIE-004",
-        nama: "Supermi Ayam Bawang 75g",
-        merk: "Supermi",
-        kategori: "Mie Instan",
-        lokasi: "Rak Makanan",
-        expired: "2027-01-01",
-        hargaHPP: 2400,
-        hargaJual: 3000,
-        stokAwal: 250,
-      },
-      {
-        sku: "SKU-MIE-005",
-        nama: "Mie Sedaap Goreng Original 82g",
-        merk: "Mie Sedaap",
-        kategori: "Mie Instan",
-        lokasi: "Rak Makanan",
-        expired: "2027-04-01",
-        hargaHPP: 2600,
-        hargaJual: 3200,
-        stokAwal: 350,
-      },
-      {
-        sku: "SKU-MIE-006",
-        nama: "Mie Sedaap Soto 75g",
-        merk: "Mie Sedaap",
-        kategori: "Mie Instan",
-        lokasi: "Rak Makanan",
-        expired: "2026-05-01",
-        hargaHPP: 2600,
-        hargaJual: 3200,
-        stokAwal: 200,
-      },
-    ],
-  };
-
-  // ============================================================
-  // 3. INVOICE MASUK — dikelompokkan per supplier
-  //    stok di sini = SISA stok SETELAH sample stock-out (lihat bag. 4)
-  // ============================================================
-  const invoices = {
-    "INV-2025-101": {
-      invoice: "INV-2025-101",
-      tanggal: "2026-05-10",
-      supplier: "PT Indolakto",
-      items: [itemOf("SKU-SUSU-001", 200), itemOf("SKU-SUSU-002", 150)],
-    },
-    "INV-2025-102": {
-      invoice: "INV-2025-102",
-      tanggal: "2026-05-12",
-      supplier: "PT Frisian Flag Indonesia",
-      items: [
-        itemOf("SKU-SUSU-003", 100), // 120 - 20 terjual di SO-2
-        itemOf("SKU-SUSU-004", 100),
-      ],
-    },
-    "INV-2025-103": {
-      invoice: "INV-2025-103",
-      tanggal: "2026-05-15",
-      supplier: "PT Ultra Jaya Milk Industry Tbk",
-      items: [itemOf("SKU-SUSU-005", 300), itemOf("SKU-SUSU-006", 250)],
-    },
-    "INV-2025-201": {
-      invoice: "INV-2025-201",
-      tanggal: "2026-05-20",
-      supplier: "PT Eagle Indo Pharma",
-      items: [
-        itemOf("SKU-PARF-001", 50), // 60 - 10 terjual di SO-2
-        itemOf("SKU-PARF-002", 80),
-      ],
-    },
-    "INV-2025-202": {
-      invoice: "INV-2025-202",
-      tanggal: "2026-05-22",
-      supplier: "PT Paragon Technology and Innovation",
-      items: [itemOf("SKU-PARF-003", 50), itemOf("SKU-PARF-004", 40)],
-    },
-    "INV-2025-203": {
-      invoice: "INV-2025-203",
-      tanggal: "2026-05-25",
-      supplier: "PT HMNS Grooming Indonesia",
-      items: [itemOf("SKU-PARF-005", 25), itemOf("SKU-PARF-006", 20)],
-    },
-    "INV-2025-301": {
-      invoice: "INV-2025-301",
-      tanggal: "2026-06-01",
-      supplier: "PT Indofood CBP Sukses Makmur Tbk",
-      items: [
-        itemOf("SKU-MIE-001", 450), // 500 - 50 terjual di SO-1
-        itemOf("SKU-MIE-002", 400),
-        itemOf("SKU-MIE-003", 300),
-        itemOf("SKU-MIE-004", 250),
-      ],
-    },
-    "INV-2025-302": {
-      invoice: "INV-2025-302",
-      tanggal: "2026-06-03",
-      supplier: "PT Sayap Mas Utama (Wings Food)",
-      items: [
-        itemOf("SKU-MIE-005", 320), // 350 - 30 terjual di SO-1
-        itemOf("SKU-MIE-006", 200),
-      ],
-    },
-  };
-
-  // Hitung total & totalHarga tiap invoice (mengikuti kalkulasi asli app)
-  Object.values(invoices).forEach((inv) => {
-    inv.total = inv.items.reduce((s, i) => s + (parseInt(i.stok) || 0), 0);
-    inv.totalHarga = inv.items.reduce(
-      (s, i) => s + (parseFloat(i.hargaHPP) || 0) * (parseInt(i.stok) || 0),
-      0,
+      { onConflict: "username" },
+      "app_users"
     );
-  });
-
-  // ============================================================
-  // 4. STOCK OUT — contoh transaksi keluar (stok di invoice di
-  //    atas sudah dikurangi sesuai transaksi ini)
-  // ============================================================
-  const stockOuts = [
-    {
-      id: "so_seed_1",
-      invoice: "INV-OUT-1",
-      tanggal: "2026-06-20",
-      penerima: "Toko Berkah Jaya",
-      telepon: "081234567890",
-      paymentId: "pay_default_cash",
-      paymentNama: "Cash",
-      items: [
-        {
-          invoiceAsal: "INV-2025-301",
-          sku: "SKU-MIE-001",
-          nama: "Indomie Goreng Original 85g",
-          kategori: "Mie Instan",
-          merk: "Indomie",
-          lokasi: "Rak Makanan",
-          hargaHPP: 2800,
-          hargaJual: 3500,
-          jumlahKeluar: 50,
-          sisaStok: 450,
-        },
-        {
-          invoiceAsal: "INV-2025-302",
-          sku: "SKU-MIE-005",
-          nama: "Mie Sedaap Goreng Original 82g",
-          kategori: "Mie Instan",
-          merk: "Mie Sedaap",
-          lokasi: "Rak Makanan",
-          hargaHPP: 2600,
-          hargaJual: 3200,
-          jumlahKeluar: 30,
-          sisaStok: 320,
-        },
-      ],
-      createdAt: new Date("2026-06-20").toISOString(),
-    },
-    {
-      id: "so_seed_2",
-      invoice: "INV-OUT-2",
-      tanggal: "2026-06-25",
-      penerima: "Minimarket Sumber Rezeki",
-      telepon: "081298765432",
-      paymentId: "pay_default_qris",
-      paymentNama: "QRIS",
-      items: [
-        {
-          invoiceAsal: "INV-2025-201",
-          sku: "SKU-PARF-001",
-          nama: "Casablanca Eau de Cologne Ocean 100ml",
-          kategori: "Parfum",
-          merk: "Casablanca",
-          lokasi: "Rak Kosmetik",
-          hargaHPP: 18000,
-          hargaJual: 25000,
-          jumlahKeluar: 10,
-          sisaStok: 50,
-        },
-        {
-          invoiceAsal: "INV-2025-102",
-          sku: "SKU-SUSU-003",
-          nama: "Frisian Flag Susu UHT Full Cream 1L",
-          kategori: "Susu",
-          merk: "Frisian Flag",
-          lokasi: "Rak Pendingin",
-          hargaHPP: 15000,
-          hargaJual: 19000,
-          jumlahKeluar: 20,
-          sisaStok: 100,
-        },
-      ],
-      createdAt: new Date("2026-06-25").toISOString(),
-    },
-  ];
-
-  // ============================================================
-  // 5. PAYMENT METHODS (default)
-  // ============================================================
-  const paymentMethods = [
-    {
-      id: "pay_default_cash",
-      nama: "Cash",
-      keterangan: "Pembayaran tunai",
-      aktif: true,
-      isDefault: true,
-    },
-    {
-      id: "pay_default_qris",
-      nama: "QRIS",
-      keterangan: "Scan QR Code (GoPay, OVO, Dana, ShopeePay, dll.)",
-      aktif: true,
-      isDefault: true,
-    },
-  ];
-
-  // ============================================================
-  // HELPER — bikin object item invoice dari daftar ITEMS di atas
-  // ============================================================
-  function itemOf(sku, stokSisa) {
-    const all = [...ITEMS.susu, ...ITEMS.parfum, ...ITEMS.mie];
-    const found = all.find((i) => i.sku === sku);
-    if (!found) throw new Error("SKU tidak ditemukan di ITEMS: " + sku);
-    return {
-      sku: found.sku,
-      nama: found.nama,
-      merk: found.merk,
-      kategori: found.kategori,
-      lokasi: found.lokasi,
-      expired: found.expired,
-      hargaHPP: found.hargaHPP,
-      hargaJual: found.hargaJual,
-      stok: stokSisa,
-    };
   }
 
-  // Isi linkedData.barang & linkedData.sku dari semua item
-  [...ITEMS.susu, ...ITEMS.parfum, ...ITEMS.mie].forEach((it) => {
-    const entry = {
-      sku: it.sku,
-      nama: it.nama,
-      merk: it.merk,
-      kategori: it.kategori,
-    };
-    linkedData.barang.push(entry);
-    linkedData.sku.push({ ...entry });
-  });
+  // ============================================================
+  // 1. KATEGORI
+  // ============================================================
+  console.log("[seed] (2/9) Kategori...");
+  const kategoriList = [
+    "Susu", "Parfum", "Mie Instan", "Elektronik", "Pakaian",
+    "Makanan", "Minuman", "Peralatan", "Kosmetik", "Aksesoris",
+  ];
+  for (const nama of kategoriList) {
+    await _upsert("kategori", { nama }, { onConflict: "nama" }, "kategori");
+  }
 
   // ============================================================
-  // TULIS SEMUA KE localStorage
+  // 2. MERK
   // ============================================================
-  localStorage.setItem("invoices", JSON.stringify(invoices));
-  localStorage.setItem("linkedData", JSON.stringify(linkedData));
-  localStorage.setItem("stockOuts_v2", JSON.stringify(stockOuts));
-  localStorage.setItem(
-    "invenz_payment_methods",
-    JSON.stringify(paymentMethods),
+  console.log("[seed] (3/9) Merk...");
+  const merkList = [
+    "Indomilk", "Frisian Flag", "Ultra Milk", "Casablanca", "Vitalis",
+    "Kahf", "HMNS", "Samsung", "Unilever", "Indofood", "Nike", "Philips",
+    "Garnier", "Sedaap", "Le Minerale", "Adidas",
+  ];
+  for (const nama of merkList) {
+    await _upsert("merk", { nama }, { onConflict: "nama" }, "merk");
+  }
+
+  // ============================================================
+  // 3. LOKASI
+  // ============================================================
+  console.log("[seed] (4/9) Lokasi...");
+  const lokasiList = ["Gudang A", "Gudang B", "Rak Utama", "Rak Display"];
+  for (const nama of lokasiList) {
+    await _upsert("lokasi", { nama }, { onConflict: "nama" }, "lokasi");
+  }
+
+  // ============================================================
+  // 4. SUPPLIER
+  // ============================================================
+  console.log("[seed] (5/9) Supplier...");
+  const supplierList = [
+    { nama: "PT Maju Jaya", kontak: "0812-3456-7890", alamat: "Jakarta", keterangan: "Supplier Utama" },
+    { nama: "CV Sentosa", kontak: "0812-9876-5432", alamat: "Bandung", keterangan: "Supplier Cabang" },
+    { nama: "UD Sumber Rejeki", kontak: "0813-1111-2222", alamat: "Surabaya", keterangan: "Supplier Elektronik" },
+    { nama: "PT Cahaya Abadi", kontak: "0857-4444-5555", alamat: "Semarang", keterangan: "Supplier Kosmetik & Parfum" },
+  ];
+  for (const s of supplierList) {
+    await _upsert("supplier", s, { onConflict: "nama" }, "supplier");
+  }
+
+  // ============================================================
+  // 5. PENERIMA / CUSTOMER
+  // ============================================================
+  console.log("[seed] (6/9) Customer...");
+  const penerimaList = [
+    { nama: "Toko Utama", telepon: "0811-2233-4455", keterangan: "Staf Toko" },
+    { nama: "Pelanggan Umum", telepon: "-", keterangan: "Retail" },
+    { nama: "Budi Santoso", telepon: "0821-5566-7788", keterangan: "Pelanggan tetap" },
+    { nama: "Rina Wijaya", telepon: "0857-9988-1122", keterangan: "Pelanggan tetap" },
+  ];
+  for (const p of penerimaList) {
+    await _upsert("penerima", p, { onConflict: "nama" }, "penerima");
+  }
+
+  // ============================================================
+  // 6. PAYMENT METHODS
+  // ============================================================
+  console.log("[seed] (7/9) Payment Methods...");
+  await _upsert(
+    "payment_methods",
+    { id: "pay_default_cash", nama: "Cash", keterangan: "Pembayaran tunai", aktif: true, is_default: true },
+    { onConflict: "id" },
+    "payment_methods (cash)"
+  );
+  await _upsert(
+    "payment_methods",
+    { id: "pay_default_qris", nama: "QRIS", keterangan: "Scan QR Code", aktif: true, is_default: true },
+    { onConflict: "id" },
+    "payment_methods (qris)"
+  );
+  await _upsert(
+    "payment_methods",
+    { id: "pay_transfer", nama: "Transfer Bank", keterangan: "BCA / Mandiri", aktif: true, is_default: false },
+    { onConflict: "id" },
+    "payment_methods (transfer)"
   );
 
-  console.log("✅ Sample data berhasil dimuat!");
-  console.log("   - " + Object.keys(invoices).length + " invoice barang masuk");
-  console.log("   - " + stockOuts.length + " transaksi stock out");
-  console.log(
-    "   - " +
-      linkedData.barang.length +
-      " jenis barang (Susu, Parfum, Mie Instan)",
-  );
-  console.log("👉 Refresh halaman untuk melihat perubahan.");
-})();
+  // ============================================================
+  // 7. BARANG (katalog SKU)
+  // ============================================================
+  console.log("[seed] (8/9) Barang...");
+  const barangList = [
+    { sku: "SKU-SUSU-001", nama: "Indomilk Cokelat 190ml", merk: "Indomilk", kategori: "Susu" },
+    { sku: "SKU-SUSU-002", nama: "Ultra Milk Full Cream 1L", merk: "Ultra Milk", kategori: "Susu" },
+    { sku: "SKU-MIE-001", nama: "Indomie Goreng Aceh 90g", merk: "Indofood", kategori: "Mie Instan" },
+    { sku: "SKU-MIE-002", nama: "Mie Sedaap Soto 75g", merk: "Sedaap", kategori: "Mie Instan" },
+    { sku: "SKU-PARFUM-001", nama: "Kahf Revered Oud 100ml", merk: "Kahf", kategori: "Parfum" },
+    { sku: "SKU-PARFUM-002", nama: "Casablanca Parfum 100ml", merk: "Casablanca", kategori: "Parfum" },
+    { sku: "SKU-ELEC-001", nama: "Samsung Monitor 24 inch", merk: "Samsung", kategori: "Elektronik" },
+    { sku: "SKU-ELEC-002", nama: "Philips Setrika Uap", merk: "Philips", kategori: "Elektronik" },
+    { sku: "SKU-KOS-001", nama: "Garnier Serum Vitamin C", merk: "Garnier", kategori: "Kosmetik" },
+    { sku: "SKU-PAK-001", nama: "Kaos Polo Nike XL", merk: "Nike", kategori: "Pakaian" },
+    { sku: "SKU-PAK-002", nama: "Kaos Kaki Adidas", merk: "Adidas", kategori: "Aksesoris" },
+    { sku: "SKU-MIN-001", nama: "Le Minerale 600ml", merk: "Le Minerale", kategori: "Minuman" },
+  ];
+  for (const b of barangList) {
+    await _upsert("barang", b, { onConflict: "sku" }, "barang");
+  }
+
+  // ============================================================
+  // 8. INVOICES (barang masuk) — tersebar beberapa bulan terakhir
+  // ============================================================
+  console.log("[seed] (9/9) Invoice masuk & Stock Out...");
+
+  const invoicesPlan = [
+    {
+      no: "INV-2026-001", hari: 60, supplier: "PT Maju Jaya",
+      items: [
+        { sku: "SKU-SUSU-001", nama: "Indomilk Cokelat 190ml", merk: "Indomilk", kategori: "Susu", lokasi: "Gudang A", expired: _daysAgo(-300), hpp: 5000, jual: 7000, stok: 60 },
+        { sku: "SKU-SUSU-002", nama: "Ultra Milk Full Cream 1L", merk: "Ultra Milk", kategori: "Susu", lokasi: "Gudang A", expired: _daysAgo(-45), hpp: 15000, jual: 18000, stok: 50 },
+      ],
+    },
+    {
+      no: "INV-2026-002", hari: 50, supplier: "CV Sentosa",
+      items: [
+        { sku: "SKU-MIE-001", nama: "Indomie Goreng Aceh 90g", merk: "Indofood", kategori: "Mie Instan", lokasi: "Rak Utama", expired: _daysAgo(-220), hpp: 2500, jual: 3500, stok: 100 },
+        { sku: "SKU-MIE-002", nama: "Mie Sedaap Soto 75g", merk: "Sedaap", kategori: "Mie Instan", lokasi: "Rak Utama", expired: _daysAgo(-15), hpp: 2300, jual: 3200, stok: 80 },
+      ],
+    },
+    {
+      no: "INV-2026-003", hari: 35, supplier: "PT Cahaya Abadi",
+      items: [
+        { sku: "SKU-PARFUM-001", nama: "Kahf Revered Oud 100ml", merk: "Kahf", kategori: "Parfum", lokasi: "Rak Display", expired: _daysAgo(-900), hpp: 55000, jual: 75000, stok: 30 },
+        { sku: "SKU-PARFUM-002", nama: "Casablanca Parfum 100ml", merk: "Casablanca", kategori: "Parfum", lokasi: "Rak Display", expired: _daysAgo(-900), hpp: 40000, jual: 58000, stok: 25 },
+        { sku: "SKU-KOS-001", nama: "Garnier Serum Vitamin C", merk: "Garnier", kategori: "Kosmetik", lokasi: "Rak Display", expired: _daysAgo(-500), hpp: 22000, jual: 32000, stok: 40 },
+      ],
+    },
+    {
+      no: "INV-2026-004", hari: 20, supplier: "UD Sumber Rejeki",
+      items: [
+        { sku: "SKU-ELEC-001", nama: "Samsung Monitor 24 inch", merk: "Samsung", kategori: "Elektronik", lokasi: "Gudang B", expired: null, hpp: 1200000, jual: 1500000, stok: 10 },
+        { sku: "SKU-ELEC-002", nama: "Philips Setrika Uap", merk: "Philips", kategori: "Elektronik", lokasi: "Gudang B", expired: null, hpp: 180000, jual: 250000, stok: 15 },
+      ],
+    },
+    {
+      no: "INV-2026-005", hari: 10, supplier: "PT Maju Jaya",
+      items: [
+        { sku: "SKU-PAK-001", nama: "Kaos Polo Nike XL", merk: "Nike", kategori: "Pakaian", lokasi: "Rak Display", expired: null, hpp: 85000, jual: 130000, stok: 20 },
+        { sku: "SKU-PAK-002", nama: "Kaos Kaki Adidas", merk: "Adidas", kategori: "Aksesoris", lokasi: "Rak Display", expired: null, hpp: 15000, jual: 25000, stok: 40 },
+      ],
+    },
+    {
+      no: "INV-2026-006", hari: 3, supplier: "CV Sentosa",
+      items: [
+        { sku: "SKU-MIN-001", nama: "Le Minerale 600ml", merk: "Le Minerale", kategori: "Minuman", lokasi: "Rak Utama", expired: _daysAgo(-180), hpp: 2000, jual: 3000, stok: 120 },
+        { sku: "SKU-SUSU-001", nama: "Indomilk Cokelat 190ml", merk: "Indomilk", kategori: "Susu", lokasi: "Gudang A", expired: _daysAgo(-330), hpp: 5000, jual: 7000, stok: 40 },
+      ],
+    },
+  ];
+
+  const invoiceIdMap = {}; // invoice_no -> id (dipakai saat seeding stock out)
+
+  for (const inv of invoicesPlan) {
+    const total = inv.items.reduce((s, i) => s + i.stok, 0);
+    const totalHarga = inv.items.reduce((s, i) => s + i.hpp * i.stok, 0);
+
+    const { data: dbInv, error: invErr } = await sb
+      .from("invoices")
+      .upsert(
+        { invoice_no: inv.no, tanggal: _daysAgo(inv.hari), supplier: inv.supplier, total, total_harga: totalHarga },
+        { onConflict: "invoice_no" }
+      )
+      .select("id")
+      .single();
+
+    if (invErr || !dbInv) {
+      console.error(`[seed] Gagal seed invoice ${inv.no}:`, invErr && invErr.message);
+      throw new Error(`Gagal menyimpan invoice ${inv.no}: ${invErr ? invErr.message : "unknown error"}`);
+    }
+    invoiceIdMap[inv.no] = dbInv.id;
+
+    // Reset item invoice ini ke kondisi awal (stok penuh) supaya seeding aman diulang
+    const { error: delErr } = await sb.from("invoice_items").delete().eq("invoice_id", dbInv.id);
+    if (delErr) console.error(`[seed] Gagal reset item invoice ${inv.no}:`, delErr.message);
+
+    const { error: itemErr } = await sb.from("invoice_items").insert(
+      inv.items.map((i) => ({
+        invoice_id: dbInv.id,
+        sku: i.sku,
+        nama: i.nama,
+        merk: i.merk,
+        kategori: i.kategori,
+        lokasi: i.lokasi,
+        expired: i.expired,
+        harga_hpp: i.hpp,
+        harga_jual: i.jual,
+        stok: i.stok,
+      }))
+    );
+    if (itemErr) {
+      console.error(`[seed] Gagal seed item invoice ${inv.no}:`, itemErr.message);
+      throw new Error(`Gagal menyimpan item invoice ${inv.no}: ${itemErr.message}`);
+    }
+  }
+
+  // ============================================================
+  // 9. STOCK OUT (barang keluar) — mengurangi stok invoice terkait
+  // ============================================================
+  const stockOutsPlan = [
+    {
+      no: "INV-OUT-001", hari: 40, penerima: "Pelanggan Umum", telepon: "-",
+      payment_id: "pay_default_cash", payment_nama: "Cash",
+      items: [
+        { invoice_asal: "INV-2026-001", sku: "SKU-SUSU-001", qty: 10 },
+        { invoice_asal: "INV-2026-002", sku: "SKU-MIE-002", qty: 20 },
+      ],
+    },
+    {
+      no: "INV-OUT-002", hari: 25, penerima: "Budi Santoso", telepon: "0821-5566-7788",
+      payment_id: "pay_default_qris", payment_nama: "QRIS",
+      items: [
+        { invoice_asal: "INV-2026-003", sku: "SKU-PARFUM-001", qty: 5 },
+        { invoice_asal: "INV-2026-003", sku: "SKU-KOS-001", qty: 8 },
+      ],
+    },
+    {
+      no: "INV-OUT-003", hari: 15, penerima: "Toko Utama", telepon: "0811-2233-4455",
+      payment_id: "pay_transfer", payment_nama: "Transfer Bank",
+      items: [
+        { invoice_asal: "INV-2026-004", sku: "SKU-ELEC-001", qty: 2 },
+        { invoice_asal: "INV-2026-004", sku: "SKU-ELEC-002", qty: 4 },
+      ],
+    },
+    {
+      no: "INV-OUT-004", hari: 6, penerima: "Rina Wijaya", telepon: "0857-9988-1122",
+      payment_id: "pay_default_cash", payment_nama: "Cash",
+      items: [
+        { invoice_asal: "INV-2026-005", sku: "SKU-PAK-001", qty: 6 },
+        { invoice_asal: "INV-2026-006", sku: "SKU-MIN-001", qty: 30 },
+      ],
+    },
+    {
+      no: "INV-OUT-005", hari: 1, penerima: "Pelanggan Umum", telepon: "-",
+      payment_id: "pay_default_qris", payment_nama: "QRIS",
+      items: [
+        { invoice_asal: "INV-2026-002", sku: "SKU-MIE-001", qty: 15 },
+        { invoice_asal: "INV-2026-006", sku: "SKU-SUSU-001", qty: 5 },
+      ],
+    },
+  ];
+
+  for (const so of stockOutsPlan) {
+    const { data: dbSO, error: soErr } = await sb
+      .from("stock_outs")
+      .upsert(
+        {
+          invoice_no: so.no,
+          tanggal: _daysAgo(so.hari),
+          penerima: so.penerima,
+          telepon: so.telepon,
+          payment_id: so.payment_id,
+          payment_nama: so.payment_nama,
+        },
+        { onConflict: "invoice_no" }
+      )
+      .select("id")
+      .single();
+
+    if (soErr || !dbSO) {
+      console.error(`[seed] Gagal seed stock out ${so.no}:`, soErr && soErr.message);
+      throw new Error(`Gagal menyimpan stock out ${so.no}: ${soErr ? soErr.message : "unknown error"}`);
+    }
+
+    const { error: delErr } = await sb.from("stock_out_items").delete().eq("stock_out_id", dbSO.id);
+    if (delErr) console.error(`[seed] Gagal reset item stock out ${so.no}:`, delErr.message);
+
+    const soItemRows = [];
+    for (const item of so.items) {
+      const invId = invoiceIdMap[item.invoice_asal];
+      if (!invId) {
+        console.warn(`[seed] Lewati item stock out: invoice asal ${item.invoice_asal} tidak ditemukan`);
+        continue;
+      }
+
+      const { data: invItem, error: findErr } = await sb
+        .from("invoice_items")
+        .select("id, nama, kategori, merk, lokasi, harga_hpp, harga_jual, stok")
+        .eq("invoice_id", invId)
+        .eq("sku", item.sku)
+        .maybeSingle();
+
+      if (findErr || !invItem) {
+        console.warn(`[seed] Item SKU ${item.sku} pada invoice ${item.invoice_asal} tidak ditemukan, dilewati.`);
+        continue;
+      }
+
+      const qty = Math.min(item.qty, invItem.stok);
+      if (qty <= 0) continue;
+      const sisa = invItem.stok - qty;
+
+      soItemRows.push({
+        stock_out_id: dbSO.id,
+        invoice_asal: item.invoice_asal,
+        sku: item.sku,
+        nama: invItem.nama,
+        kategori: invItem.kategori,
+        merk: invItem.merk,
+        lokasi: invItem.lokasi,
+        harga_hpp: invItem.harga_hpp,
+        harga_jual: invItem.harga_jual,
+        jumlah_keluar: qty,
+        sisa_stok: sisa,
+      });
+
+      const { error: updErr } = await sb.from("invoice_items").update({ stok: sisa }).eq("id", invItem.id);
+      if (updErr) console.error(`[seed] Gagal update stok invoice_items untuk SKU ${item.sku}:`, updErr.message);
+    }
+
+    if (soItemRows.length) {
+      const { error: soItemErr } = await sb.from("stock_out_items").insert(soItemRows);
+      if (soItemErr) {
+        console.error(`[seed] Gagal seed item stock out ${so.no}:`, soItemErr.message);
+        throw new Error(`Gagal menyimpan item stock out ${so.no}: ${soItemErr.message}`);
+      }
+    } else {
+      console.warn(`[seed] Tidak ada item valid untuk stock out ${so.no}, dilewati.`);
+    }
+  }
+
+  console.log("=== [seed] Seeding data berhasil diselesaikan! ===");
+}
+
+async function clearSupabaseData() {
+  console.log("=== [seed] Membersihkan data Supabase ===");
+  const steps = [
+    ["retur_items", "id"],
+    ["stock_out_items", "id"],
+    ["stock_outs", "id"],
+    ["invoice_items", "id"],
+    ["invoices", "id"],
+    ["barang", "id"],
+    ["penerima", "id"],
+    ["supplier", "id"],
+    ["lokasi", "id"],
+    ["merk", "id"],
+    ["kategori", "id"],
+    ["payment_methods", "id"],
+  ];
+
+  for (const [table] of steps) {
+    const { error } = await sb.from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error && table !== "payment_methods") {
+      // payment_methods pakai id non-uuid ("pay_..."), jadi coba fallback hapus semua
+      console.warn(`[seed] Peringatan saat hapus ${table}:`, error.message);
+    }
+  }
+  // payment_methods pakai id string custom, hapus terpisah dengan aman
+  const { error: payErr } = await sb.from("payment_methods").delete().neq("id", "___none___");
+  if (payErr) console.warn("[seed] Peringatan saat hapus payment_methods:", payErr.message);
+
+  // Hapus hanya user non-builtin agar akun utama tetap ada
+  const { error: userErr } = await sb.from("app_users").delete().eq("is_builtin", false);
+  if (userErr) console.warn("[seed] Peringatan saat hapus app_users non-builtin:", userErr.message);
+
+  console.log("=== [seed] Data Supabase berhasil dibersihkan ===");
+}
