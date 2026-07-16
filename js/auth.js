@@ -69,22 +69,22 @@ function hashPassword(pw) {
 
 const INVENZ = {
   get role() {
-    return localStorage.getItem("loggedRole") || "";
+    return sessionStorage.getItem("loggedRole") || "";
   },
   get user() {
-    return localStorage.getItem("loggedUser") || "Admin";
+    return sessionStorage.getItem("loggedUser") || "Admin";
   },
   get isLoggedIn() {
-    return localStorage.getItem("isLoggedIn") === "true";
+    return sessionStorage.getItem("isLoggedIn") === "true";
   },
   can(feature) {
     const perms = ROLE_PERMISSIONS[this.role] || [];
     return perms.includes(feature);
   },
   logout() {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("loggedUser");
-    localStorage.removeItem("loggedRole");
+    sessionStorage.removeItem("isLoggedIn");
+    sessionStorage.removeItem("loggedUser");
+    sessionStorage.removeItem("loggedRole");
     window.location.href = "login.html";
   },
 };

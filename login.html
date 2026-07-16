@@ -688,7 +688,7 @@ body {
         return null;
     }
 
-    if (localStorage.getItem("isLoggedIn") === "true") {
+    if (sessionStorage.getItem("isLoggedIn") === "true") {
         window.location.href = "dashboard.html";
     }
 
@@ -746,9 +746,9 @@ body {
                 ? user.nama
                 : username.charAt(0).toUpperCase() + username.slice(1);
 
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("loggedUser", displayName);
-            localStorage.setItem("loggedRole", user.role);
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("loggedUser", displayName);
+            sessionStorage.setItem("loggedRole", user.role);
 
             setTimeout(() => { window.location.href = "dashboard.html"; }, 800);
         } else {

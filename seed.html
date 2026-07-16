@@ -130,9 +130,9 @@ button { width: 100%; padding: 13px; border: none; border-radius: 10px; font-siz
         try {
             await seedSupabaseData();
             // Set session agar langsung bisa akses dashboard
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("loggedUser", "Owner INVENZ");
-            localStorage.setItem("loggedRole", "owner");
+            sessionStorage.removeItem("isLoggedIn");
+            sessionStorage.removeItem("loggedUser");
+            sessionStorage.removeItem("loggedRole");
             showStatus("✅ Berhasil! User & data sample sudah dimuat. Membuka dashboard...", "success");
             setTimeout(() => { window.location.href = "dashboard.html"; }, 1800);
         } catch (e) {
