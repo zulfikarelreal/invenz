@@ -1,10 +1,4 @@
 // js/auth.js
-// Menjaga akses halaman berdasarkan status login & role.
-// Status SESSION (isLoggedIn / loggedUser / loggedRole) tetap disimpan di
-// localStorage -- ini hanya menyimpan "siapa yang sedang login di browser
-// ini", BUKAN data bisnis. Data akun sesungguhnya ada di tabel app_users
-// di Supabase (lihat login.js).
-
 "use strict";
 
 const ROLE_LABELS = {
@@ -65,9 +59,6 @@ const ROLE_PERMISSIONS = {
   ],
 };
 
-// Hash password super-simple (SAMA seperti versi lama) hanya supaya
-// password tidak plaintext di kolom password_hash. Ini BUKAN hashing
-// yang aman secara kriptografi -- cukup untuk tugas/demo.
 function hashPassword(pw) {
   let h = 0;
   for (let i = 0; i < pw.length; i++) {
@@ -100,8 +91,21 @@ const INVENZ = {
 window.INVENZ = INVENZ;
 
 // ================= ROUTE GUARD =================
-// Halaman publik yang tidak butuh login:
 const PUBLIC_PAGES = ["login.html", "index.html", ""];
+
+// Halaman -> permission yang dibutuhkan (dipakai untuk guard & sidebar)
+const PAGE_PERMISSION = {
+  "dashboard.html": "dashboard",
+  "inputBarang.html": "inputBarang",
+  "invoice.html": "inputBarang",
+  "globalStok.html": "globalStok",
+  "stockOut.html": "stockOut",
+  "invoiceKeluar.html": "stockOut",
+  "linkedData.html": "linkedData",
+  "laporan.html": "laporan",
+  "barangKadaluarsa.html": "barangKadaluarsa",
+  "userManagement.html": "user_management",
+};
 
 (function guard() {
   const path = window.location.pathname.split("/").pop();
@@ -112,22 +116,50 @@ const PUBLIC_PAGES = ["login.html", "index.html", ""];
     return;
   }
 
-  // Halaman -> permission yang dibutuhkan
-  const PAGE_PERMISSION = {
-    "dashboard.html": "dashboard",
-    "inputBarang.html": "inputBarang",
-    "invoice.html": "inputBarang",
-    "globalStok.html": "globalStok",
-    "stockOut.html": "stockOut",
-    "invoiceKeluar.html": "stockOut",
-    "linkedData.html": "linkedData",
-    "laporan.html": "laporan",
-    "barangKadaluarsa.html": "barangKadaluarsa",
-    "userManagement.html": "user_management",
-  };
-
   const needed = PAGE_PERMISSION[path];
   if (needed && !INVENZ.can(needed)) {
     window.location.href = "dashboard.html";
   }
 })();
+
+// ================= SIDEBAR PERMISSION FILTER =================
+// Menyembunyikan menu/tombol sidebar yang halamannya tidak
+// diizinkan untuk role user yang sedang login.
+function applySidebarPermissions() {
+  if (!INVENZ.isLoggedIn) return;
+
+  document.querySelectorAll(".sidebar-menu a[href]").forEach((a) => {
+    const href = a.getAttribute("href");
+    const perm = PAGE_PERMISSION[href];
+    if (perm && !INVENZ.can(perm)) {
+      const li = a.closest("li") || a;
+      li.style.display = "none";
+    }
+  });
+
+  // Jika section "Admin" jadi kosong semua (misal userManagement
+  // tersembunyi), sembunyikan juga label section-nya.
+  document.querySelectorAll(".sidebar-menu").forEach((menu) => {
+    const visibleItems = Array.from(menu.querySelectorAll("li")).filter(
+      (li) => li.style.display !== "none",
+    );
+    if (visibleItems.length === 0) {
+      menu.style.display = "none";
+      const prevLabel = menu.previousElementSibling;
+      if (
+        prevLabel &&
+        (prevLabel.classList.contains("sidebar-section-label") ||
+          prevLabel.classList.contains("sidebar-section"))
+      ) {
+        prevLabel.style.display = "none";
+      }
+    }
+  });
+}
+
+if (document.readyState !== "loading") {
+  applySidebarPermissions();
+} else {
+  document.addEventListener("DOMContentLoaded", applySidebarPermissions);
+}
+window.applySidebarPermissions = applySidebarPermissions;
