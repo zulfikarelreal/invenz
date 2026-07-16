@@ -3,6 +3,11 @@ const loggedUser = INVENZ.user;
 document.getElementById("sidebarUsername").textContent = loggedUser;
 document.getElementById("sidebarAvatar").textContent = loggedUser.charAt(0).toUpperCase();
 
+// ===== SEARCH STATE PER TAB =====
+const searchKeywords = {
+  kategori: "", merk: "", supplier: "", lokasi: "", penerima: "", barang: "", payment: ""
+};
+
 // ===== SIDEBAR =====
 const sidebar = document.getElementById("sidebar");
 const overlay = document.getElementById("sidebarOverlay");
@@ -674,23 +679,38 @@ async function renderTable(type) {
     renderTableBarang();
     return;
   }
-  
+
   const config = tableConfig[type];
   const tbodyId = "table" + type.charAt(0).toUpperCase() + type.slice(1);
   const tbody = document.getElementById(tbodyId);
   if (!tbody) return;
-  
+
   const { data, error } = await sb.from(type).select("*").order("nama");
-  if (error || !data || data.length === 0) {
-    if (error) {
-      alert("Error loading " + type + ": " + error.message);
-    }
+  if (error) {
+    alert("Error loading " + type + ": " + error.message);
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${config.colspan}">Belum ada data ${type}</td></tr>`;
     return;
   }
-  
+
+  const kw = (searchKeywords[type] || "").toLowerCase();
+  let filtered = data || [];
+  if (kw) {
+    filtered = filtered.filter((item) =>
+      config.cols.some((col) => (item[col] || "").toLowerCase().includes(kw)),
+    );
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="${config.colspan}">${
+      kw
+        ? "Tidak ditemukan data yang cocok dengan pencarian."
+        : "Belum ada data " + type
+    }</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = "";
-  data.forEach((item, idx) => {
+  filtered.forEach((item, idx) => {
     const tr = document.createElement("tr");
     const dataCols = config.cols
       .map((col) => `<td>${item[col] || (col === "nama" ? "" : "-")}</td>`)
@@ -700,7 +720,7 @@ async function renderTable(type) {
         <button class="btn-edit" data-id="${item.id}"><i class="bx bx-edit"></i> Edit</button>
         <button class="btn-delete" data-id="${item.id}"><i class="bx bx-trash"></i> Hapus</button>
       </div></td>`;
-      
+
     tr.querySelector(".btn-edit").addEventListener("click", () =>
       openModal(type, "edit", item.id),
     );
@@ -713,19 +733,38 @@ async function renderTable(type) {
 
 async function renderTableBarang() {
   const tbody = document.getElementById("tableBarang");
-  
+
   const { data, error } = await sb.from("barang").select("*").order("nama");
-  
-  if (error || !data || data.length === 0) {
-    if (error) {
-      alert("Error loading barang: " + error.message);
-    }
+
+  if (error) {
+    alert("Error loading barang: " + error.message);
     tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Belum ada data barang</td></tr>`;
     return;
   }
 
+  const kw = (searchKeywords.barang || "").toLowerCase();
+  let filtered = data || [];
+  if (kw) {
+    filtered = filtered.filter(
+      (item) =>
+        (item.sku || "").toLowerCase().includes(kw) ||
+        (item.nama || "").toLowerCase().includes(kw) ||
+        (item.merk || "").toLowerCase().includes(kw) ||
+        (item.kategori || "").toLowerCase().includes(kw),
+    );
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">${
+      kw
+        ? "Tidak ditemukan barang yang cocok dengan pencarian."
+        : "Belum ada data barang"
+    }</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = "";
-  data.forEach((item, idx) => {
+  filtered.forEach((item, idx) => {
     const skuDisplay = item.sku || "-";
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -801,14 +840,37 @@ async function getPaymentMethods() {
 async function renderPaymentTable() {
   const tbody = document.getElementById("tablePayment");
   if (!tbody) return;
-  const { data: list, error } = await sb.from("payment_methods").select("*").order("nama");
-  
-  if (error || !list || !list.length) {
+  const { data: list, error } = await sb
+    .from("payment_methods")
+    .select("*")
+    .order("nama");
+
+  if (error) {
     tbody.innerHTML =
       '<tr class="empty-row"><td colspan="5">Belum ada metode pembayaran</td></tr>';
     return;
   }
-  tbody.innerHTML = list
+
+  const kw = (searchKeywords.payment || "").toLowerCase();
+  let filtered = list || [];
+  if (kw) {
+    filtered = filtered.filter(
+      (p) =>
+        (p.nama || "").toLowerCase().includes(kw) ||
+        (p.keterangan || "").toLowerCase().includes(kw),
+    );
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${
+      kw
+        ? "Tidak ditemukan metode yang cocok dengan pencarian."
+        : "Belum ada metode pembayaran"
+    }</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered
     .map(
       (p, i) => `
     <tr>
@@ -963,6 +1025,18 @@ function bindPaymentEvents() {
   });
 }
 
+function bindSearchInputs() {
+  document.querySelectorAll(".search-input-linked").forEach((input) => {
+    input.addEventListener("input", () => {
+      const tab = input.dataset.tab;
+      searchKeywords[tab] = input.value.trim();
+      if (tab === "barang") renderTableBarang();
+      else if (tab === "payment") renderPaymentTable();
+      else renderTable(tab);
+    });
+  });
+}
+
 function initLinkedData() {
   const activeTabBtn = document.querySelector(".tab-btn.active");
   const activeTab = activeTabBtn ? activeTabBtn.dataset.tab : "kategori";
@@ -972,6 +1046,7 @@ function initLinkedData() {
     renderTable(activeTab);
   }
   bindPaymentEvents();
+  bindSearchInputs();
 }
 
 document.addEventListener("DOMContentLoaded", initLinkedData);

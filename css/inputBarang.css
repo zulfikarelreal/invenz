@@ -124,7 +124,7 @@ body::before {
     flex-shrink: 0;
 }
 
-.sidebar-header span {
+.sidebar-header > span {
     font-family: var(--font-display);
     font-weight: 800;
     font-size: 16px;
@@ -135,7 +135,7 @@ body::before {
     gap: 10px;
 }
 
-.sidebar-header span::before {
+.sidebar-header > span::before {
     content: '';
     display: inline-block;
     width: 28px;

@@ -399,6 +399,32 @@ body::before {
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ===== SEARCH BOX PER TAB ===== */
+.search-wrap-linked {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    max-width: 340px;
+    transition: border-color var(--transition);
+}
+.search-wrap-linked:focus-within { border-color: var(--border-hi); }
+.search-wrap-linked i { font-size: 16px; color: var(--text3); flex-shrink: 0; }
+.search-input-linked {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--font);
+}
+.search-input-linked::placeholder { color: var(--text3); }
+
 /* ===== SECTION HEADER ===== */
 .section-header {
     display: flex;
