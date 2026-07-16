@@ -69,7 +69,7 @@ body::before {
     z-index: 0;
 }
 
-::-webkit-scrollbar { width: 4px; height: 6px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
 
@@ -399,6 +399,32 @@ body::before {
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ===== SEARCH BOX PER TAB ===== */
+.search-wrap-linked {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    max-width: 340px;
+    transition: border-color var(--transition);
+}
+.search-wrap-linked:focus-within { border-color: var(--border-hi); }
+.search-wrap-linked i { font-size: 16px; color: var(--text3); flex-shrink: 0; }
+.search-input-linked {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--font);
+}
+.search-input-linked::placeholder { color: var(--text3); }
+
 /* ===== SECTION HEADER ===== */
 .section-header {
     display: flex;
@@ -438,25 +464,17 @@ body::before {
 .btn-add i { font-size: 16px !important; }
 
 /* ===== TABLE ===== */
-/* FIX: sebelumnya overflow:hidden membuat tabel tidak bisa
-   discroll horizontal saat ada nama data yang panjang, sehingga
-   layout melebar/terpotong. Diganti jadi overflow-x:auto agar
-   muncul scrollbar horizontal, overflow-y tetap hidden supaya
-   border-radius tidak terpotong aneh. */
 .table-wrapper {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     transition: border-color var(--transition);
-    -webkit-overflow-scrolling: touch;
 }
 .table-wrapper:hover { border-color: var(--border2); }
 
 table {
     width: 100%;
-    min-width: 640px; /* jaga agar kolom tidak terlalu sempit sebelum scroll aktif */
     border-collapse: collapse;
     font-size: 13px;
 }
